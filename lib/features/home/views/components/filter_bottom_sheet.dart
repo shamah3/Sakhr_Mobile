@@ -37,20 +37,16 @@ class FilterBottomSheet extends StatelessWidget {
         textDirection: TextDirection.rtl,
         child: StatefulBuilder(
             builder: (context, setModalState) {
-              // استخدام القيم الحالية كبداية للحالة المحلية داخل الـ Sheet
+              // متغيرات الحالة المحلية
               var tempRange = appController.priceRange.value;
               var tempCategory = appController.activeCategory.value;
               var tempBrand = appController.selectedBrand.value;
               var tempAvailability = appController.selectedAvailability.value;
+              var tempWarranty = appController.warrantyText.value;
 
-              // التأكد من توافق النطاق مع الحد الأقصى قبل الرسم لتجنب أخطاء Assertion
-              if (tempRange.end > maxProductPrice) {
-                tempRange = RangeValues(tempRange.start, maxProductPrice);
-              }
-
-              final TextEditingController maxPriceCtrl = TextEditingController(
-                  text: tempRange.end.round().toString()
-              );
+              final TextEditingController minPriceCtrl = TextEditingController(text: tempRange.start.round().toString());
+              final TextEditingController maxPriceCtrl = TextEditingController(text: tempRange.end.round().toString());
+              final TextEditingController warrantyCtrl = TextEditingController(text: tempWarranty);
 
               return SingleChildScrollView(
                 child: Column(
@@ -66,40 +62,36 @@ class FilterBottomSheet extends StatelessWidget {
                     const Center(child: Text("فلترة المنتجات", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
 
                     const SizedBox(height: 30),
-                    const Text("السعر", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                    const Text("نطاق السعر", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                     const SizedBox(height: 10),
-
-                    FilterWidgets.buildTextField("حدد السعر", "", controller: maxPriceCtrl, onChanged: (val) {
-                      double? maxVal = double.tryParse(val);
-                      if (maxVal != null) {
-                        if (maxVal > maxProductPrice) maxVal = maxProductPrice;
-                        if (maxVal < tempRange.start) maxVal = tempRange.start;
-
-                        setModalState(() {
-                          tempRange = RangeValues(tempRange.start, maxVal!);
-                          appController.priceRange.value = tempRange;
-                        });
-                      }
-                    }),
-
-                    RangeSlider(
-                      values: tempRange,
-                      min: 0,
-                      max: maxProductPrice,
-                      divisions: 100,
-                      labels: RangeLabels(
-                          tempRange.start.round().toString(),
-                          tempRange.end.round().toString()
-                      ),
-                      onChanged: (RangeValues values) {
-                        setModalState(() {
-                          tempRange = values;
-                          appController.priceRange.value = values;
-                          maxPriceCtrl.text = values.end.round().toString();
-                        });
-                      },
-                      activeColor: kPrimaryColor,
-                      inactiveColor: kPrimaryColor.withOpacity(0.2),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: FilterWidgets.buildTextField("أقل سعر", "", controller: minPriceCtrl, onChanged: (val) {
+                             double? minVal = double.tryParse(val);
+                             if (minVal != null) {
+                               if (minVal < 0) minVal = 0;
+                               if (minVal > tempRange.end) minVal = tempRange.end;
+                               setModalState(() {
+                                 tempRange = RangeValues(minVal!, tempRange.end);
+                               });
+                             }
+                          }),
+                        ),
+                        const SizedBox(width: 15),
+                        Expanded(
+                          child: FilterWidgets.buildTextField("أعلى سعر", "", controller: maxPriceCtrl, onChanged: (val) {
+                             double? maxVal = double.tryParse(val);
+                             if (maxVal != null) {
+                               if (maxVal > maxProductPrice) maxVal = maxProductPrice;
+                               if (maxVal < tempRange.start) maxVal = tempRange.start;
+                               setModalState(() {
+                                 tempRange = RangeValues(tempRange.start, maxVal!);
+                               });
+                             }
+                          }),
+                        ),
+                      ],
                     ),
 
                     const SizedBox(height: 20),
@@ -110,7 +102,6 @@ class FilterBottomSheet extends StatelessWidget {
                       items: CategoryData.categories.map((c) => c['name'] as String).toList(),
                       onChanged: (v) {
                         setModalState(() => tempCategory = v ?? tempCategory);
-                        appController.activeCategory.value = tempCategory;
                       },
                     ),
                     const SizedBox(height: 20),
@@ -118,10 +109,9 @@ class FilterBottomSheet extends StatelessWidget {
                       tempBrand,
                       null,
                       label: "الماركة",
-                      items: ["الكل", "HP", "Apple", "Dell", "Canon", "Logitech", "Samsung"],
+                      items: ["الكل", "Apple", "HP", "Dell", "Samsung", "Sony", "Canon", "Asus", "Lenovo"],
                       onChanged: (v) {
                         setModalState(() => tempBrand = v ?? tempBrand);
-                        appController.selectedBrand.value = tempBrand;
                       },
                     ),
 
@@ -134,9 +124,15 @@ class FilterBottomSheet extends StatelessWidget {
                       items: ["الكل", "متوفر", "غير متوفر", "قيد الشحن"],
                       onChanged: (v) {
                         setModalState(() => tempAvailability = v ?? tempAvailability);
-                        appController.selectedAvailability.value = tempAvailability;
                       },
                     ),
+
+                    const SizedBox(height: 20),
+                    const Text("الضمان", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                    const SizedBox(height: 10),
+                    FilterWidgets.buildTextField("أدخل مدة الضمان (مثال: سنة)", "", controller: warrantyCtrl, onChanged: (val) {
+                        tempWarranty = val;
+                    }),
 
                     const SizedBox(height: 40),
                     ElevatedButton(
@@ -146,6 +142,7 @@ class FilterBottomSheet extends StatelessWidget {
                           category: tempCategory,
                           brand: tempBrand,
                           availability: tempAvailability,
+                          warranty: tempWarranty,
                         );
                         homeController.applyFilters();
                         Get.back();

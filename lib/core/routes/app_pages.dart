@@ -17,6 +17,7 @@ import 'package:bytore/features/checkout/views/success_page.dart';
 import 'package:bytore/features/wishlist/views/wishlist_view.dart';
 import 'package:bytore/features/orders/views/tracking_view.dart';
 import 'package:bytore/features/profile/views/profile_page.dart';
+import 'package:bytore/features/home/views/ads_view.dart';
 
 // Profile Sub-Pages Imports
 import 'package:bytore/features/profile/sub_pages/wallet_page.dart';
@@ -118,6 +119,10 @@ class AppPages {
     GetPage(
       name: AppRoutes.TRACKING,
       page: () => const TrackingView(),
+    ),
+    GetPage(
+      name: AppRoutes.ADS,
+      page: () => const AdsView(),
     ),
     GetPage(
       name: AppRoutes.PROFILE,

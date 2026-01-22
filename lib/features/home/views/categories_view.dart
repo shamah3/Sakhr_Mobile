@@ -105,7 +105,32 @@ class CategoriesView extends GetView<CategoriesController> {
       final filteredSubs = controller.getFilteredSubCategories();
 
       // قائمة الماركات مع الفلترة اللحظية
-      final brands = ["Apple", "HP", "Dell", "Samsung", "Asus", "Lenovo"]
+      // قائمة الماركات مع الفلترة اللحظية حسب القسم
+      List<String> rawBrands = [];
+      switch(cat['slug']) {
+        case 'laptops':
+          rawBrands = ["Apple", "HP", "Dell", "Asus", "Lenovo", "MSI", "Microsoft"];
+          break;
+        case 'monitors':
+          rawBrands = ["LG", "Samsung", "Dell", "BenQ", "Asus", "Acer"];
+          break;
+        case 'audio':
+          rawBrands = ["Sony", "Bose", "JBL", "Apple", "Sennheiser", "Beats"];
+          break;
+        case 'printers':
+          rawBrands = ["HP", "Canon", "Epson", "Brother", "Xerox"];
+          break;
+        case 'cameras':
+          rawBrands = ["Canon", "Nikon", "Sony", "Fujifilm", "GoPro", "Panasonic"];
+          break;
+        case 'accessories':
+          rawBrands = ["Logitech", "Razer", "Corsair", "HyperX", "SteelSeries", "Anker"];
+          break;
+        default:
+          rawBrands = ["Apple", "Samsung", "Sony", "LG", "Huawei", "Xiaomi"];
+      }
+
+      final brands = rawBrands
           .where((b) => b.toLowerCase().contains(controller.searchText.value.toLowerCase()))
           .toList();
 

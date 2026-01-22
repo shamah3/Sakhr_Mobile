@@ -17,6 +17,7 @@ abstract class AppRoutes {
   static const WISHLIST = '/wishlist';
   static const PROFILE = '/profile';
   static const TRACKING = '/tracking';
+  static const ADS = '/ads';
 
   // Profile Sub-Pages
   static const WALLET = '/wallet';

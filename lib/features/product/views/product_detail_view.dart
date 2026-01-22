@@ -71,13 +71,8 @@ class ProductDetailView extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Positioned(
-                    bottom: 20,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(controller.productImages.length, (index) => _buildDot(index, controller)),
-                    ),
-                  ),
+                  // Thumbnails removed as per request
+                  const SizedBox.shrink(),
                 ],
               )),
             ),
@@ -211,7 +206,7 @@ class ProductDetailView extends StatelessWidget {
         OutlinedButton(
           onPressed: () => _showAllReviewsSheet(context),
           style: OutlinedButton.styleFrom(side: const BorderSide(color: kSecondaryColor)),
-          child: const Text("عرض المزيد وكتابة مراجعة", style: TextStyle(color: kSecondaryColor, fontWeight: FontWeight.bold)),
+          child: const Text("عرض المزيد", style: TextStyle(color: kSecondaryColor, fontWeight: FontWeight.bold)),
         )
       ],
     );
@@ -241,33 +236,10 @@ class ProductDetailView extends StatelessWidget {
                 ),
               ),
                   const Divider(),
-              // Writing review section (Only if purchased)
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      enabled: false, // Disabled by default for mock logic
-                      decoration: InputDecoration(
-                        hintText: "يجب شراء المنتج أولاً لتتمكن من التقييم",
-                        filled: true,
-                        fillColor: Colors.grey[100],
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  IconButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('عذراً، لا يمكنك التقييم إلا بعد شراء المنتج واستلامه.'), backgroundColor: Colors.orange),
-                      );
-                    }, 
-                    icon: const Icon(Icons.lock_outline, color: Colors.grey)
-                  ),
+                  // Writing review section removed as per request
+                  const SizedBox(height: 20),
                 ],
               ),
-            ],
-          ),
         ),
       ),
     );

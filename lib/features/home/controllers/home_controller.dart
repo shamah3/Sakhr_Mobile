@@ -42,10 +42,12 @@ class HomeController extends GetxController {
     final query = searchController.text.toLowerCase();
     
     var results = allProducts.where((p) {
-      // Search match
+      // Search match (Name, Description, Brand, Category)
       final matchesSearch = query.isEmpty || 
           p.name.toLowerCase().contains(query) || 
-          p.description.toLowerCase().contains(query);
+          p.description.toLowerCase().contains(query) ||
+          p.brandName.toLowerCase().contains(query) ||
+          p.storeName.toLowerCase().contains(query);
           
       // Price match
       final matchesPrice = p.price >= appController.priceRange.value.start && 
@@ -53,12 +55,12 @@ class HomeController extends GetxController {
                            
       // Category match
       final matchesCategory = appController.activeCategory.value == "الكل" || 
-                              p.name.contains(appController.activeCategory.value) || 
-                              p.brandName.contains(appController.activeCategory.value);
+                              p.brandName.contains(appController.activeCategory.value); // Product model maps 'brandName' to category/brand loosely, refining this might be needed in future but sticking to existing logic pattern
                               
-      // Brand match
+      // Brand match (Strict)
       final matchesBrand = appController.selectedBrand.value == "الكل" || 
-                           p.brandName.contains(appController.selectedBrand.value);
+                           p.brandName == appController.selectedBrand.value ||
+                           p.name.contains(appController.selectedBrand.value);
                            
       // Availability match
       bool matchesAvailability = true;
@@ -72,7 +74,11 @@ class HomeController extends GetxController {
         }
       }
       
-      return matchesSearch && matchesPrice && matchesCategory && matchesBrand && matchesAvailability;
+      // Warranty match
+      final matchesWarranty = appController.warrantyText.value.isEmpty ||
+                              p.warranty.contains(appController.warrantyText.value);
+      
+      return matchesSearch && matchesPrice && matchesCategory && matchesBrand && matchesAvailability && matchesWarranty;
     }).toList();
     
     filteredProducts.assignAll(results);

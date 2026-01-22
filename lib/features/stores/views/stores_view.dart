@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bytore/core/constants/constants.dart';
 import 'package:bytore/features/product/views/product_list_view.dart';
+import 'package:carousel_slider/carousel_slider.dart'; // Import Carousel
 import '../controllers/stores_controller.dart';
 
 class StoresView extends GetView<StoresController> {
@@ -20,6 +21,8 @@ class StoresView extends GetView<StoresController> {
         child: Column(
           children: [
             _buildWhiteHeader(),
+            const SizedBox(height: 15),
+            _buildBanners(), // Added banners as requested
             _buildSearchField(),
             Expanded(
               child: Obx(() => controller.filteredStores.isEmpty 
@@ -28,7 +31,7 @@ class StoresView extends GetView<StoresController> {
                     padding: const EdgeInsets.all(20),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      childAspectRatio: 0.85,
+                      childAspectRatio: 0.65,
                       crossAxisSpacing: 15,
                       mainAxisSpacing: 15,
                     ),
@@ -87,8 +90,8 @@ class StoresView extends GetView<StoresController> {
             hintText: 'ابحث عن اسم المتجر',
             hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
             border: InputBorder.none,
-            suffixIcon: const Icon(Icons.search_rounded, color: kPrimaryColor),
-            prefixIcon: Obx(() => controller.searchText.value.isNotEmpty 
+            prefixIcon: const Icon(Icons.search_rounded, color: kPrimaryColor),
+            suffixIcon: Obx(() => controller.searchText.value.isNotEmpty 
               ? IconButton(
                   icon: const Icon(Icons.close, size: 18, color: Colors.grey),
                   onPressed: () => controller.filterStores(''),
@@ -207,6 +210,50 @@ class StoresView extends GetView<StoresController> {
           ),
         ),
       ),
+    );
+  }
+  Widget _buildBanners() {
+    return Column(
+      children: [
+        CarouselSlider(
+          options: CarouselOptions(
+            height: 160,
+            viewportFraction: 0.92,
+            autoPlay: true,
+            enlargeCenterPage: true,
+          ),
+          items: [1, 2].map((i) {
+            return Builder(
+              builder: (BuildContext context) {
+                return Container(
+                  width: MediaQuery.of(context).size.width,
+                  margin: const EdgeInsets.symmetric(horizontal: 0.0),
+                  decoration: BoxDecoration(
+                    color: i == 1 ? Colors.indigoAccent : Colors.teal,
+                    borderRadius: BorderRadius.circular(15),
+                    image: DecorationImage(
+                      image: NetworkImage(
+                        i == 1 
+                        ? "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=1000&auto=format&fit=crop" // Camera/Lens
+                        : "https://images.unsplash.com/photo-1546435770-a3e426bf472b?q=80&w=2065&auto=format&fit=crop" // Headphones/Tech
+                      ),
+                      fit: BoxFit.cover,
+                      colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.3), BlendMode.darken),
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      i == 1 ? "خصومات متجر كانون\nعلى الكاميرات الاحترافية" : "متجر سوني\nعالم من الصوتيات",
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22, shadows: [Shadow(blurRadius: 10, color: Colors.black, offset: Offset(0, 2))]),
+                    ),
+                  ),
+                );
+              },
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 }

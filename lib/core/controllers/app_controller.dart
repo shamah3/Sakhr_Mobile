@@ -137,12 +137,14 @@ class AppController extends GetxController {
   var activeCategory = "الكل".obs;
   var selectedBrand = "الكل".obs;
   var selectedAvailability = "متوفر".obs;
+  var warrantyText = "".obs;
 
-  void updateFilters({RangeValues? range, String? category, String? brand, String? availability}) {
+  void updateFilters({RangeValues? range, String? category, String? brand, String? availability, String? warranty}) {
     if (range != null) priceRange.value = range;
     if (category != null) activeCategory.value = category;
     if (brand != null) selectedBrand.value = brand;
     if (availability != null) selectedAvailability.value = availability;
+    if (warranty != null) warrantyText.value = warranty;
   }
 
   void updateLoginStatus(bool status) => isLoggedIn.value = status;

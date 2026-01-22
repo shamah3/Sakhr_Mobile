@@ -279,7 +279,8 @@ class WishlistView extends StatelessWidget {
             width: 200,
             child: ElevatedButton(
               onPressed: () {
-                Get.find<MainController>().onTabTapped(0);
+                Get.back(); // Close Wishlist
+                Get.find<MainController>().onTabTapped(0); // Switch to Home
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: kPrimaryColor,

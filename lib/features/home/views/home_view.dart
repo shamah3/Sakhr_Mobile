@@ -12,6 +12,7 @@ import 'package:bytore/data/category_data.dart';
 import 'package:bytore/features/home/controllers/home_controller.dart';
 import 'package:bytore/features/product/views/product_list_view.dart';
 import 'package:bytore/features/notifications/views/notification_view.dart';
+import 'package:bytore/core/routes/app_routes.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
@@ -77,7 +78,7 @@ class HomeView extends GetView<HomeController> {
             children: [
               const SizedBox(height: 40),
               _buildSectionHeader("المنتجات الأكثر طلباً", showViewAll: true, onTap: () {
-                Get.to(() => const ProductListView(categoryTitle: "الأكثر طلباً"));
+                Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': "الأكثر طلباً"}, id: 1);
               }),
               const SizedBox(height: 15),
             ],
@@ -92,7 +93,7 @@ class HomeView extends GetView<HomeController> {
           child: Column(
             children: [
               _buildSectionHeader("وصل حديثاً", showViewAll: true, onTap: () {
-                Get.to(() => const ProductListView(categoryTitle: "وصل حديثاً"));
+                Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': "وصل حديثاً"}, id: 1);
               }),
               const SizedBox(height: 18),
             ],
@@ -107,7 +108,7 @@ class HomeView extends GetView<HomeController> {
           child: Column(
             children: [
               _buildSectionHeader("الخصومات", showViewAll: true, onTap: () {
-                Get.to(() => const ProductListView(categoryTitle: "الخصومات"));
+                Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': "الخصومات"}, id: 1);
               }),
               const SizedBox(height: 18),
             ],
@@ -298,55 +299,114 @@ class HomeView extends GetView<HomeController> {
             onPageChanged: (index, reason) => controller.updateCarouselIndex(index),
           ),
           items: [1, 2, 3].map((i) {
-            return Builder(
-              builder: (BuildContext context) {
-                return Container(
-                  width: MediaQuery.of(context).size.width,
-                  margin: const EdgeInsets.symmetric(horizontal: 5.0),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [kPrimaryColor, kPrimaryColor.withAlpha((0.8 * 255).round())],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        right: 25, top: 30, bottom: 30,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 10),
-                            Text(
-                              i == 1 ? "أقوى\nاللابتوبات" : (i == 2 ? "أفضل\nالملحقات" : "أجهزة\nذكية"),
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 26, height: 1.1),
-                            ),
-                            const SizedBox(height: 15),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                              decoration: BoxDecoration(color: kSecondaryColor, borderRadius: BorderRadius.circular(20)),
-                              child: const Text("تسوق الآن", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-                            ),
-                          ],
-                        ),
+            return GestureDetector(
+              onTap: () {
+                Get.dialog(
+                  Dialog(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                      Positioned(
-                        left: -10, bottom: 0, top: 0, width: 180,
-                        child: ClipRRect(
-                          borderRadius: const BorderRadius.only(topLeft: Radius.circular(25), bottomLeft: Radius.circular(25)),
-                          child: Image.network(
-                            i == 1 ? "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=2071&auto=format&fit=crop" : (i == 2 ? "https://images.unsplash.com/photo-1546435770-a3e426bf472b?q=80&w=2065&auto=format&fit=crop" : "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=1780&auto=format&fit=crop"),
-                            fit: i == 3 ? BoxFit.contain : BoxFit.cover,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text("عروض حصرية", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              IconButton(onPressed: () => Get.back(), icon: const Icon(Icons.close)),
+                            ],
                           ),
-                        ),
+                          const SizedBox(height: 10),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(15),
+                            child: Image.network(
+                              i == 1 
+                              ? "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=2071&auto=format&fit=crop" 
+                              : (i == 2 ? "https://images.unsplash.com/photo-1546435770-a3e426bf472b?q=80&w=2065&auto=format&fit=crop" : "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=1780&auto=format&fit=crop"),
+                              height: 150,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          const SizedBox(height: 15),
+                          Text(
+                            i == 1 ? "احصل على خصم 20% على جميع اللابتوبات!" : (i == 2 ? "اشتري ملحقين واحصل على الثالث مجاناً!" : "خصومات تصل إلى 50% على الأجهزة الذكية"),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                          ),
+                          const SizedBox(height: 20),
+                          ElevatedButton(
+                            onPressed: () {
+                              Get.back();
+                              Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': 'العروض'}, id: 1);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: kPrimaryColor,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                            ),
+                            child: const Text("تصفح العروض", style: TextStyle(color: Colors.white)),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 );
               },
+              child: Builder(
+                builder: (BuildContext context) {
+                  return Container(
+                    width: MediaQuery.of(context).size.width,
+                    margin: const EdgeInsets.symmetric(horizontal: 5.0),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [kPrimaryColor, kPrimaryColor.withAlpha((0.8 * 255).round())],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          right: 25, top: 30, bottom: 30,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 10),
+                              Text(
+                                i == 1 ? "أقوى\nاللابتوبات" : (i == 2 ? "أفضل\nالملحقات" : "أجهزة\nذكية"),
+                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 26, height: 1.1),
+                              ),
+                              const SizedBox(height: 15),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                decoration: BoxDecoration(color: kSecondaryColor, borderRadius: BorderRadius.circular(20)),
+                                child: const Text("تسوق الآن", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Positioned(
+                          left: -10, bottom: 0, top: 0, width: 180,
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.only(topLeft: Radius.circular(25), bottomLeft: Radius.circular(25)),
+                            child: Image.network(
+                              i == 1 ? "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=2071&auto=format&fit=crop" : (i == 2 ? "https://images.unsplash.com/photo-1546435770-a3e426bf472b?q=80&w=2065&auto=format&fit=crop" : "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=1780&auto=format&fit=crop"),
+                              fit: i == 3 ? BoxFit.contain : BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             );
           }).toList(),
         ),
@@ -463,10 +523,11 @@ class HomeView extends GetView<HomeController> {
             final isSelected = index == 0;
 
             return GestureDetector(
-              onTap: () => Get.to(() => ProductListView(
-                  categoryTitle: cat['name'],
-                  apiCategorySlug: cat['slug']
-              )),
+              onTap: () => Get.toNamed(
+                  AppRoutes.PRODUCT_LIST,
+                  arguments: {'categoryTitle': cat['name'], 'apiCategorySlug': cat['slug']},
+                  id: 1 // الحفاظ على الشريط السفلي
+              ),
               child: Container(
                 margin: const EdgeInsets.only(left: 10),
                 padding: const EdgeInsets.symmetric(horizontal: 20),

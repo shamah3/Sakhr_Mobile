@@ -128,11 +128,10 @@ class ItemCard extends StatelessWidget {
                     ),
                   ),
 
-                  // Rating & Buyer Count Row
                   Padding(
                      padding: const EdgeInsets.symmetric(horizontal: 10),
                      child: SizedBox(
-                       height: 20,
+                       height: 18,
                        child: Row(
                          children: [
                            const Icon(Icons.star_rounded, color: Colors.amber, size: 14),
@@ -155,7 +154,7 @@ class ItemCard extends StatelessWidget {
                   ),
                   
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2), // Reduced vertical padding
                     child: SizedBox(
                       height: 16,
                       child: Text(
