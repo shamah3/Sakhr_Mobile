@@ -4,8 +4,9 @@ import 'package:get/get.dart';
 class MainController extends GetxController {
   var selectedIndex = 0.obs;
   
-  final GlobalKey<NavigatorState> homeNavigatorKey = GlobalKey<NavigatorState>();
-  final GlobalKey<NavigatorState> categoriesNavigatorKey = GlobalKey<NavigatorState>();
+  final GlobalKey<NavigatorState> homeNavigatorKey = Get.nestedKey(1)!;
+  final GlobalKey<NavigatorState> categoriesNavigatorKey = Get.nestedKey(2)!;
+  final GlobalKey<NavigatorState> profileNavigatorKey = Get.nestedKey(3)!;
 
   void onTabTapped(int index) {
     if (selectedIndex.value == index) {
@@ -13,6 +14,8 @@ class MainController extends GetxController {
         homeNavigatorKey.currentState?.popUntil((route) => route.isFirst);
       } else if (index == 1) {
         categoriesNavigatorKey.currentState?.popUntil((route) => route.isFirst);
+      } else if (index == 4) {
+        profileNavigatorKey.currentState?.popUntil((route) => route.isFirst);
       }
     }
     selectedIndex.value = index;
@@ -22,6 +25,7 @@ class MainController extends GetxController {
     NavigatorState? currentNav;
     if (selectedIndex.value == 0) currentNav = homeNavigatorKey.currentState;
     if (selectedIndex.value == 1) currentNav = categoriesNavigatorKey.currentState;
+    if (selectedIndex.value == 4) currentNav = profileNavigatorKey.currentState;
 
     if (currentNav != null && currentNav.canPop()) {
       currentNav.pop();

@@ -22,7 +22,7 @@ centerTitle: true,
 // رابط الإعدادات (ترس الإعدادات)
 leading: IconButton(
 icon: const Icon(Icons.settings, color: Colors.white, size: 24),
-onPressed: () => Get.toNamed('/settings'),
+onPressed: () => Get.toNamed(AppRoutes.SETTINGS),
 ),
 title: Text(
 'حسابي',
@@ -52,10 +52,10 @@ const SizedBox(height: 25),
 // 3. قسم إدارة الحساب
 _buildSectionHeader('إدارة الحساب'),
 _buildMenuContainer([
-_buildMenuItem('تقارير المشتريات', Icons.bar_chart_rounded, () => Get.toNamed('/reports')),
-_buildMenuItem('المنتجات المسترجعة', Icons.assignment_return_outlined, () => Get.toNamed('/returns')),
-_buildMenuItem('سجل الأنشطة', Icons.access_time_rounded, () => Get.toNamed('/activity')),
-_buildMenuItem('تقييماتي', Icons.star_border_rounded, () => Get.toNamed('/reviews'), isLast: true),
+_buildMenuItem('تقارير المشتريات', Icons.bar_chart_rounded, () => Get.toNamed(AppRoutes.REPORTS)),
+_buildMenuItem('المنتجات المسترجعة', Icons.assignment_return_outlined, () => Get.toNamed(AppRoutes.RETURNS)),
+_buildMenuItem('سجل الأنشطة', Icons.access_time_rounded, () => Get.toNamed(AppRoutes.ACTIVITY)),
+_buildMenuItem('تقييماتي', Icons.star_border_rounded, () => Get.toNamed(AppRoutes.REVIEWS), isLast: true),
 ]),
 
 const SizedBox(height: 20),
@@ -63,13 +63,13 @@ const SizedBox(height: 20),
 // 4. قسم المساعدة والدعم
 _buildSectionHeader('المساعدة والدعم'),
 _buildMenuContainer([
-_buildMenuItem('تواصل معنا', Icons.headset_mic_outlined, () => Get.toNamed('/contact')),
-_buildMenuItem('الأسئلة الشائعة', Icons.help_outline_rounded, () => Get.toNamed('/faq')),
-_buildMenuItem('الشكاوى', Icons.warning_amber_rounded, () => Get.toNamed('/complaints_page')),
-_buildMenuItem('سياسة الاستبدال والاسترجاع', Icons.cached_rounded, () => Get.toNamed('/return-policy')),
-_buildMenuItem('سياسة الخصوصية', Icons.verified_user_outlined, () => Get.toNamed('/privacy')),
-_buildMenuItem('الشروط والأحكام', Icons.gavel_rounded, () => Get.toNamed('terms_and_cond')),
-_buildMenuItem('من نحن', Icons.info_outline_rounded, () => Get.toNamed('/about'), isLast: true),
+_buildMenuItem('تواصل معنا', Icons.headset_mic_outlined, () => Get.toNamed(AppRoutes.CONTACT)),
+_buildMenuItem('الأسئلة الشائعة', Icons.help_outline_rounded, () => Get.toNamed(AppRoutes.FAQ)),
+_buildMenuItem('الشكاوى', Icons.warning_amber_rounded, () => Get.toNamed(AppRoutes.COMPLAINTS)),
+_buildMenuItem('سياسة الاستبدال والاسترجاع', Icons.cached_rounded, () => Get.toNamed(AppRoutes.RETURN_POLICY)),
+_buildMenuItem('سياسة الخصوصية', Icons.verified_user_outlined, () => Get.toNamed(AppRoutes.PRIVACY)),
+_buildMenuItem('الشروط والأحكام', Icons.gavel_rounded, () => Get.toNamed(AppRoutes.TERMS)),
+_buildMenuItem('من نحن', Icons.info_outline_rounded, () => Get.toNamed(AppRoutes.ABOUT), isLast: true),
 ]),
 
 const SizedBox(height: 20),
@@ -99,7 +99,7 @@ children: [
 Align(
 alignment: Alignment.topLeft,
 child: InkWell(
-onTap: () => Get.toNamed('/edit-profile'),
+onTap: () => Get.toNamed(AppRoutes.EDIT_PROFILE),
 
 
 child: const Icon(Icons.edit_outlined, color: primaryBlue, size: 20),

@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:bytore/data/category_data.dart';
 import 'package:bytore/features/product/views/product_list_view.dart';
+import 'package:bytore/core/routes/app_routes.dart';
 
 class CategoriesController extends GetxController {
   var selectedCategoryIndex = 0.obs;
@@ -33,6 +34,7 @@ class CategoriesController extends GetxController {
   }
 
   void navigateToProducts(String title, String slug) {
-    Get.to(() => ProductListView(categoryTitle: title, apiCategorySlug: slug));
+    // استخدام id: 2 لضمان البقاء داخل الـ Nested Navigator الخاص بالأقسام (وبالتالي ظهور الشريط السفلي)
+    Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': title, 'apiCategorySlug': slug}, id: 2);
   }
 }
