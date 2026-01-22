@@ -1,0 +1,212 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:bytore/core/constants/constants.dart';
+import 'package:bytore/features/product/views/product_list_view.dart';
+import '../controllers/stores_controller.dart';
+
+class StoresView extends GetView<StoresController> {
+  final VoidCallback? onReturnHome;
+  const StoresView({super.key, this.onReturnHome});
+
+  @override
+  Widget build(BuildContext context) {
+    if (!Get.isRegistered<StoresController>()) {
+      Get.put(StoresController());
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildWhiteHeader(),
+            _buildSearchField(),
+            Expanded(
+              child: Obx(() => controller.filteredStores.isEmpty 
+                ? const Center(child: Text("لا توجد نتائج"))
+                : GridView.builder(
+                    padding: const EdgeInsets.all(20),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.85,
+                      crossAxisSpacing: 15,
+                      mainAxisSpacing: 15,
+                    ),
+                    itemCount: controller.filteredStores.length,
+                    itemBuilder: (context, index) => _buildStoreCard(controller.filteredStores[index]),
+                  )),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWhiteHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
+      ),
+      child: Row(
+        children: [
+          if (onReturnHome != null)
+            IconButton(
+              icon: const Icon(Icons.arrow_back_ios_rounded, color: kTextColor, size: 20),
+              onPressed: onReturnHome,
+            ),
+          const Expanded(
+            child: Center(
+              child: Text(
+                'المتاجر الشريكة',
+                style: TextStyle(color: kTextColor, fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+            ),
+          ),
+          if (onReturnHome != null)
+             const SizedBox(width: 40), // Balance the title
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchField() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 15),
+        decoration: BoxDecoration(
+          color: kBgColor,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: TextField(
+          onChanged: controller.filterStores,
+          textAlign: TextAlign.right,
+          decoration: InputDecoration(
+            hintText: 'ابحث عن اسم المتجر',
+            hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+            border: InputBorder.none,
+            suffixIcon: const Icon(Icons.search_rounded, color: kPrimaryColor),
+            prefixIcon: Obx(() => controller.searchText.value.isNotEmpty 
+              ? IconButton(
+                  icon: const Icon(Icons.close, size: 18, color: Colors.grey),
+                  onPressed: () => controller.filterStores(''),
+                ) 
+              : const SizedBox.shrink()),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStoreCard(Map<String, dynamic> store) {
+    return GestureDetector(
+      onTap: () {
+        Get.to(() => ProductListView(
+          categoryTitle: store['name'],
+          apiCategorySlug: 'all', 
+        ));
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: kPrimaryColor.withOpacity(0.2), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: kPrimaryColor.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 10),
+                      Stack(
+                        children: [
+                          Container(
+                            height: 70,
+                            width: 70,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: kSecondaryColor, width: 2),
+                              boxShadow: [
+                                 BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
+                              ]
+                            ),
+                            child: Image.network(
+                              store['logo'],
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) => Center(child: Icon(Icons.storefront_outlined, size: 28, color: Colors.grey.shade300)),
+                            ),
+                          ),
+                          if (store['isVerified'])
+                            Positioned(
+                              bottom: 2,
+                              right: 2,
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                                child: const Icon(Icons.verified_rounded, color: Colors.blue, size: 16),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        store['name'],
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: kTextColor),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        store['category'],
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: kTextLightColor, fontSize: 10),
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: kBgColor,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                             const Icon(Icons.star_rounded, color: Colors.amber, size: 14),
+                             const SizedBox(width: 4),
+                             Text(
+                               '${store['rating']}',
+                               style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                             ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
