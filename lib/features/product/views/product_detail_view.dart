@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bytore/core/constants/constants.dart';
 import 'package:bytore/features/product/models/product_model.dart';
 import 'package:get/get.dart';
+import 'package:bytore/core/components/custom_image.dart';
 import 'package:bytore/core/controllers/cart_controller.dart';
 import 'package:bytore/core/components/currency_switcher.dart';
 import 'package:bytore/core/controllers/app_controller.dart';
@@ -53,7 +54,11 @@ class ProductDetailView extends StatelessWidget {
                     itemCount: controller.productImages.length,
                     itemBuilder: (context, index) => Container(
                       padding: const EdgeInsets.all(40),
-                      child: Image.network(controller.productImages[index], fit: BoxFit.contain),
+                      child: CustomImage(
+                        imageUrl: controller.productImages[index],
+                        fit: BoxFit.contain,
+                        width: double.infinity,
+                      ),
                     ),
                   ),
                   Positioned(
@@ -314,12 +319,11 @@ class ProductDetailView extends StatelessWidget {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(6),
-                child: Image.network(
-                  c['image'],
+                child: CustomImage(
+                  imageUrl: c['image'],
                   width: 30,
                   height: 30,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => CircleAvatar(radius: 15, backgroundColor: Color(c['colorCode'])),
                 ),
               ),
             ),

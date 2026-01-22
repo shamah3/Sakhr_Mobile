@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:bytore/core/constants/constants.dart';
 import 'package:bytore/features/product/models/product_model.dart';
+import 'package:bytore/core/components/custom_image.dart';
 import 'package:bytore/features/product/views/product_detail_view.dart';
 import 'package:get/get.dart';
 import 'package:bytore/core/controllers/cart_controller.dart';
@@ -60,10 +61,10 @@ class ItemCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(15),
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),
-                      child: Image.network(
-                        product.imageUrl,
+                      child: CustomImage(
+                        imageUrl: product.imageUrl,
                         fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, color: Colors.grey),
+                        width: double.infinity,
                       ),
                     ),
                   ),

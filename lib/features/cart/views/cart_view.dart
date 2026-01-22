@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:bytore/core/components/custom_image.dart';
 import 'package:bytore/core/controllers/cart_controller.dart';
 import 'package:bytore/core/constants/constants.dart';
 import 'package:bytore/features/checkout/views/address_page.dart';
@@ -106,7 +107,12 @@ class _CartViewState extends State<CartView> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.network(item.product.imageUrl, width: 75, height: 75, fit: BoxFit.cover),
+            child: CustomImage(
+              imageUrl: item.product.imageUrl, 
+              width: 75, 
+              height: 75, 
+              fit: BoxFit.cover
+            ),
           ),
           const SizedBox(width: 15),
           Expanded(

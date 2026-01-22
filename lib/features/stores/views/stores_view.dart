@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:bytore/core/constants/constants.dart';
 import 'package:bytore/features/product/views/product_list_view.dart';
 import 'package:carousel_slider/carousel_slider.dart'; // Import Carousel
+import 'package:bytore/core/components/custom_image.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../controllers/stores_controller.dart';
 
 class StoresView extends GetView<StoresController> {
@@ -149,10 +151,9 @@ class StoresView extends GetView<StoresController> {
                                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
                               ]
                             ),
-                            child: Image.network(
-                              store['logo'],
+                            child: CustomImage(
+                              imageUrl: store['logo'],
                               fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) => Center(child: Icon(Icons.storefront_outlined, size: 28, color: Colors.grey.shade300)),
                             ),
                           ),
                           if (store['isVerified'])
@@ -232,7 +233,7 @@ class StoresView extends GetView<StoresController> {
                     color: i == 1 ? Colors.indigoAccent : Colors.teal,
                     borderRadius: BorderRadius.circular(15),
                     image: DecorationImage(
-                      image: NetworkImage(
+                      image: CachedNetworkImageProvider(
                         i == 1 
                         ? "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=1000&auto=format&fit=crop" // Camera/Lens
                         : "https://images.unsplash.com/photo-1546435770-a3e426bf472b?q=80&w=2065&auto=format&fit=crop" // Headphones/Tech

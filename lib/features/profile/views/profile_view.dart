@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bytore/core/constants/constants.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:bytore/core/controllers/app_controller.dart';
 import 'package:bytore/core/routes/app_routes.dart';
 
@@ -84,7 +85,7 @@ class ProfileView extends GetView<AppController> {
             child: const CircleAvatar(
               radius: 60,
               backgroundColor: kBgColor,
-              backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=male_ahmed'),
+              backgroundImage: CachedNetworkImageProvider('https://i.pravatar.cc/150?u=male_ahmed'),
             ),
           ),
           const SizedBox(height: 15),

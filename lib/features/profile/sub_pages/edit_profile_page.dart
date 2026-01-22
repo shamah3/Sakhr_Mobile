@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bytore/features/profile/controllers/edit_profile_controller.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 // import 'edit_profile_controller.dart';
 
 class EditProfileScreen extends StatelessWidget {
@@ -112,7 +113,7 @@ class EditProfileScreen extends StatelessWidget {
             backgroundColor: Colors.grey.shade200,
             child: const CircleAvatar(
               radius: 58,
-              backgroundImage: NetworkImage(
+              backgroundImage: CachedNetworkImageProvider(
                 'https://i.pravatar.cc/150?u=a042581f4e29026704d',
               ),
             ),

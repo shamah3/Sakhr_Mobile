@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bytore/features/product/models/product_model.dart';
 
 class ApiService {
@@ -13,95 +14,125 @@ class ApiService {
     }
 
     try {
-      // إضافة وقت انتظار (Timeout) 5 ثواني لتجنب التعليق
+      // 1. Try fetching from network
       final response = await http.get(Uri.parse(url)).timeout(
         const Duration(seconds: 5),
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> productListJson = json.decode(utf8.decode(response.bodyBytes));
-        List<Product> products = productListJson.map((item) {
-          Product p = Product.fromJson(item);
-          
-          // List of stores from StoresView
-          final List<String> storeNames = [
-            'عالم التقنية', 'آفاق الكمبيوتر', 'مركز الحلول', 
-            'المتجر الذكي', 'كمبيوتك', 'متجر النخبة'
-          ];
-          final String assignedStore = storeNames[p.id % storeNames.length];
-
-          // Augment with mock variants for testing
-          return Product(
-            id: p.id,
-            name: p.name,
-            description: p.description,
-            price: p.price,
-            oldPrice: p.oldPrice,
-            imageUrl: p.imageUrl,
-            brandName: p.brandName,
-            stock: p.stock,
-            status: p.status,
-            warranty: p.warranty,
-            deliveryTime: p.deliveryTime,
-            storeName: assignedStore, // Link to real store
-            rating: p.rating,
-            buyerCount: p.buyerCount,
-            images: [p.imageUrl, "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500", "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=500"],
-            colors: [
-              {'name': 'Black', 'colorCode': 0xFF000000, 'price': p.price, 'image': p.imageUrl},
-              {'name': 'Blue', 'colorCode': 0xFF2196F3, 'price': p.price + 10, 'image': "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500"},
-            ],
-            sizes: [
-              {'name': 'S', 'price': p.price},
-              {'name': 'M', 'price': p.price + 5},
-              {'name': 'L', 'price': p.price + 10},
-            ],
-          );
-        }).toList();
+        final String jsonString = utf8.decode(response.bodyBytes);
         
-        // --- إضافة منتجات تجريبية للاختبار ---
-        products.add(Product(
-          id: 9991, 
-          name: "منتج غير متوفر (تست)", 
-          description: "منتج للتجربة - غير متوفر", 
-          price: 1500.0, 
-          oldPrice: 1800.0,
-          imageUrl: "https://via.placeholder.com/300?text=Sold+Out", 
-          brandName: "Test Brand", 
-          stock: 0, // غير متوفر
-          status: "Out of Stock",
-          warranty: "N/A",
-          deliveryTime: "N/A",
-          rating: 0.0,
-          buyerCount: 0,
-          images: ["https://via.placeholder.com/300?text=Sold+Out", "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500"],
-        ));
-        products.add(Product(
-          id: 9992, 
-          name: "منتج قيد الشحن (تست)", 
-          description: "منتج للتجربة - قيد الشحن", 
-          price: 2500.0, 
-          oldPrice: 2800.0,
-          imageUrl: "https://via.placeholder.com/300?text=Shippment", 
-          brandName: "Test Brand", 
-          stock: 5, 
-          status: "On Shipment", // قيد الشحن
-          warranty: "1 Year",
-          deliveryTime: "10 Days",
-          rating: 3.5,
-          buyerCount: 20,
-          images: ["https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=500", "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500"],
-        ));
-        // ----------------------------------------------------
+        // Save to cache
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('cached_products_$categorySlug', jsonString);
+          await prefs.setInt('cached_products_time', DateTime.now().millisecondsSinceEpoch);
+        } catch (e) {
+          debugPrint("Failed to cache data: $e");
+        }
 
-        return products;
+        return _parseProducts(jsonString);
       } else {
-        return _getMockProducts(); // الرد ببيانات تجريبية في حال خطأ السيرفر
+        return await _loadFromCache(categorySlug) ?? _getMockProducts();
       }
     } catch (e) {
-      debugPrint("Network error or timeout: $e");
-      return _getMockProducts(); // الرد ببيانات تجريبية في حال فشل الاتصال أو البطء
+      debugPrint("Network error or timeout: $e. Loading from cache...");
+      return await _loadFromCache(categorySlug) ?? _getMockProducts();
     }
+  }
+
+  Future<List<Product>?> _loadFromCache(String? categorySlug) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? cachedString = prefs.getString('cached_products_$categorySlug');
+      
+      if (cachedString != null && cachedString.isNotEmpty) {
+        debugPrint("Loaded products from cache");
+        return _parseProducts(cachedString);
+      }
+    } catch (e) {
+      debugPrint("Failed to load from cache: $e");
+    }
+    return null;
+  }
+
+  List<Product> _parseProducts(String jsonString) {
+    final List<dynamic> productListJson = json.decode(jsonString);
+    List<Product> products = productListJson.map((item) {
+      Product p = Product.fromJson(item);
+      
+      // List of stores from StoresView
+      final List<String> storeNames = [
+        'عالم التقنية', 'آفاق الكمبيوتر', 'مركز الحلول', 
+        'المتجر الذكي', 'كمبيوتك', 'متجر النخبة'
+      ];
+      final String assignedStore = storeNames[p.id % storeNames.length];
+
+      // Augment with mock variants for testing
+      return Product(
+        id: p.id,
+        name: p.name,
+        description: p.description,
+        price: p.price,
+        oldPrice: p.oldPrice,
+        imageUrl: p.imageUrl,
+        brandName: p.brandName,
+        stock: p.stock,
+        status: p.status,
+        warranty: p.warranty,
+        deliveryTime: p.deliveryTime,
+        storeName: assignedStore, // Link to real store
+        rating: p.rating,
+        buyerCount: p.buyerCount,
+        images: [p.imageUrl, "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500", "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=500"],
+        colors: [
+          {'name': 'Black', 'colorCode': 0xFF000000, 'price': p.price, 'image': p.imageUrl},
+          {'name': 'Blue', 'colorCode': 0xFF2196F3, 'price': p.price + 10, 'image': "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500"},
+        ],
+        sizes: [
+          {'name': 'S', 'price': p.price},
+          {'name': 'M', 'price': p.price + 5},
+          {'name': 'L', 'price': p.price + 10},
+        ],
+      );
+    }).toList();
+    
+    // --- إضافة منتجات تجريبية للاختبار ---
+    products.add(Product(
+      id: 9991, 
+      name: "منتج غير متوفر (تست)", 
+      description: "منتج للتجربة - غير متوفر", 
+      price: 1500.0, 
+      oldPrice: 1800.0,
+      imageUrl: "https://via.placeholder.com/300?text=Sold+Out", 
+      brandName: "Test Brand", 
+      stock: 0, // غير متوفر
+      status: "Out of Stock",
+      warranty: "N/A",
+      deliveryTime: "N/A",
+      rating: 0.0,
+      buyerCount: 0,
+       images: ["https://via.placeholder.com/300?text=Sold+Out", "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500"],
+    ));
+    products.add(Product(
+      id: 9992, 
+      name: "منتج قيد الشحن (تست)", 
+      description: "منتج للتجربة - قيد الشحن", 
+      price: 2500.0, 
+      oldPrice: 2800.0,
+      imageUrl: "https://via.placeholder.com/300?text=Shippment", 
+      brandName: "Test Brand", 
+      stock: 5, 
+      status: "On Shipment", // قيد الشحن
+      warranty: "1 Year",
+      deliveryTime: "10 Days",
+      rating: 3.5,
+      buyerCount: 20,
+      images: ["https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=500", "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500"],
+    ));
+    // ----------------------------------------------------
+
+    return products;
   }
 
   // بيانات تجريبية (Mock Data) لضمان عمل التطبيق في أي وقت

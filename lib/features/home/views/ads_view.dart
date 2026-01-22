@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bytore/core/constants/constants.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:bytore/features/home/views/components/item_card.dart';
 import 'package:bytore/features/home/controllers/home_controller.dart';
 import 'package:bytore/core/controllers/app_controller.dart';
@@ -40,7 +41,7 @@ class AdsView extends StatelessWidget {
               color: kPrimaryColor,
               borderRadius: BorderRadius.circular(20),
               image: const DecorationImage(
-                image: NetworkImage("https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=2070&auto=format&fit=crop"),
+                image: CachedNetworkImageProvider("https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=2070&auto=format&fit=crop"),
                 fit: BoxFit.cover,
               ),
             ),

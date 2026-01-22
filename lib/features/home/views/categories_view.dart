@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bytore/core/constants/constants.dart';
 import 'package:bytore/data/category_data.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../controllers/categories_controller.dart';
 
 class CategoriesView extends GetView<CategoriesController> {
@@ -169,7 +170,7 @@ class CategoriesView extends GetView<CategoriesController> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         image: DecorationImage(
-          image: NetworkImage(cat['image'] ?? ""),
+          image: CachedNetworkImageProvider(cat['image'] ?? ""),
           fit: BoxFit.cover,
         ),
       ),

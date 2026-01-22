@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:bytore/core/constants/constants.dart';
 import '../controllers/auth_controller.dart';
 import 'otp_verification_view.dart';
+import 'package:bytore/core/components/custom_image.dart';
 
 class LoginView extends GetView<AuthController> {
   final bool redirectToAddress;
@@ -283,7 +284,7 @@ class LoginView extends GetView<AuthController> {
         ),
         child: Center(
           child: isImage && imgUrl != null
-              ? Image.network(imgUrl, width: 28)
+              ? CustomImage(imageUrl: imgUrl, width: 28, height: 28)
               : Icon(icon, color: color, size: 30),
         ),
       ),
