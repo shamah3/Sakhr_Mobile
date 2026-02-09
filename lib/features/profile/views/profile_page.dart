@@ -55,6 +55,7 @@ _buildMenuContainer([
 _buildMenuItem('تقارير المشتريات', Icons.bar_chart_rounded, () => Get.toNamed(AppRoutes.REPORTS)),
 _buildMenuItem('المنتجات المسترجعة', Icons.assignment_return_outlined, () => Get.toNamed(AppRoutes.RETURNS)),
 _buildMenuItem('سجل الأنشطة', Icons.access_time_rounded, () => Get.toNamed(AppRoutes.ACTIVITY)),
+_buildMenuItem('الرسائل', Icons.mail_outline_rounded, () => Get.toNamed(AppRoutes.MESSAGES)),
 _buildMenuItem('تقييماتي', Icons.star_border_rounded, () => Get.toNamed(AppRoutes.REVIEWS), isLast: true),
 ]),
 
@@ -140,7 +141,7 @@ style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold),
           _buildVerticalDivider(), // الفاصل الأزرق
           _buildActionBtn('المحفظة', Icons.account_balance_wallet_outlined, () => Get.toNamed(AppRoutes.WALLET)),
           _buildVerticalDivider(), // الفاصل الأزرق
-          _buildActionBtn('طلباتي', Icons.shopping_bag_outlined, () => Get.toNamed(AppRoutes.TRACKING)),
+          _buildActionBtn('طلباتي', Icons.shopping_bag_outlined, () => Get.toNamed(AppRoutes.ORDERS)),
         ],
       ),
     );

@@ -34,6 +34,8 @@ import 'package:bytore/features/profile/sub_pages/policy_page.dart';
 import 'package:bytore/features/profile/sub_pages/privacy_policy_page.dart';
 import 'package:bytore/features/profile/sub_pages/terms_and_conditions_page.dart';
 import 'package:bytore/features/profile/sub_pages/about_us_page.dart';
+import 'package:bytore/features/profile/sub_pages/messages_page.dart';
+import 'package:bytore/features/orders/views/my_orders_page.dart';
 
 // Bindings
 import 'package:bytore/features/home/bindings/home_binding.dart';
@@ -183,6 +185,14 @@ class AppPages {
     GetPage(
       name: AppRoutes.ABOUT,
       page: () => const AboutUsPage(),
+    ),
+    GetPage(
+      name: AppRoutes.MESSAGES,
+      page: () => const MessagesPage(),
+    ),
+    GetPage(
+      name: AppRoutes.ORDERS,
+      page: () => const MyOrdersPage(),
     ),
   ];
 }

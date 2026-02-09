@@ -35,6 +35,8 @@ class ProfileView extends GetView<AppController> {
                           onTap: () => Get.toNamed(AppRoutes.WISHLIST)),
                       _buildSettingTile(Icons.location_on_outlined, "عناويني", "إدارة عناوين التوصيل"),
                       _buildSettingTile(Icons.payment_outlined, "البطاقات البنكية", "إدارة وسائل الدفع"),
+                      _buildSettingTile(Icons.mail_outline_rounded, "الرسائل", "صندوق الوارد والمحادثات",
+                          onTap: () => Get.toNamed(AppRoutes.MESSAGES)),
                     ],
                   ),
                   const SizedBox(height: 25),

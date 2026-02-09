@@ -45,26 +45,21 @@ class MainView extends GetView<MainController> {
       child: Scaffold(
         resizeToAvoidBottomInset: false, // Prevents FAB from moving up when keyboard appears
         extendBody: true, // Important for the notch effect
-        body: Column(
-          children: [
-            const CustomStatusBar(),
-            Expanded(
-              child: Obx(() => IndexedStack(
-                index: controller.selectedIndex.value,
-                children: pages,
-              )),
-            ),
-          ],
+        body: Expanded(
+          child: Obx(() => IndexedStack(
+            index: controller.selectedIndex.value,
+            children: pages,
+          )),
         ),
         floatingActionButton: SizedBox(
-          height: 65,
-          width: 65,
+          height: 55,
+          width: 55,
           child: FloatingActionButton(
             backgroundColor: kSecondaryColor,
             elevation: 4,
             shape: const CircleBorder(),
             onPressed: () => controller.onTabTapped(2), // Index 2 is Stores
-            child: const Icon(Icons.store_rounded, color: Colors.white, size: 30),
+            child: const Icon(Icons.store_rounded, color: Colors.white, size: 24),
           ),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,

@@ -34,4 +34,6 @@ abstract class AppRoutes {
   static const PRIVACY = '/privacy';
   static const TERMS = '/terms';
   static const ABOUT = '/about';
+  static const MESSAGES = '/messages';
+  static const ORDERS = '/orders';
 }

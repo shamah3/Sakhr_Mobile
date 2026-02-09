@@ -22,7 +22,7 @@ class HomeView extends GetView<HomeController> {
   Widget build(BuildContext context) {
     final appController = Get.find<AppController>();
     // لا نحتاج لتعريف الكنترولر مرة أخرى لأننا نستخدم GetView<HomeController>
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -374,12 +374,11 @@ class HomeView extends GetView<HomeController> {
                     child: Stack(
                       children: [
                         Positioned(
-                          right: 25, top: 30, bottom: 30,
+                          right: 25, top: 0, bottom: 0,
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const SizedBox(height: 10),
                               Text(
                                 i == 1 ? "أقوى\nاللابتوبات" : (i == 2 ? "أفضل\nالملحقات" : "أجهزة\nذكية"),
                                 style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 26, height: 1.1),
@@ -388,7 +387,7 @@ class HomeView extends GetView<HomeController> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                                 decoration: BoxDecoration(color: kSecondaryColor, borderRadius: BorderRadius.circular(20)),
-                                child: const Text("تسوق الآن", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                                child: const Text("تسوق الآن", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
                               ),
                             ],
                           ),

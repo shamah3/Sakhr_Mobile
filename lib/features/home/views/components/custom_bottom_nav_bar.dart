@@ -23,18 +23,18 @@ class CustomBottomNavBar extends StatelessWidget {
       elevation: 10,
       surfaceTintColor: Colors.white,
       shadowColor: Colors.black,
-      height: 70,
+      height: 60,
       padding: EdgeInsets.zero,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 15),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             // Left Side
             Row(
               children: [
                 _buildNavItem(0, "الرئيسية", Icons.home_rounded, Icons.home_outlined),
-                const SizedBox(width: 25), // Increased spacing
+                const SizedBox(width: 35),
                 _buildNavItem(1, "الأقسام", Icons.grid_view_rounded, Icons.grid_view_outlined),
               ],
             ),
@@ -48,7 +48,7 @@ class CustomBottomNavBar extends StatelessWidget {
             Row(
               children: [
                 _buildNavItem(3, "السلة", Icons.shopping_cart_rounded, Icons.shopping_cart_outlined, count: notificationCount),
-                 const SizedBox(width: 25), // Increased spacing
+                 const SizedBox(width: 35),
                 _buildNavItem(4, "حسابي", Icons.person, Icons.person_outline),
               ],
             ),
@@ -77,7 +77,7 @@ class CustomBottomNavBar extends StatelessWidget {
                 Icon(
                   isSelected ? activeIcon : inactiveIcon,
                   color: color,
-                  size: 26,
+                  size: 22,
                 ),
                 if (count > 0)
                   Positioned(
@@ -111,7 +111,7 @@ class CustomBottomNavBar extends StatelessWidget {
               label,
               style: TextStyle(
                 color: color,
-                fontSize: 10,
+                fontSize: 9,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
             )
