@@ -117,7 +117,7 @@ child: Icon(Icons.person, size: 50, color: primaryBlue),
 ),
 const SizedBox(height: 10),
 Text(
-'jino Eskander',
+'Mohammed Issa',
 style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold),
 ),
 ],

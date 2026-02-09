@@ -14,10 +14,10 @@ class EditProfileController extends GetxController {
   void onInit() {
     super.onInit();
     // يمكنك هنا جلب البيانات من الكنترولر الخاص بالمستخدم لاحقاً
-    firstNameController = TextEditingController(text: 'جيهان');
-    lastNameController = TextEditingController(text: 'اسكندر');
-    emailController = TextEditingController(text: 'jeehan@example.com');
-    phoneController = TextEditingController(text: '777123456');
+    firstNameController = TextEditingController(text: 'محمد');
+    lastNameController = TextEditingController(text: 'عيسى');
+    emailController = TextEditingController(text: 'mohammed@example.com');
+    phoneController = TextEditingController(text: '777444555');
   }
 
   void saveProfile() {

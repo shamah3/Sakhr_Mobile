@@ -36,6 +36,7 @@ import 'package:bytore/features/profile/sub_pages/terms_and_conditions_page.dart
 import 'package:bytore/features/profile/sub_pages/about_us_page.dart';
 import 'package:bytore/features/profile/sub_pages/messages_page.dart';
 import 'package:bytore/features/orders/views/my_orders_page.dart';
+import 'package:bytore/features/chat/views/ai_chat_view.dart';
 
 // Bindings
 import 'package:bytore/features/home/bindings/home_binding.dart';
@@ -193,6 +194,10 @@ class AppPages {
     GetPage(
       name: AppRoutes.ORDERS,
       page: () => const MyOrdersPage(),
+    ),
+    GetPage(
+      name: AppRoutes.AI_CHAT,
+      page: () => const AiChatView(),
     ),
   ];
 }

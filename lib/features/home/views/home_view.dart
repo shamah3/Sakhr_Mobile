@@ -13,6 +13,7 @@ import 'package:bytore/data/category_data.dart';
 import 'package:bytore/features/home/controllers/home_controller.dart';
 import 'package:bytore/features/product/views/product_list_view.dart';
 import 'package:bytore/features/notifications/views/notification_view.dart';
+import 'package:bytore/features/search/views/search_view.dart';
 import 'package:bytore/core/routes/app_routes.dart';
 
 class HomeView extends GetView<HomeController> {
@@ -240,11 +241,10 @@ class HomeView extends GetView<HomeController> {
                   child: TextField(
                     controller: controller.searchController,
                     textAlign: TextAlign.right,
-                    onChanged: (value) {
-                      controller.searchProducts(value);
-                    },
                     onSubmitted: (value) {
-                      controller.searchProducts(value);
+                      if (value.isNotEmpty) {
+                        Get.to(() => SearchView(query: value));
+                      }
                     },
                     decoration: const InputDecoration(
                       hintText: "ابحث عن اسم المنتج أو الوصف",
@@ -253,13 +253,18 @@ class HomeView extends GetView<HomeController> {
                     ),
                   ),
                 ),
-                // تم تعديل هذا الجزء ليعمل البحث دون شاشة حمراء
-                IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 18, color: Colors.grey),
-                  onPressed: () {
-                    controller.searchController.clear();
-                    controller.searchProducts("");
-                  },
+                VerticalDivider(width: 1, thickness: 1, color: Colors.grey.shade100, indent: 15, endIndent: 15),
+                const SizedBox(width: 5),
+                GestureDetector(
+                  onTap: () => Get.toNamed(AppRoutes.AI_CHAT),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: kPrimaryColor.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.auto_awesome_rounded, color: kPrimaryColor, size: 20),
+                  ),
                 ),
               ],
             ),

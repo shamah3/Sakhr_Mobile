@@ -15,6 +15,17 @@ class AppController extends GetxController {
   var landmark = "".obs;
   var isLoggedIn = false.obs;
   
+  @override
+  void onInit() {
+    super.onInit();
+    // Add some sample notifications if empty
+    if (notifications.isEmpty) {
+      addNotification(title: "طلب جديد", body: "تم استلام طلبك رقم #1234 وهو قيد المعالجة الآن.", category: "الطلبات", color: Colors.blue);
+      addNotification(title: "عرض خاص!", body: "خصم 30% على جميع ملحقات الحاسوب هذا الأسبوع.", category: "العروض", color: Colors.orange);
+      addNotification(title: "تحديث الشحن", body: "طلبك في الطريق إليك، سيصل خلال ساعتين.", category: "الطلبات", color: Colors.green);
+    }
+  }
+  
   final Map<String, String> _users = {"777777777": "123456"}.obs;
 
   // Currency State
@@ -104,7 +115,7 @@ class AppController extends GetxController {
 
   int get notificationCount => notifications.where((n) => n['read'] == false).length;
 
-  void addNotification({required String title, required String body, Color? color}) {
+  void addNotification({required String title, required String body, Color? color, String category = 'الكل'}) {
     final DateTime now = DateTime.now();
     final String timeStr = "${now.hour}:${now.minute.toString().padLeft(2, '0')}";
     
@@ -114,6 +125,7 @@ class AppController extends GetxController {
       'time': timeStr,
       'color': color?.value ?? kPrimaryColor.value,
       'read': false,
+      'category': category,
     });
   }
 

@@ -48,7 +48,7 @@ class ItemCard extends StatelessWidget {
               children: [
                 // Product Image Container
                 Container(
-                  height: isCompact ? 100 : 120, // Keep fixed height for image consistency
+                  height: isCompact ? 90 : 100, // Reduced to fit more content below
                   width: double.infinity,
                   margin: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
@@ -142,7 +142,7 @@ class ItemCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               "(${product.buyerCount} تم شراؤه)",
-                              style: const TextStyle(fontSize: 9, color: Colors.grey),
+                              style: const TextStyle(fontSize: 8, color: Colors.grey),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -155,7 +155,7 @@ class ItemCard extends StatelessWidget {
                       Text(
                         product.stock == 0 ? "غير متوفر" : (product.status == 'On Shipment' ? "قيد الشحن" : "متوفر"),
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 9,
                           fontWeight: FontWeight.bold,
                           color: product.stock == 0 ? Colors.red : (product.status == 'On Shipment' ? Colors.blue : Colors.green),
                         ),
@@ -237,7 +237,7 @@ class ItemCard extends StatelessWidget {
                                     product.warranty,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontSize: 8.5, color: Colors.black87, fontWeight: FontWeight.bold),
+                                    style: const TextStyle(fontSize: 8, color: Colors.black87, fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ],
@@ -256,7 +256,7 @@ class ItemCard extends StatelessWidget {
                                     product.deliveryTime,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontSize: 8.5, color: Colors.black87, fontWeight: FontWeight.bold),
+                                    style: const TextStyle(fontSize: 8, color: Colors.black87, fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ],

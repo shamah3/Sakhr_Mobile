@@ -36,4 +36,5 @@ abstract class AppRoutes {
   static const ABOUT = '/about';
   static const MESSAGES = '/messages';
   static const ORDERS = '/orders';
+  static const AI_CHAT = '/ai-chat';
 }
