@@ -104,7 +104,7 @@ class ApiService {
       description: "منتج للتجربة - غير متوفر", 
       price: 1500.0, 
       oldPrice: 1800.0,
-      imageUrl: "https://via.placeholder.com/300?text=Sold+Out", 
+      imageUrl: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500", 
       brandName: "Test Brand", 
       stock: 0, // غير متوفر
       status: "Out of Stock",
@@ -112,7 +112,7 @@ class ApiService {
       deliveryTime: "N/A",
       rating: 0.0,
       buyerCount: 0,
-       images: ["https://via.placeholder.com/300?text=Sold+Out", "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500"],
+       images: ["https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500"],
     ));
     products.add(Product(
       id: 9992, 
@@ -120,7 +120,7 @@ class ApiService {
       description: "منتج للتجربة - قيد الشحن", 
       price: 2500.0, 
       oldPrice: 2800.0,
-      imageUrl: "https://via.placeholder.com/300?text=Shippment", 
+      imageUrl: "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=500", 
       brandName: "Test Brand", 
       stock: 5, 
       status: "On Shipment", // قيد الشحن
@@ -128,7 +128,7 @@ class ApiService {
       deliveryTime: "10 Days",
       rating: 3.5,
       buyerCount: 20,
-      images: ["https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=500", "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500"],
+      images: ["https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=500"],
     ));
     // ----------------------------------------------------
 

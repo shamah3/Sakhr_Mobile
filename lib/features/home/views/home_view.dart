@@ -326,8 +326,8 @@ class HomeView extends GetView<HomeController> {
                             borderRadius: BorderRadius.circular(15),
                             child: CustomImage(
                               imageUrl: i == 1 
-                              ? "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=2071&auto=format&fit=crop" 
-                              : (i == 2 ? "https://images.unsplash.com/photo-1546435770-a3e426bf472b?q=80&w=2065&auto=format&fit=crop" : "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=1780&auto=format&fit=crop"),
+                              ? "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=600&auto=format&fit=crop" 
+                              : (i == 2 ? "https://images.unsplash.com/photo-1546435770-a3e426bf472b?q=80&w=600&auto=format&fit=crop" : "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=600&auto=format&fit=crop"),
                               height: 150,
                               width: double.infinity,
                               fit: BoxFit.cover,
@@ -398,7 +398,7 @@ class HomeView extends GetView<HomeController> {
                           child: ClipRRect(
                             borderRadius: const BorderRadius.only(topLeft: Radius.circular(25), bottomLeft: Radius.circular(25)),
                             child: CustomImage(
-                              imageUrl: i == 1 ? "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=2071&auto=format&fit=crop" : (i == 2 ? "https://images.unsplash.com/photo-1546435770-a3e426bf472b?q=80&w=2065&auto=format&fit=crop" : "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=1780&auto=format&fit=crop"),
+                              imageUrl: i == 1 ? "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=600&auto=format&fit=crop" : (i == 2 ? "https://images.unsplash.com/photo-1546435770-a3e426bf472b?q=80&w=600&auto=format&fit=crop" : "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=600&auto=format&fit=crop"),
                               fit: i == 3 ? BoxFit.contain : BoxFit.cover,
                             ),
                           ),

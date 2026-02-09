@@ -12,7 +12,6 @@ class BytoreLogo extends StatelessWidget {
     this.textColor,
     this.showText = true,
   });
-
   @override
   Widget build(BuildContext context) {
     return Column(

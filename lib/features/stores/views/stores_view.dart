@@ -235,8 +235,8 @@ class StoresView extends GetView<StoresController> {
                     image: DecorationImage(
                       image: CachedNetworkImageProvider(
                         i == 1 
-                        ? "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=1000&auto=format&fit=crop" // Camera/Lens
-                        : "https://images.unsplash.com/photo-1546435770-a3e426bf472b?q=80&w=2065&auto=format&fit=crop" // Headphones/Tech
+                        ? "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=600&auto=format&fit=crop" // Camera/Lens
+                        : "https://images.unsplash.com/photo-1546435770-a3e426bf472b?q=80&w=600&auto=format&fit=crop" // Headphones/Tech
                       ),
                       fit: BoxFit.cover,
                       colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.3), BlendMode.darken),

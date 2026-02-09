@@ -43,13 +43,12 @@ class ItemCard extends StatelessWidget {
           ],
         ),
         child: Column(
-          mainAxisSize: MainAxisSize.min, // Added to prevent stretching
           children: [
             Stack(
               children: [
                 // Product Image Container
                 Container(
-                  height: isCompact ? 100 : 120, // Shorter in compact mode
+                  height: isCompact ? 100 : 120, // Keep fixed height for image consistency
                   width: double.infinity,
                   margin: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
@@ -80,7 +79,7 @@ class ItemCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      "${(product.id * 7 + 10) % 30 + 5}%", 
+                      "${(product.id * 7 + 10) % 30 + 5}%",
                       style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -95,9 +94,9 @@ class ItemCard extends StatelessWidget {
                       backgroundColor: Colors.white,
                       radius: 12,
                       child: Obx(() => Icon(
-                        appController.isWishlisted(product.id) ? Icons.favorite : Icons.favorite_border, 
-                        color: appController.isWishlisted(product.id) ? kSecondaryColor : Colors.grey, 
-                        size: 14
+                        appController.isWishlisted(product.id) ? Icons.favorite : Icons.favorite_border,
+                        color: appController.isWishlisted(product.id) ? kSecondaryColor : Colors.grey,
+                        size: 14,
                       )),
                     ),
                   ),
@@ -105,60 +104,55 @@ class ItemCard extends StatelessWidget {
               ],
             ),
             // Main Content with Opacity if unavailable
-            Opacity(
-              opacity: product.stock == 0 ? 0.6 : 1.0,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    child: SizedBox(
-                      height: 32, // Fixed height for 2 lines
-                      child: Text(
+            // Use Expanded to fill remaining vertical space and avoid overflow
+            Expanded(
+              child: Opacity(
+                opacity: product.stock == 0 ? 0.6 : 1.0,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween, // Distribute space
+                    children: [
+                      // Product Name
+                      Text(
                         product.name,
                         maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                        overflow: TextOverflow.ellipsis, // Ensure ellipsis
                         style: TextStyle(
-                          fontWeight: FontWeight.bold, 
-                          fontSize: isCompact ? 11 : 12, 
-                          color: kTextColor, 
-                          height: 1.2
+                          fontWeight: FontWeight.bold,
+                          fontSize: isCompact ? 11 : 12,
+                          color: kTextColor,
+                          height: 1.2,
                         ),
                       ),
-                    ),
-                  ),
+                      
+                      const SizedBox(height: 4),
 
-                  Padding(
-                     padding: const EdgeInsets.symmetric(horizontal: 10),
-                     child: SizedBox(
-                       height: 18,
-                       child: Row(
-                         children: [
-                           const Icon(Icons.star_rounded, color: Colors.amber, size: 14),
-                           const SizedBox(width: 4),
-                           Text(
-                             "${product.rating}",
-                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black54),
-                           ),
-                           const SizedBox(width: 8),
-                           Expanded(
-                             child: Text(
-                               "(${product.buyerCount} تم شراؤه)",
-                                style: const TextStyle(fontSize: 9, color: Colors.grey),
-                                overflow: TextOverflow.ellipsis,
-                             ),
-                           ),
-                         ],
-                       ),
-                     ),
-                  ),
-                  
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2), // Reduced vertical padding
-                    child: SizedBox(
-                      height: 16,
-                      child: Text(
+                      // Rating
+                      Row(
+                        children: [
+                          const Icon(Icons.star_rounded, color: Colors.amber, size: 14),
+                          const SizedBox(width: 4),
+                          Text(
+                            "${product.rating}",
+                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black54),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              "(${product.buyerCount} تم شراؤه)",
+                              style: const TextStyle(fontSize: 9, color: Colors.grey),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      const Spacer(), // Push bottom elements down
+
+                      // Status
+                      Text(
                         product.stock == 0 ? "غير متوفر" : (product.status == 'On Shipment' ? "قيد الشحن" : "متوفر"),
                         style: TextStyle(
                           fontSize: 10,
@@ -166,102 +160,113 @@ class ItemCard extends StatelessWidget {
                           color: product.stock == 0 ? Colors.red : (product.status == 'On Shipment' ? Colors.blue : Colors.green),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Obx(() => Text(
-                              appController.getFormattedPrice(product.price),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                                color: kPrimaryColor,
-                              ),
-                            )),
-                          ],
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            if (product.stock == 0) {
-                               NotificationHelper.showCustomSnackBar(context, "هذا المنتج غير متوفر", isError: false);
-                               return;
-                            }
-                            if (product.status == 'On Shipment') {
-                               NotificationHelper.showCustomSnackBar(context, "هذا المنتج قيد الشحن حالياً", isError: false);
-                               return;
-                            }
+                      const SizedBox(height: 4),
 
-                            cartController.addItem(product);
-                            
-                            NotificationHelper.showCustomSnackBar(
-                              context, 
-                              "تمت الإضافة للسلة (في السلة: ${cartController.totalQuantity})",
-                              isError: false
-                            );
-
-                            appController.addNotification(
-                              title: "تمت الإضافة للسلة",
-                              body: "تم إضافة ${product.name} (عدد العناصر: ${cartController.totalQuantity})",
-                              color: kPrimaryColor
-                            );
-                          },
-                          child: Container(
-                            padding: EdgeInsets.all(isCompact ? 6 : 8),
-                            decoration: BoxDecoration(
-                              color: (product.stock == 0 || product.status == 'On Shipment') ? Colors.grey.shade300 : kPrimaryColor,
-                              borderRadius: BorderRadius.circular(isCompact ? 8 : 10),
-                              boxShadow: [BoxShadow(color: kPrimaryColor.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))]
-                            ),
-                            child: Icon(Icons.shopping_cart_outlined, color: Colors.white, size: isCompact ? 16 : 18),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  
-                  const SizedBox(height: 5), // Space before line
-                  const Divider(height: 1, color: Color(0xFFF5F5F5)),
-                  const SizedBox(height: 5), // Space after line
-                  
-                  // Footer: Warranty and Delivery (Centered)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
+                      // Price and Cart
                       Row(
-                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Icon(Icons.verified_user_outlined, size: 9, color: Colors.orange),
-                          const SizedBox(width: 3),
-                          Text(
-                            product.warranty,
-                            style: const TextStyle(fontSize: 8.5, color: Colors.black87, fontWeight: FontWeight.bold),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Obx(() => Text(
+                                appController.getFormattedPrice(product.price),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                  color: kPrimaryColor,
+                                ),
+                              )),
+                            ],
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              if (product.stock == 0) {
+                                NotificationHelper.showCustomSnackBar(context, "هذا المنتج غير متوفر", isError: false);
+                                return;
+                              }
+                              if (product.status == 'On Shipment') {
+                                NotificationHelper.showCustomSnackBar(context, "هذا المنتج قيد الشحن حالياً", isError: false);
+                                return;
+                              }
+
+                              cartController.addItem(product);
+
+                              NotificationHelper.showCustomSnackBar(
+                                context,
+                                "تمت الإضافة للسلة (في السلة: ${cartController.totalQuantity})",
+                                isError: false,
+                              );
+
+                              appController.addNotification(
+                                title: "تمت الإضافة للسلة",
+                                body: "تم إضافة ${product.name} (عدد العناصر: ${cartController.totalQuantity})",
+                                color: kPrimaryColor,
+                              );
+                            },
+                            child: Container(
+                              padding: EdgeInsets.all(isCompact ? 6 : 8),
+                              decoration: BoxDecoration(
+                                color: (product.stock == 0 || product.status == 'On Shipment') ? Colors.grey.shade300 : kPrimaryColor,
+                                borderRadius: BorderRadius.circular(isCompact ? 8 : 10),
+                                boxShadow: [BoxShadow(color: kPrimaryColor.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))],
+                              ),
+                              child: Icon(Icons.shopping_cart_outlined, color: Colors.white, size: isCompact ? 16 : 18),
+                            ),
                           ),
                         ],
                       ),
-                      const SizedBox(width: 15), // Gap between the two items
+                      
+                      const SizedBox(height: 4),
+                      const Divider(height: 1, color: Color(0xFFF5F5F5)),
+                      const SizedBox(height: 4),
+
+                      // Footer: Warranty and Delivery
                       Row(
-                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.local_shipping_outlined, size: 9, color: Colors.orange),
-                          const SizedBox(width: 3),
-                          Text(
-                            product.deliveryTime,
-                            style: const TextStyle(fontSize: 8.5, color: Colors.black87, fontWeight: FontWeight.bold),
+                          Expanded(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.verified_user_outlined, size: 9, color: Colors.orange),
+                                const SizedBox(width: 2),
+                                Flexible(
+                                  child: Text(
+                                    product.warranty,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontSize: 8.5, color: Colors.black87, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.local_shipping_outlined, size: 9, color: Colors.orange),
+                                const SizedBox(width: 2),
+                                Flexible(
+                                  child: Text(
+                                    product.deliveryTime,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontSize: 8.5, color: Colors.black87, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
             ),
           ],
