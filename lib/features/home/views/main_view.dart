@@ -51,15 +51,18 @@ class MainView extends GetView<MainController> {
             children: pages,
           )),
         ),
-        floatingActionButton: SizedBox(
-          height: 55,
-          width: 55,
-          child: FloatingActionButton(
-            backgroundColor: kSecondaryColor,
-            elevation: 4,
-            shape: const CircleBorder(),
-            onPressed: () => controller.onTabTapped(2), // Index 2 is Stores
-            child: const Icon(Icons.store_rounded, color: Colors.white, size: 24),
+        floatingActionButton: Padding(
+          padding: const EdgeInsets.only(bottom: 10), // Raise it above the bar
+          child: SizedBox(
+            height: 60,
+            width: 60,
+            child: FloatingActionButton(
+              backgroundColor: kSecondaryColor,
+              elevation: 6,
+              shape: const CircleBorder(),
+              onPressed: () => controller.onTabTapped(2), // Index 2 is Stores
+              child: const Icon(Icons.store_rounded, color: Colors.white, size: 28),
+            ),
           ),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,

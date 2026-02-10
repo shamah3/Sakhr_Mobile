@@ -170,7 +170,7 @@ class _CartViewState extends State<CartView> {
     String priceLabel = cart.items.length > 1 ? "سعر المنتجات" : "سعر المنتج";
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 15, 20, 30),
+      padding: const EdgeInsets.fromLTRB(20, 15, 20, 100), // Increased bottom padding to clear the navigation bar
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),

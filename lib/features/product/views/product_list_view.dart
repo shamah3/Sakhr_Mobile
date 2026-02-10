@@ -176,7 +176,7 @@ class ProductListView extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2, 
-        childAspectRatio: 0.85, 
+        childAspectRatio: 0.72, // Increased height (was 0.85)
         crossAxisSpacing: 15, 
         mainAxisSpacing: 15
       ),

@@ -100,35 +100,52 @@ class ApiService {
     // --- إضافة منتجات تجريبية للاختبار ---
     products.add(Product(
       id: 8881, 
-      name: "لابتوب Bytore Pro - 3D", 
-      description: "لابتوب حديث فائق النحافة بتصميم مستقبلي وأداء جبار.", 
-      price: 1250.0, 
-      oldPrice: 1500.0,
+      name: "لابتوب Bytore Pro Max - 360° VR", 
+      description: "لابتوب فائق الأداء بشاشة 16 بوصة ومعالج M3 Pro. استمتع بتجربة عرض 3D حقيقية للمنتج.", 
+      price: 2499.0, 
+      oldPrice: 2800.0,
       imageUrl: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=600&auto=format&fit=crop", 
       brandName: "Bytore", 
-      stock: 12, 
+      stock: 5, 
       status: "Available",
       warranty: "سنتان",
-      deliveryTime: "24 ساعة",
+      deliveryTime: "وصول اليوم",
       rating: 5.0,
-      buyerCount: 45,
-       images: ["https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=600&auto=format&fit=crop"],
+      buyerCount: 120,
+      images: [
+        "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?q=80&w=600&auto=format&fit=crop",
+      ],
+      threeDImages: [
+        "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=600&auto=format&fit=crop", // Front
+        "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?q=80&w=600&auto=format&fit=crop", // Angle 1
+        "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?q=80&w=600&auto=format&fit=crop", // Angle 2
+        "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?q=80&w=600&auto=format&fit=crop", // Top
+        "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=600&auto=format&fit=crop", // Closed
+        "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?q=80&w=600&auto=format&fit=crop", // Detail
+        "https://images.unsplash.com/photo-1484788984921-039564c39b7a?q=80&w=600&auto=format&fit=crop", // Back
+        "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?q=80&w=600&auto=format&fit=crop", // End
+      ],
     ));
     products.add(Product(
-      id: 8882, 
-      name: "كاميرا Bytore Vision 360", 
-      description: "كاميرا احترافية بدقة 8K لالتقاط أجمل اللحظات بجودة سينمائية.", 
-      price: 850.0, 
-      oldPrice: 1100.0,
-      imageUrl: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=600&auto=format&fit=crop", 
-      brandName: "Bytore", 
-      stock: 8, 
+      id: 8883, 
+      name: "سماعات Earbuds Pro - 360° View", 
+      description: "سماعات لاسلكية متطورة مع عزل ضوضاء فعال وتجربة دوران 360 درجة ناعمة جداً.", 
+      price: 299.0, 
+      oldPrice: 350.0,
+      imageUrl: "https://scaleflex.cloudimg.io/v7/demo/earbuds/1.jpg", 
+      brandName: "Bytore Audio", 
+      stock: 25, 
       status: "Available",
       warranty: "سنة واحدة",
-      deliveryTime: "2 يوم",
-      rating: 4.9,
-      buyerCount: 15,
-      images: ["https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=600&auto=format&fit=crop"],
+      deliveryTime: "وصول خلال يومين",
+      rating: 4.8,
+      buyerCount: 250,
+      images: [
+        "https://scaleflex.cloudimg.io/v7/demo/earbuds/1.jpg",
+        "https://scaleflex.cloudimg.io/v7/demo/earbuds/18.jpg",
+      ],
+      threeDImages: List.generate(36, (index) => "https://scaleflex.cloudimg.io/v7/demo/earbuds/${index + 1}.jpg"),
     ));
     // ----------------------------------------------------
 

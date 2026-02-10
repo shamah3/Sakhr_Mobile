@@ -10,6 +10,7 @@ import 'package:bytore/features/home/views/components/item_card.dart';
 import 'package:bytore/core/utils/notification_helper.dart';
 import 'package:bytore/features/product/views/product_list_view.dart';
 import 'package:bytore/features/product/controllers/product_controller.dart';
+import 'package:bytore/features/product/views/components/three_d_viewer.dart';
 
 
 
@@ -45,41 +46,48 @@ class ProductDetailView extends StatelessWidget {
               const SizedBox(width: 10),
             ],
             flexibleSpace: FlexibleSpaceBar(
-              background: Obx(() => Stack(
+              background: Stack(
                 alignment: Alignment.bottomCenter,
                 children: [
-                  PageView.builder(
-                    controller: controller.pageController,
-                    onPageChanged: (index) => controller.currentImageIndex.value = index,
-                    itemCount: controller.productImages.length,
-                    itemBuilder: (context, index) => Container(
-                      padding: const EdgeInsets.all(40),
-                      child: CustomImage(
-                        imageUrl: controller.productImages[index],
-                        fit: BoxFit.contain,
-                        width: double.infinity,
+                  if (product.threeDImages.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 60),
+                      child: ThreeDProductViewer(images: product.threeDImages, height: 280),
+                    )
+                  else
+                    Obx(() => PageView.builder(
+                      controller: controller.pageController,
+                      onPageChanged: (index) => controller.currentImageIndex.value = index,
+                      itemCount: controller.productImages.length,
+                      itemBuilder: (context, index) => Container(
+                        padding: const EdgeInsets.all(40),
+                        child: CustomImage(
+                          imageUrl: controller.productImages[index],
+                          fit: BoxFit.contain,
+                          width: double.infinity,
+                        ),
+                      ),
+                    )),
+                  if (product.threeDImages.isEmpty) // Only show page indicator for standard images
+                    Positioned(
+                      bottom: 20,
+                      right: 20,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.4),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Obx(() => Text(
+                          "${controller.currentImageIndex.value + 1}/${controller.productImages.length}",
+                          style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                        )),
                       ),
                     ),
-                  ),
-                  Positioned(
-                    bottom: 20,
-                    right: 20,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.4),
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Text(
-                        "${controller.currentImageIndex.value + 1}/${controller.productImages.length}",
-                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
                   // Thumbnails removed as per request
                   const SizedBox.shrink(),
                 ],
-              )),
+              ),
             ),
           ),
 

@@ -230,33 +230,33 @@ class ItemCard extends StatelessWidget {
                               mainAxisSize: MainAxisSize.min,
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.verified_user_outlined, size: 9, color: Colors.orange),
+                                const Icon(Icons.verified_user_outlined, size: 8, color: Colors.orange), // Reduced size
                                 const SizedBox(width: 2),
                                 Flexible(
                                   child: Text(
                                     product.warranty,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontSize: 8, color: Colors.black87, fontWeight: FontWeight.bold),
+                                    style: const TextStyle(fontSize: 7.5, color: Colors.black87, fontWeight: FontWeight.bold), // Reduced font
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 2),
                           Expanded(
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.local_shipping_outlined, size: 9, color: Colors.orange),
+                                const Icon(Icons.local_shipping_outlined, size: 8, color: Colors.orange), // Reduced size
                                 const SizedBox(width: 2),
                                 Flexible(
                                   child: Text(
                                     product.deliveryTime,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontSize: 8, color: Colors.black87, fontWeight: FontWeight.bold),
+                                    style: const TextStyle(fontSize: 7.5, color: Colors.black87, fontWeight: FontWeight.bold), // Reduced font
                                   ),
                                 ),
                               ],

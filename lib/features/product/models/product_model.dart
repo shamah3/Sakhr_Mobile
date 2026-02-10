@@ -15,6 +15,7 @@ class Product {
   final double rating;
   final int buyerCount;
   final List<String> images; // Multiple images
+  final List<String> threeDImages; // 360 Degree images sequence
   final List<Map<String, dynamic>>? colors; // Color variants
   final List<Map<String, dynamic>>? sizes; // Size variants
 
@@ -28,6 +29,7 @@ class Product {
     this.rating = 4.5,
     this.buyerCount = 100,
     this.images = const [],
+    this.threeDImages = const [],
     this.colors,
     this.sizes,
   });
