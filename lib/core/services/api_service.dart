@@ -147,6 +147,38 @@ class ApiService {
       ],
       threeDImages: List.generate(36, (index) => "https://scaleflex.cloudimg.io/v7/demo/earbuds/${index + 1}.jpg"),
     ));
+    
+    // Adding Unavailable and On Shipment test products for wishlist verification
+    products.add(Product(
+      id: 9991, 
+      name: "منتج تجريبي - غير متوفر", 
+      description: "هذا المنتج غير متوفر حالياً للاختبار.", 
+      price: 1500.0, 
+      oldPrice: 1800.0,
+      imageUrl: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500", 
+      brandName: "Bytore Test", 
+      stock: 0, 
+      status: "Out of Stock",
+      warranty: "بدون ضمان",
+      deliveryTime: "N/A",
+      rating: 0.0,
+      buyerCount: 0,
+    ));
+    products.add(Product(
+      id: 9992, 
+      name: "منتج تجريبي - قيد الشحن", 
+      description: "هذا المنتج في طريقه للمخازن حالياً.", 
+      price: 2500.0, 
+      oldPrice: 2800.0,
+      imageUrl: "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=500", 
+      brandName: "Bytore Test", 
+      stock: 5, 
+      status: "On Shipment",
+      warranty: "سنة واحدة",
+      deliveryTime: "10 أيام",
+      rating: 3.5,
+      buyerCount: 20,
+    ));
     // ----------------------------------------------------
 
     return products;

@@ -97,77 +97,40 @@ class ProductDetailView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Directionality(
-                    textDirection: controller.getDirection(product.name),
-                    child: Text(
-                      product.name,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: kTextColor),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.star_rounded, color: Colors.amber, size: 18),
-                      const SizedBox(width: 4),
-                      Text(
-                        "${product.rating}",
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        "(${product.buyerCount} تم شراؤه)",
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Obx(() => Text(appController.getFormattedPrice(controller.currentPrice), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: kPrimaryColor))),
-                      const SizedBox(width: 15),
-                      Obx(() => product.oldPrice > controller.currentPrice
-                        ? Text(appController.getFormattedPrice(product.oldPrice), style: const TextStyle(fontSize: 14, color: Colors.grey, decoration: TextDecoration.lineThrough))
-                        : const SizedBox.shrink()),
-                      const Spacer(),
-                      if (product.colors != null) _buildColorSelector(controller),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  if (product.sizes != null) ...[
-                    const Text("المقاس/الحجم:", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    _buildSizeSelector(controller),
-                    const SizedBox(height: 15),
-                  ],
-                  Text(
-                    product.stock == 0 ? "حالة المنتج: غير متوفر" : (product.status == 'On Shipment' ? "حالة المنتج: قيد الشحن" : "حالة المنتج: متوفر"),
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: product.stock == 0 ? Colors.red : (product.status == 'On Shipment' ? Colors.blue : Colors.green),
-                    ),
-                  ),
+                  // 1. Product Header (Title, Rating, Price)
+                  _buildPremiumHeader(controller, appController),
                   const SizedBox(height: 20),
+
+                  // 2. Service Cards (Warranty, Delivery, Store)
+                  _buildServiceSection(context),
+                  const SizedBox(height: 25),
+
+                  // 3. Variant Selectors (Colors & Sizes)
+                  if (product.colors != null || product.sizes != null) ...[
+                    _buildVariantSection(controller),
+                    const SizedBox(height: 25),
+                  ],
+
+                  // 4. Quantity & Total
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const Text("الكمية", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kTextColor)),
                       _buildQuantityCounter(controller),
-                      _buildMetaInfo(context, appController),
                     ],
                   ),
-                  const SizedBox(height: 25),
-                  const Text("تفاصيل المنتج", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: kTextColor)), // Added as specific request
-                  const SizedBox(height: 10),
-                  const Text("وصف المنتج:", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 5),
-                  const Text(
-                    "هذا المنتج يوفر لك تجربة فريدة بجودة خامات عالية وتصميم مريح للاستخدام اليومي المكثف مع مراعاة أدق التفاصيل.",
-                    style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.5),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  const SizedBox(height: 30),
+
+                  // 5. Description
+                  const Text("عن المنتج", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: kTextColor)),
+                  const SizedBox(height: 12),
+                  Text(
+                    product.description.isNotEmpty ? product.description : "هذا المنتج يوفر لك تجربة فريدة بجودة خامات عالية وتصميم مريح للاستخدام اليومي المكثف مع مراعاة أدق التفاصيل.",
+                    style: TextStyle(fontSize: 14, color: Colors.black.withOpacity(0.7), height: 1.6),
                   ),
                   const SizedBox(height: 25),
+                  
+                  // 6. Detailed Tabs
                   _buildDetailedTabs(context),
                 ],
               ),
@@ -176,6 +139,189 @@ class ProductDetailView extends StatelessWidget {
         ],
       ),
       bottomNavigationBar: _buildBottomBar(context, appController, cartController, controller),
+    );
+  }
+
+  // --- دوال بناء القوالب الجديدة للمنظومة القوية ---
+
+  Widget _buildPremiumHeader(ProductController controller, AppController appController) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Directionality(
+                textDirection: controller.getDirection(product.name),
+                child: Text(
+                  product.name,
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: kTextColor, letterSpacing: -0.5),
+                ),
+              ),
+            ),
+            const SizedBox(width: 15),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.amber.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.star_rounded, color: Colors.amber, size: 14),
+                  const SizedBox(width: 4),
+                  Text(
+                    "${product.rating}",
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Obx(() => Text(
+              appController.getFormattedPrice(controller.currentPrice),
+              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: kPrimaryColor),
+            )),
+            const SizedBox(width: 12),
+            Obx(() => product.oldPrice > controller.currentPrice
+                ? Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      appController.getFormattedPrice(product.oldPrice),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey,
+                        decoration: TextDecoration.lineThrough,
+                      ),
+                    ),
+                  )
+                : const SizedBox.shrink()),
+            const Spacer(),
+            Text(
+              "(${product.buyerCount} تم شراؤه)",
+              style: const TextStyle(fontSize: 13, color: Colors.grey, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildServiceSection(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      child: Row(
+        children: [
+          _buildServiceCard(
+            icon: Icons.verified_user_rounded,
+            title: "الضمان",
+            subtitle: product.warranty,
+            color: Colors.orange,
+          ),
+          _buildServiceCard(
+            icon: Icons.local_shipping_rounded,
+            title: "التوصيل",
+            subtitle: product.deliveryTime,
+            color: Colors.blue,
+          ),
+          GestureDetector(
+            onTap: () {
+              Get.to(() => ProductListView(
+                categoryTitle: product.storeName,
+                apiCategorySlug: 'all', 
+              ));
+            },
+            child: _buildServiceCard(
+              icon: Icons.store_rounded,
+              title: "المتجر",
+              subtitle: product.storeName,
+              color: kSecondaryColor,
+            ),
+          ),
+          _buildServiceCard(
+            icon: Icons.payments_rounded,
+            title: "الدفع",
+            subtitle: "عند الاستلام",
+            color: Colors.green,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildServiceCard({required IconData icon, required String title, required String subtitle, required Color color}) {
+    return Container(
+      width: 110,
+      margin: const EdgeInsets.only(left: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.grey.shade100, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 14),
+          ),
+          const SizedBox(height: 10),
+          Text(title, style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 2),
+          Text(
+            subtitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: kTextColor),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVariantSection(ProductController controller) {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FB),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (product.colors != null) ...[
+            const Text("الألوان المتاحة", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kTextColor)),
+            const SizedBox(height: 12),
+            _buildColorSelector(controller),
+            const SizedBox(height: 20),
+          ],
+          if (product.sizes != null) ...[
+            const Text("المواصفات المختارة", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kTextColor)),
+            const SizedBox(height: 12),
+            _buildSizeSelector(controller),
+          ],
+        ],
+      ),
     );
   }
 
@@ -250,57 +396,14 @@ class ProductDetailView extends StatelessWidget {
               ),
                   const Divider(),
                   // Writing review section removed as per request
-                  const SizedBox(height: 20),
-                ],
-              ),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildMetaInfo(BuildContext context, AppController appController) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Text(product.warranty, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: kTextColor)),
-            const SizedBox(width: 8),
-            const Icon(Icons.verified_user_outlined, size: 16, color: Colors.orange),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Text("التوصيل: ${product.deliveryTime}", style: const TextStyle(fontSize: 11, color: kTextColor, fontWeight: FontWeight.w500)),
-            const SizedBox(width: 8),
-            const Icon(Icons.local_shipping_outlined, size: 14, color: Colors.orange),
-          ],
-        ),
-        const SizedBox(height: 4),
-        GestureDetector(
-          onTap: () {
-            Get.to(() => ProductListView(
-              categoryTitle: product.storeName,
-              apiCategorySlug: 'all', 
-            ));
-          },
-          child: Text(
-            "متجر: ${product.storeName}", 
-            style: const TextStyle(
-              fontSize: 12, 
-              color: kSecondaryColor, 
-              fontWeight: FontWeight.bold,
-            )
-          ),
-        ),
-        const SizedBox(height: 10),
-        const CurrencySwitcher(),
-      ],
-    );
-  }
 
   Widget _buildDot(int index, ProductController controller) {
     return AnimatedContainer(
@@ -379,9 +482,9 @@ class ProductDetailView extends StatelessWidget {
       height: 40, decoration: BoxDecoration(color: const Color(0xFFF1F4F7), borderRadius: BorderRadius.circular(12)),
       child: Row(
         children: [
-          IconButton(onPressed: () => controller.incrementQuantity(), icon: const Icon(Icons.add, size: 20, color: kSecondaryColor)),
-          Obx(() => Text("${controller.quantity.value}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
-          IconButton(onPressed: () => controller.decrementQuantity(), icon: const Icon(Icons.remove, size: 20, color: kPrimaryColor)),
+          IconButton(onPressed: () => controller.incrementQuantity(), icon: const Icon(Icons.add, size: 16, color: kSecondaryColor)),
+          Obx(() => Text("${controller.quantity.value}", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kTextColor))),
+          IconButton(onPressed: () => controller.decrementQuantity(), icon: const Icon(Icons.remove, size: 16, color: kSecondaryColor)),
         ],
       ),
     );
@@ -483,94 +586,112 @@ class ProductDetailView extends StatelessWidget {
     bool isOnShipment = product.status == 'On Shipment';
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            offset: const Offset(0, -5),
+            offset: const Offset(0, -10),
             blurRadius: 20,
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.04),
           ),
         ],
         borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(30),
-          topRight: Radius.circular(30),
+          topLeft: Radius.circular(35),
+          topRight: Radius.circular(35),
         ),
       ),
       child: SafeArea(
         child: Row(
           children: [
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "السعر الإجمالي",
-                  style: TextStyle(color: Colors.grey, fontSize: 12),
-                ),
-                Obx(() => Text(
-                  appController.getFormattedPrice(controller.currentPrice),
-                  style: const TextStyle(
-                    color: kPrimaryColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
+            Expanded(
+              flex: 2,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "السعر النهائي",
+                    style: TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500),
                   ),
-                )),
-              ],
+                  const SizedBox(height: 2),
+                  Obx(() => Text(
+                    appController.getFormattedPrice(controller.currentPrice),
+                    style: const TextStyle(
+                      color: kPrimaryColor,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 24,
+                    ),
+                  )),
+                ],
+              ),
             ),
             const SizedBox(width: 20),
             Expanded(
-              child: ElevatedButton(
-                onPressed: () {
-                  if (isUnavailable) {
-                    NotificationHelper.showCustomSnackBar(context, "عذراً، هذا المنتج غير متوفر حالياً ولا يمكن إضافته للسلة.", isError: true);
-                    return;
-                  }
-                  if (isOnShipment) {
-                    NotificationHelper.showCustomSnackBar(context, "هذا المنتج قيد الشحن حالياً ولا يمكن طلبه حتى يصل.", isError: false);
-                    return;
-                  }
-
-                  cartController.addItem(product);
-                  
-                  appController.addNotification(
-                    title: "تمت الإضافة للسلة",
-                    body: "تم إضافة ${product.name} إلى سلة المشتريات (العدد: ${cartController.totalQuantity})",
-                    color: kPrimaryColor,
-                  );
-                  
-                  NotificationHelper.showCustomSnackBar(
-                    context, 
-                    "تمت الإضافة للسلة بنجاح (في السلة: ${cartController.totalQuantity})",
-                    isError: false
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: (isUnavailable || isOnShipment) ? Colors.grey : kPrimaryColor,
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  elevation: 0,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      isUnavailable ? Icons.block : (isOnShipment ? Icons.local_shipping : Icons.shopping_bag_outlined),
-                      color: Colors.white
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      isUnavailable ? "غير متوفر" : (isOnShipment ? "قيد الشحن" : "إضافة للسلة"),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+              flex: 3,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    if (!isUnavailable && !isOnShipment)
+                      BoxShadow(
+                        color: kPrimaryColor.withOpacity(0.3),
+                        blurRadius: 15,
+                        offset: const Offset(0, 8),
                       ),
-                    ),
                   ],
+                ),
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (isUnavailable) {
+                      NotificationHelper.showCustomSnackBar(context, "عذراً، هذا المنتج غير متوفر حالياً.", isError: true);
+                      return;
+                    }
+                    if (isOnShipment) {
+                      NotificationHelper.showCustomSnackBar(context, "هذا المنتج قيد الشحن حالياً.", isError: false);
+                      return;
+                    }
+
+                    cartController.addItem(product);
+                    
+                    appController.addNotification(
+                      title: "تمت الإضافة للسلة",
+                      body: "تم إضافة ${product.name} إلى سلة المشتريات.",
+                      color: kPrimaryColor,
+                    );
+                    
+                    NotificationHelper.showCustomSnackBar(
+                      context, 
+                      "تمت الإضافة للسلة بنجاح",
+                      isError: false
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: (isUnavailable || isOnShipment) ? Colors.grey.shade400 : kPrimaryColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        isUnavailable ? Icons.block_flipped : (isOnShipment ? Icons.local_shipping_rounded : Icons.shopping_basket_rounded),
+                        size: 16,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        isUnavailable ? "غير متوفر" : (isOnShipment ? "قيد الشحن" : "إضافة للسلة"),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
