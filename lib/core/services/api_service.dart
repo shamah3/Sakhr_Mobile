@@ -99,35 +99,6 @@ class ApiService {
     
     // --- إضافة منتجات تجريبية للاختبار ---
     products.add(Product(
-      id: 8881, 
-      name: "لابتوب Bytore Pro Max - 360° VR", 
-      description: "لابتوب فائق الأداء بشاشة 16 بوصة ومعالج M3 Pro. استمتع بتجربة عرض 3D حقيقية للمنتج.", 
-      price: 2499.0, 
-      oldPrice: 2800.0,
-      imageUrl: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=600&auto=format&fit=crop", 
-      brandName: "Bytore", 
-      stock: 5, 
-      status: "Available",
-      warranty: "سنتان",
-      deliveryTime: "وصول اليوم",
-      rating: 5.0,
-      buyerCount: 120,
-      images: [
-        "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=600&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?q=80&w=600&auto=format&fit=crop",
-      ],
-      threeDImages: [
-        "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=600&auto=format&fit=crop", // Front
-        "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?q=80&w=600&auto=format&fit=crop", // Angle 1
-        "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?q=80&w=600&auto=format&fit=crop", // Angle 2
-        "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?q=80&w=600&auto=format&fit=crop", // Top
-        "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=600&auto=format&fit=crop", // Closed
-        "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?q=80&w=600&auto=format&fit=crop", // Detail
-        "https://images.unsplash.com/photo-1484788984921-039564c39b7a?q=80&w=600&auto=format&fit=crop", // Back
-        "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?q=80&w=600&auto=format&fit=crop", // End
-      ],
-    ));
-    products.add(Product(
       id: 8883, 
       name: "سماعات Earbuds Pro - 360° View", 
       description: "سماعات لاسلكية متطورة مع عزل ضوضاء فعال وتجربة دوران 360 درجة ناعمة جداً.", 

@@ -78,7 +78,7 @@ const SizedBox(height: 20),
 // 5. زر تسجيل الخروج
 _buildLogoutButton(),
 
-const SizedBox(height: 30),
+const SizedBox(height: 120),
 ],
 ),
 ),

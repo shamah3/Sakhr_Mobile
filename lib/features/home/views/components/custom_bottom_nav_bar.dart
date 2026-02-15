@@ -23,37 +23,16 @@ class CustomBottomNavBar extends StatelessWidget {
       elevation: 10,
       surfaceTintColor: Colors.white,
       shadowColor: Colors.black,
-      height: 60,
+      height: 80, // Increased from 60
       padding: EdgeInsets.zero,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 15),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            // Left Side
-            Row(
-              children: [
-                _buildNavItem(0, "الرئيسية", Icons.home_rounded, Icons.home_outlined),
-                const SizedBox(width: 35),
-                _buildNavItem(1, "الأقسام", Icons.grid_view_rounded, Icons.grid_view_outlined),
-              ],
-            ),
-            
-            // Spacer for FAB
-            const SizedBox(width: 40),
-
-            // Right Side (Reversed because of RTL or logic) 
-            // Note: In Row, children are LTR. So first items are left.
-            // But visually "Cart" and "Profile" should definitely be on the other side.
-            Row(
-              children: [
-                _buildNavItem(3, "السلة", Icons.shopping_cart_rounded, Icons.shopping_cart_outlined, count: notificationCount),
-                 const SizedBox(width: 35),
-                _buildNavItem(4, "حسابي", Icons.person, Icons.person_outline),
-              ],
-            ),
-          ],
-        ),
+      child: Row(
+        children: [
+          Expanded(child: _buildNavItem(0, "الرئيسية", Icons.home_rounded, Icons.home_outlined)),
+          Expanded(child: _buildNavItem(1, "الأقسام", Icons.grid_view_rounded, Icons.grid_view_outlined)),
+          const SizedBox(width: 70), // المساحة الوسطى للزر العائم
+          Expanded(child: _buildNavItem(3, "السلة", Icons.shopping_cart_rounded, Icons.shopping_cart_outlined, count: notificationCount)),
+          Expanded(child: _buildNavItem(4, "حسابي", Icons.person, Icons.person_outline)),
+        ],
       ),
     );
   }
@@ -77,12 +56,12 @@ class CustomBottomNavBar extends StatelessWidget {
                 Icon(
                   isSelected ? activeIcon : inactiveIcon,
                   color: color,
-                  size: 22,
+                  size: 28, // Increased from 22
                 ),
                 if (count > 0)
                   Positioned(
-                    top: -5,
-                    right: -5,
+                    top: -6,
+                    right: -6,
                     child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: const BoxDecoration(
@@ -97,7 +76,7 @@ class CustomBottomNavBar extends StatelessWidget {
                         '$count',
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 10,
+                          fontSize: 9,
                           fontWeight: FontWeight.bold,
                         ),
                         textAlign: TextAlign.center,
@@ -106,12 +85,12 @@ class CustomBottomNavBar extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2), // Reduced from 4
             Text(
               label,
               style: TextStyle(
                 color: color,
-                fontSize: 9,
+                fontSize: 10, // Increased slightly from 9
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
             )

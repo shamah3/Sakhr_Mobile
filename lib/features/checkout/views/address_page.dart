@@ -326,7 +326,7 @@ class AddressPage extends GetView<CheckoutController> {
               child: const Text("الاستمرار للدفع", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 100),
         ],
       ),
     );

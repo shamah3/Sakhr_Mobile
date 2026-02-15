@@ -51,7 +51,7 @@ class ProfileView extends GetView<AppController> {
                   ),
                   const SizedBox(height: 30),
                   _buildLogoutButton(),
-                  const SizedBox(height: 50),
+                  const SizedBox(height: 120),
                 ],
               ),
             ),

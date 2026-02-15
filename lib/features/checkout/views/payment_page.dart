@@ -248,6 +248,7 @@ class PaymentPage extends GetView<CheckoutController> {
                 child: const Text("إتمام الدفع وتأكيد الطلب", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
+            const SizedBox(height: 100),
           ],
         );
       }),

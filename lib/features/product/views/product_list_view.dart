@@ -12,22 +12,40 @@ class ProductListView extends StatelessWidget {
   
   const ProductListView({
     super.key, 
-    this.categoryTitle = "المنتجات", 
-    this.apiCategorySlug = "all"
+    this.categoryTitle = "", 
+    this.apiCategorySlug = ""
   });
 
   @override
   Widget build(BuildContext context) {
+    // Retrieve arguments with better fallback for nested navigation
+    final args = (ModalRoute.of(context)?.settings.arguments as Map?) ?? Get.arguments as Map?;
+    
+    final String actualTitle = (categoryTitle.isNotEmpty && categoryTitle != "المنتجات") 
+        ? categoryTitle 
+        : (args?['categoryTitle'] ?? "المنتجات");
+        
+    final String actualSlug = (apiCategorySlug.isNotEmpty && apiCategorySlug != "all") 
+        ? apiCategorySlug 
+        : (args?['apiCategorySlug'] ?? "all");
+
     // Inject controller with unique tag for this category to avoid state sharing
     final controller = Get.put(
-      ProductListController(initialSlug: apiCategorySlug, initialTitle: categoryTitle),
-      tag: apiCategorySlug
+      ProductListController(initialSlug: actualSlug, initialTitle: actualTitle),
+      tag: actualSlug,
+      permanent: false,
     );
+    
+    // Update title/slug ONLY if they changed to avoid redundant network calls
+    if (controller.categoryTitle.value != actualTitle || controller.categorySlug.value != actualSlug) {
+      Future.microtask(() => controller.updateCategory(actualSlug, actualTitle));
+    }
+
     final appController = Get.find<AppController>();
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _buildAppBar(controller),
+      appBar: _buildAppBar(context, controller),
       body: Column(
         children: [
           _buildCategoriesBar(controller),
@@ -48,14 +66,14 @@ class ProductListView extends StatelessWidget {
     );
   }
 
-  PreferredSizeWidget _buildAppBar(ProductListController controller) {
+  PreferredSizeWidget _buildAppBar(BuildContext context, ProductListController controller) {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
       centerTitle: true,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new, color: kTextColor),
-        onPressed: () => Get.back(),
+        icon: const Icon(Icons.arrow_back_ios_new, color: kTextColor, size: 20),
+        onPressed: () => Navigator.maybePop(context),
       ),
       title: Obx(() => controller.isSearching.value 
         ? TextField(

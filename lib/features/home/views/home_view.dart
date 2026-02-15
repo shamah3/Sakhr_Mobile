@@ -80,7 +80,7 @@ class HomeView extends GetView<HomeController> {
             children: [
               const SizedBox(height: 40),
               _buildSectionHeader("المنتجات الأكثر طلباً", showViewAll: true, onTap: () {
-                Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': "الأكثر طلباً"}, id: 1);
+                Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': "الأكثر طلباً", 'apiCategorySlug': 'all'}, id: 1);
               }),
               const SizedBox(height: 15),
             ],
@@ -95,7 +95,7 @@ class HomeView extends GetView<HomeController> {
           child: Column(
             children: [
               _buildSectionHeader("وصل حديثاً", showViewAll: true, onTap: () {
-                Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': "وصل حديثاً"}, id: 1);
+                Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': "وصل حديثاً", 'apiCategorySlug': 'in_stock'}, id: 1);
               }),
               const SizedBox(height: 18),
             ],
@@ -110,7 +110,7 @@ class HomeView extends GetView<HomeController> {
           child: Column(
             children: [
               _buildSectionHeader("الخصومات", showViewAll: true, onTap: () {
-                Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': "الخصومات"}, id: 1);
+                Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': "الخصومات", 'apiCategorySlug': 'discounts'}, id: 1);
               }),
               const SizedBox(height: 18),
             ],
@@ -348,7 +348,7 @@ class HomeView extends GetView<HomeController> {
                           ElevatedButton(
                             onPressed: () {
                               Get.back();
-                              Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': 'العروض'}, id: 1);
+                              Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': 'الاعلانات', 'apiCategorySlug': 'all'}, id: 1);
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: kPrimaryColor,

@@ -97,40 +97,44 @@ class ProductDetailView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 1. Product Header (Title, Rating, Price)
+                  // 1. Product Header (Title, Price, Stats)
                   _buildPremiumHeader(controller, appController),
-                  const SizedBox(height: 20),
-
-                  // 2. Service Cards (Warranty, Delivery, Store)
-                  _buildServiceSection(context),
+                  const SizedBox(height: 25),
+                  
+                  // 2. Statistics Row (Rating, Buyer Count)
+                  _buildStatsRow(),
                   const SizedBox(height: 25),
 
-                  // 3. Variant Selectors (Colors & Sizes)
+                  // 3. Service Cards (Warranty, Delivery, Store)
+                  _buildServiceSection(context),
+                  const SizedBox(height: 30),
+
+                  // 4. Variant Selectors (Colors & Sizes)
                   if (product.colors != null || product.sizes != null) ...[
                     _buildVariantSection(controller),
-                    const SizedBox(height: 25),
+                    const SizedBox(height: 30),
                   ],
 
-                  // 4. Quantity & Total
+                  // 5. Quantity
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text("الكمية", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kTextColor)),
+                      const Text("الكمية المطلوبة", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: kTextColor)),
                       _buildQuantityCounter(controller),
                     ],
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 35),
 
-                  // 5. Description
+                  // 6. Description
                   const Text("عن المنتج", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: kTextColor)),
                   const SizedBox(height: 12),
                   Text(
                     product.description.isNotEmpty ? product.description : "هذا المنتج يوفر لك تجربة فريدة بجودة خامات عالية وتصميم مريح للاستخدام اليومي المكثف مع مراعاة أدق التفاصيل.",
-                    style: TextStyle(fontSize: 14, color: Colors.black.withOpacity(0.7), height: 1.6),
+                    style: TextStyle(fontSize: 14, color: Colors.black.withOpacity(0.6), height: 1.7),
                   ),
-                  const SizedBox(height: 25),
+                  const SizedBox(height: 30),
                   
-                  // 6. Detailed Tabs
+                  // 7. Detailed Tabs
                   _buildDetailedTabs(context),
                 ],
               ),
@@ -148,156 +152,150 @@ class ProductDetailView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Directionality(
+          textDirection: controller.getDirection(product.name),
+          child: Text(
+            product.name,
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: kTextColor, height: 1.2),
+          ),
+        ),
+        const SizedBox(height: 20),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
-              child: Directionality(
-                textDirection: controller.getDirection(product.name),
-                child: Text(
-                  product.name,
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: kTextColor, letterSpacing: -0.5),
-                ),
-              ),
-            ),
-            const SizedBox(width: 15),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: Colors.amber.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
               child: Row(
                 children: [
-                  const Icon(Icons.star_rounded, color: Colors.amber, size: 14),
-                  const SizedBox(width: 4),
-                  Text(
-                    "${product.rating}",
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Obx(() => Text(
+                        appController.getFormattedPrice(controller.currentPrice),
+                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: kPrimaryColor),
+                      )),
+                    ),
                   ),
+                  const SizedBox(width: 8),
+                  Obx(() => product.oldPrice > controller.currentPrice
+                      ? Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              appController.getFormattedPrice(product.oldPrice),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey,
+                                decoration: TextDecoration.lineThrough,
+                              ),
+                            ),
+                          ),
+                        )
+                      : const SizedBox.shrink()),
                 ],
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Obx(() => Text(
-              appController.getFormattedPrice(controller.currentPrice),
-              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: kPrimaryColor),
-            )),
-            const SizedBox(width: 12),
-            Obx(() => product.oldPrice > controller.currentPrice
-                ? Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Text(
-                      appController.getFormattedPrice(product.oldPrice),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey,
-                        decoration: TextDecoration.lineThrough,
-                      ),
-                    ),
-                  )
-                : const SizedBox.shrink()),
-            const Spacer(),
-            Text(
-              "(${product.buyerCount} تم شراؤه)",
-              style: const TextStyle(fontSize: 13, color: Colors.grey, fontWeight: FontWeight.w500),
-            ),
+            const SizedBox(width: 8),
+            const CurrencySwitcher(),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildServiceSection(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
+  Widget _buildStatsRow() {
+    return Row(
+      children: [
+        _buildStatBadge(Icons.star_rounded, "${product.rating}", Colors.amber),
+        const SizedBox(width: 12),
+        _buildStatBadge(Icons.shopping_bag_rounded, "${product.buyerCount} تم شراؤه", Colors.blueGrey),
+      ],
+    );
+  }
+
+  Widget _buildStatBadge(IconData icon, String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(10),
+      ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          _buildServiceCard(
-            icon: Icons.verified_user_rounded,
-            title: "الضمان",
-            subtitle: product.warranty,
-            color: Colors.orange,
-          ),
-          _buildServiceCard(
-            icon: Icons.local_shipping_rounded,
-            title: "التوصيل",
-            subtitle: product.deliveryTime,
-            color: Colors.blue,
-          ),
-          GestureDetector(
-            onTap: () {
-              Get.to(() => ProductListView(
-                categoryTitle: product.storeName,
-                apiCategorySlug: 'all', 
-              ));
-            },
-            child: _buildServiceCard(
-              icon: Icons.store_rounded,
-              title: "المتجر",
-              subtitle: product.storeName,
-              color: kSecondaryColor,
-            ),
-          ),
-          _buildServiceCard(
-            icon: Icons.payments_rounded,
-            title: "الدفع",
-            subtitle: "عند الاستلام",
-            color: Colors.green,
+          Icon(icon, color: color, size: 14),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color.withOpacity(0.9)),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildServiceCard({required IconData icon, required String title, required String subtitle, required Color color}) {
+  Widget _buildServiceSection(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildServiceChip(
+            icon: Icons.shield_outlined,
+            label: "ضمان ${product.warranty}",
+            color: Colors.orange,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _buildServiceChip(
+            icon: Icons.local_shipping_outlined,
+            label: product.deliveryTime.isNotEmpty ? product.deliveryTime : "توصيل سريع",
+            color: Colors.blue,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: GestureDetector(
+            onTap: () {
+              Get.to(() => ProductListView(
+                categoryTitle: product.storeName,
+                apiCategorySlug: 'all', 
+              ));
+            },
+            child: _buildServiceChip(
+              icon: Icons.storefront_outlined,
+              label: product.storeName,
+              color: kSecondaryColor,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildServiceChip({required IconData icon, required String label, required Color color}) {
     return Container(
-      width: 110,
-      margin: const EdgeInsets.only(left: 12),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.grey.shade100, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade100, width: 1),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 14),
-          ),
-          const SizedBox(height: 10),
-          Text(title, style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 2),
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: 6),
           Text(
-            subtitle,
+            label,
+            textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: kTextColor),
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: kTextColor),
           ),
         ],
       ),
     );
   }
+
+
 
   Widget _buildVariantSection(ProductController controller) {
     return Container(
@@ -492,9 +490,9 @@ class ProductDetailView extends StatelessWidget {
 
   Widget _buildHeaderBtn(IconData icon, VoidCallback onTap, {Color? color}) {
     return Container(
-      margin: const EdgeInsets.all(8),
+      margin: const EdgeInsets.all(6),
       decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-      child: IconButton(onPressed: onTap, icon: Icon(icon, color: color ?? kPrimaryColor, size: 20)),
+      child: IconButton(onPressed: onTap, icon: Icon(icon, color: color ?? kPrimaryColor, size: 18)),
     );
   }
 
@@ -678,16 +676,17 @@ class ProductDetailView extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        isUnavailable ? Icons.block_flipped : (isOnShipment ? Icons.local_shipping_rounded : Icons.shopping_basket_rounded),
-                        size: 16,
+                       Icon(
+                        isUnavailable ? Icons.block_flipped : (isOnShipment ? Icons.local_shipping_rounded : Icons.shopping_bag_outlined),
+                        size: 20,
                       ),
                       const SizedBox(width: 12),
                       Text(
                         isUnavailable ? "غير متوفر" : (isOnShipment ? "قيد الشحن" : "إضافة للسلة"),
                         style: const TextStyle(
-                          fontSize: 16,
+                          fontSize: 18,
                           fontWeight: FontWeight.w900,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ],
