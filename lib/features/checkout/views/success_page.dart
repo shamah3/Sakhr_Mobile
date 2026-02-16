@@ -6,8 +6,11 @@ import 'package:bytore/core/controllers/cart_controller.dart';
 import 'package:bytore/features/home/controllers/main_controller.dart';
 import 'package:bytore/features/orders/views/tracking_view.dart';
 
+import 'package:bytore/features/profile/models/order_model.dart';
+
 class SuccessPage extends StatelessWidget {
-  const SuccessPage({super.key});
+  final OrderModel? order;
+  const SuccessPage({super.key, this.order});
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +45,7 @@ class SuccessPage extends StatelessWidget {
               const SizedBox(height: 40),
 
               // ملخص الطلب
-              _buildOrderSummaryCard(),
+              if (order != null) _buildOrderSummaryCard(),
 
               const Spacer(flex: 3),
 
@@ -136,20 +139,20 @@ class SuccessPage extends StatelessWidget {
             child: const Icon(Icons.receipt_long_rounded, color: kPrimaryColor),
           ),
           const SizedBox(width: 15),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text("رقم الطلب", style: TextStyle(color: kTextLightColor, fontSize: 12)),
-                Text("#BTR-98521", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: kTextColor)),
+                Text(order?.id ?? "#UNKNOWN", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: kTextColor)),
               ],
             ),
           ),
-          const Column(
+          Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text("الإجمالي", style: TextStyle(color: kTextLightColor, fontSize: 12)),
-              Text("250 \$", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: kSecondaryColor)),
+              Text("${(order?.total ?? 0).toStringAsFixed(0)} ر.ي", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: kSecondaryColor)),
             ],
           ),
         ],

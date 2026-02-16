@@ -5,6 +5,8 @@ import 'dart:math';
 import 'package:bytore/core/constants/constants.dart';
 import 'package:bytore/core/services/notification_service.dart';
 import 'package:bytore/core/services/whatsapp_service.dart';
+import 'package:bytore/features/profile/controllers/purchase_reports_controller.dart';
+import 'package:bytore/features/profile/controllers/activities_controller.dart';
 
 class AppController extends GetxController {
   // Address State
@@ -24,6 +26,10 @@ class AppController extends GetxController {
       addNotification(title: "عرض خاص!", body: "خصم 30% على جميع ملحقات الحاسوب هذا الأسبوع.", category: "العروض", color: Colors.orange);
       addNotification(title: "تحديث الشحن", body: "طلبك في الطريق إليك، سيصل خلال ساعتين.", category: "الطلبات", color: Colors.green);
     }
+
+    // Initialize Purchase & Activity Controllers permanently
+    Get.put(PurchaseReportsController(), permanent: true);
+    Get.put(ActivitiesController(), permanent: true);
   }
   
   final Map<String, String> _users = {"777777777": "123456"}.obs;

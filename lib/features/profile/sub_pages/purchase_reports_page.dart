@@ -9,7 +9,7 @@ class PurchaseReportsPage extends StatelessWidget {
   PurchaseReportsPage({Key? key}) : super(key: key);
 
 // ربط الكنترولر
-  final PurchaseReportsController controller = Get.put(PurchaseReportsController());
+  final PurchaseReportsController controller = Get.find<PurchaseReportsController>();
 
   static const Color primaryBlue = Color(0xFF015C92);
   static const Color secondaryOrange = Color(0xFFFFA931);
@@ -58,8 +58,25 @@ class PurchaseReportsPage extends StatelessWidget {
                   _buildChartSection(),
                   const SizedBox(height: 25),
                   _buildSectionTitle('ملخص المشتريات الأخيرة'),
-                  _buildOrderSummaryTile('آيفون 15 برو ماكس', '450,000 ريال', '12 ديسمبر'),
-                  _buildOrderSummaryTile('ساعة شاومي S3', '45,000 ريال', '05 ديسمبر'),
+                  
+                  Obx(() {
+                    if (controller.filteredOrders.isEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: Center(child: Text("لا توجد مشتريات في هذه الفترة", style: GoogleFonts.cairo(color: Colors.grey))),
+                      );
+                    }
+                    
+                    return Column(
+                      children: controller.filteredOrders.map((order) {
+                        return _buildOrderSummaryTile(
+                          order.itemsNames.join(", "), 
+                          "${order.total.toStringAsFixed(0)} ريال", 
+                          order.date
+                        );
+                      }).toList(),
+                    );
+                  }),
                 ],
               ),
             ),

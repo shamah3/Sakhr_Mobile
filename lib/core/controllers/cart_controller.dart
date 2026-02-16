@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:bytore/features/product/models/product_model.dart';
 import 'package:bytore/core/services/notification_service.dart';
+import 'package:bytore/features/profile/controllers/activities_controller.dart';
 
 class CartItem {
   final Product product;
@@ -62,6 +63,17 @@ class CartController extends GetxController {
       title: 'السلة',
       body: 'تم إضافة ${product.name} إلى السلة',
     );
+    
+    // Log Activity
+    try {
+      Get.find<ActivitiesController>().logActivity(
+        title: 'إضافة "${product.name}" للسلة',
+        type: 'fav' // Using fav icon for cart add as closest match or add new type
+      );
+    } catch (e) {
+      print("ActivitiesController not found: $e");
+    }
+
   }
 
   void incrementItem(int productId) {

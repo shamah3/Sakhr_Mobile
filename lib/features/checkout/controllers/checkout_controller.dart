@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bytore/core/controllers/cart_controller.dart';
+import 'package:bytore/features/profile/controllers/purchase_reports_controller.dart';
+import 'package:bytore/features/profile/controllers/activities_controller.dart';
+import 'package:bytore/features/profile/models/order_model.dart';
 
 class CheckoutController extends GetxController {
   // استخدام lazy find إذا لم يكن موجوداً
@@ -70,8 +73,40 @@ class CheckoutController extends GetxController {
     couponStatus.value = success ? "تم تطبيق الخصم بنجاح!" : "الكود غير صحيح";
   }
 
-  void completeOrder() {
+  OrderModel? completeOrder() {
+    // 1. Create Order
+    final cart = cartController;
+    if (cart.items.isEmpty) return null;
+    
+    final orderId = "#ORD-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}"; // Simple ID
+    final now = DateTime.now();
+    final dateStr = "${now.day}/${now.month}";
+    
+    final order = OrderModel(
+      id: orderId,
+      date: dateStr,
+      dateTime: now,
+      total: cart.totalAmount + cart.shippingCost, // Include shipping
+      itemsNames: cart.items.values.map((e) => e.product.name).toList(),
+    );
+    
+    // 2. Add to Reports
+    try {
+      Get.find<PurchaseReportsController>().addOrder(order);
+    } catch (e) { print(e); }
+    
+    // 3. Log Activity
+    try {
+      Get.find<ActivitiesController>().logActivity(
+        title: 'إتمام طلب جديد $orderId',
+        type: 'buy'
+      );
+    } catch (e) { print(e); }
+
+    // 4. Clear Cart
     cartController.clearCart();
+    
+    return order;
   }
 
   @override

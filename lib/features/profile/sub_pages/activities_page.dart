@@ -9,7 +9,7 @@ class ActivitiesPage extends StatelessWidget {
   ActivitiesPage({Key? key}) : super(key: key);
 
   // استدعاء الكنترولر
-  final ActivitiesController controller = Get.put(ActivitiesController());
+  final ActivitiesController controller = Get.find<ActivitiesController>();
 
   static const Color primaryBlue = Color(0xFF015C92);
   static const Color secondaryOrange = Color(0xFFFFA931);

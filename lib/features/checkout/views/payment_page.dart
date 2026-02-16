@@ -238,7 +238,14 @@ class PaymentPage extends GetView<CheckoutController> {
                 boxShadow: [BoxShadow(color: kPrimaryColor.withOpacity(0.2), blurRadius: 15, offset: const Offset(0, 8))],
               ),
               child: ElevatedButton(
-                onPressed: () => Get.offAll(() => const SuccessPage()),
+                onPressed: () {
+                  final order = controller.completeOrder();
+                  if (order != null) {
+                    Get.offAll(() => SuccessPage(order: order));
+                  } else {
+                    Get.snackbar("تنبيه", "السلة فارغة!", backgroundColor: Colors.redAccent, colorText: Colors.white);
+                  }
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimaryColor,
                   foregroundColor: Colors.white,
