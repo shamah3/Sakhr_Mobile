@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:bytore/features/profile/controllers/reviews_controller.dart';
 import 'package:bytore/features/profile/models/review_model.dart';
+import 'package:bytore/core/components/custom_app_bar.dart';
+
 
 class ReviewsPage extends StatelessWidget {
   ReviewsPage({Key? key}) : super(key: key);
@@ -16,11 +18,13 @@ class ReviewsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
+      appBar: const CustomAppBar(title: 'تقييماتي'),
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: Column(
           children: [
-            _buildCurvedAppBar(),
+            // _buildCurvedAppBar(), removed
+
 
 // التبويبات (Tabs)
             Container(
@@ -60,30 +64,6 @@ class ReviewsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildCurvedAppBar() {
-    return Container(
-      height: 140,
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(colors: [primaryBlue, Color(0xFF0277BD)]),
-        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(45), bottomRight: Radius.circular(45)),
-      ),
-      child: SafeArea(
-        child: Stack(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
-              onPressed: () => Get.back(),
-            ),
-            Center(
-              child: Text('تقييماتي',
-                  style: GoogleFonts.cairo(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildList(List<ReviewModel> list, {required bool isReviewed}) {
     return Obx(() => ListView.builder(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
+import 'package:bytore/core/components/custom_app_bar.dart';
+
 
 class FaqPage extends StatelessWidget {
   const FaqPage({Key? key}) : super(key: key);
@@ -37,12 +39,13 @@ class FaqPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bgColor,
+      appBar: const CustomAppBar(title: 'الأسئلة الشائعة'),
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: Column(
           children: [
             // --- AppBar المنحني الموحد ---
-            _buildCurvedAppBar(),
+            // _buildCurvedAppBar(), removed
 
             Expanded(
               child: ListView(
@@ -67,47 +70,6 @@ class FaqPage extends StatelessWidget {
 
   // --- دوال البناء بنفس تصميمك بالضبط ---
 
-  Widget _buildCurvedAppBar() {
-    return Container(
-      height: 140,
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [primaryBlue, Color(0xFF0277BD)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(45),
-          bottomRight: Radius.circular(45),
-        ),
-      ),
-      child: SafeArea(
-        child: Stack(
-          children: [
-            Positioned(
-              right: 15,
-              top: 10,
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 22),
-                onPressed: () => Get.back(), // استخدام GetX للعودة
-              ),
-            ),
-            Center(
-              child: Text(
-                'الأسئلة الشائعة',
-                style: GoogleFonts.cairo(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildSectionTitle(String title) {
     return Row(

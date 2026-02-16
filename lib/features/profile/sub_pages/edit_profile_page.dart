@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:bytore/features/profile/controllers/edit_profile_controller.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 // import 'edit_profile_controller.dart';
+import 'package:bytore/core/components/custom_app_bar.dart';
+
 
 class EditProfileScreen extends StatelessWidget {
   EditProfileScreen({Key? key}) : super(key: key);
@@ -16,15 +18,7 @@ class EditProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'إعدادات الملف الشخصي',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: primaryColor,
-        iconTheme: const IconThemeData(color: Colors.white),
-        centerTitle: true,
-      ),
+      appBar: const CustomAppBar(title: 'إعدادات الملف الشخصي'),
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: Form(

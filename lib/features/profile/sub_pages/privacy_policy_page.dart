@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:bytore/core/components/custom_app_bar.dart';
+import 'package:get/get.dart';
+
 
 class PrivacyPolicyScreen extends StatelessWidget {
   const PrivacyPolicyScreen({Key? key}) : super(key: key);
@@ -13,12 +16,13 @@ class PrivacyPolicyScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bgColor,
+      appBar: const CustomAppBar(title: 'سياسة الخصوصية'),
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: Column(
           children: [
             // --- AppBar المنحني (نفس نمط صفحة الشروط) ---
-            _buildCurvedAppBar(context),
+            // _buildCurvedAppBar(context), removed
 
             Expanded(
               child: ListView(
@@ -70,40 +74,6 @@ class PrivacyPolicyScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCurvedAppBar(BuildContext context) {
-    return Container(
-      height: 150,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [primaryColor, Color(0xFF0277BD)],
-        ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(40),
-          bottomRight: Radius.circular(40),
-        ),
-      ),
-      child: SafeArea(
-        child: Stack(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
-              onPressed: () => Navigator.pop(context),
-            ),
-            Center(
-              child: Text(
-                'سياسة الخصوصية',
-                style: GoogleFonts.cairo(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
 
   Widget _buildIntroSection() {

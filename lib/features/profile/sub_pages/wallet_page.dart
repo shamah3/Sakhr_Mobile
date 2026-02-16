@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:bytore/features/profile/controllers/wallet_controller.dart';
+import 'package:bytore/core/components/custom_app_bar.dart';
+
 
 class WalletPage extends StatelessWidget {
   WalletPage({Key? key}) : super(key: key);
@@ -16,12 +18,13 @@ class WalletPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
+      appBar: const CustomAppBar(title: 'المحفظة المالية'),
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: Column(
           children: [
             // AppBar الموحد لمتجر محسوب
-            _buildCurvedAppBar(),
+            // _buildCurvedAppBar(), removed
 
             // بطاقة الرصيد التفاعلية
             Obx(() => _buildBalanceCard(controller.currentBalance)),
@@ -60,30 +63,6 @@ class WalletPage extends StatelessWidget {
     );
   }
 
-  Widget _buildCurvedAppBar() {
-    return Container(
-      height: 130,
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(colors: [primaryBlue, Color(0xFF0277BD)]),
-        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(40), bottomRight: Radius.circular(40)),
-      ),
-      child: SafeArea(
-        child: Stack(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
-              onPressed: () => Get.back(),
-            ),
-            Center(
-              child: Text('المحفظة المالية',
-                  style: GoogleFonts.cairo(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildBalanceCard(double balance) {
     return Container(

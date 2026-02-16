@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:get/get.dart';
+import 'package:bytore/core/components/custom_app_bar.dart';
+
 
 class ContactUsPage extends StatelessWidget {
   const ContactUsPage({Key? key}) : super(key: key);
@@ -23,12 +25,13 @@ class ContactUsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
+      appBar: const CustomAppBar(title: 'تواصل معنا'),
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: Column(
           children: [
             // --- AppBar المنحني الموحد ---
-            _buildCurvedAppBar(),
+            // _buildCurvedAppBar(), removed
 
             Expanded(
               child: SingleChildScrollView(
@@ -96,49 +99,6 @@ class ContactUsPage extends StatelessWidget {
 
   // --- المكونات البصرية بنفس تصميمك بالضبط ---
 
-  Widget _buildCurvedAppBar() {
-    return Container(
-      height: 140,
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [primaryBlue, Color(0xFF0277BD)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-
-
-        ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(45),
-          bottomRight: Radius.circular(45),
-        ),
-      ),
-      child: SafeArea(
-        child: Stack(
-          children: [
-            Positioned(
-              right: 15,
-              top: 10,
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 22),
-                onPressed: () => Get.back(), // تغيير إلى Get.back()
-              ),
-            ),
-            Center(
-              child: Text(
-                'تواصل معنا',
-                style: GoogleFonts.cairo(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildHeroIcon() {
     return Container(

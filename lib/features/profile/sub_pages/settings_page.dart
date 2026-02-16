@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import 'package:bytore/features/profile/controllers/settings_controller.dart';
 import 'package:bytore/features/profile/sub_pages/edit_profile_page.dart';
 import 'package:bytore/core/routes/app_routes.dart';
+import 'package:bytore/core/components/custom_app_bar.dart';
+
 
 class SettingsPage extends StatelessWidget {
   SettingsPage({Key? key}) : super(key: key);
@@ -17,11 +19,12 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
+      appBar: const CustomAppBar(title: 'الإعدادات'),
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: Column(
           children: [
-            _buildCurvedAppBar('الإعدادات'),
+            // _buildCurvedAppBar('الإعدادات'), removed
             Expanded(
               child: ListView(
                 physics: const BouncingScrollPhysics(),
@@ -89,16 +92,6 @@ class SettingsPage extends StatelessWidget {
 
   // --- المكونات (Widgets) ---
 
-  Widget _buildCurvedAppBar(String title) {
-    return Container(
-      height: 140, width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(colors: [primaryBlue, Color(0xFF0277BD)]),
-        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(45), bottomRight: Radius.circular(45)),
-      ),
-      child: SafeArea(child: Center(child: Text(title, style: GoogleFonts.cairo(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)))),
-    );
-  }
 
   Widget _buildInteractiveItem({required IconData icon, required String title, required VoidCallback onTap}) {
     return Card(

@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 // import 'package:nice/view/screen/complaints_page.dart';
+import 'package:bytore/core/constants/constants.dart';
 import 'package:bytore/core/routes/app_routes.dart';
+
+
+import 'package:bytore/core/components/custom_app_bar.dart';
 
 class ProfilePage extends StatelessWidget {
 const ProfilePage({Key? key}) : super(key: key);
@@ -15,22 +19,15 @@ static const Color secondaryOrange = Color(0xFFFFA931);
 Widget build(BuildContext context) {
 return Scaffold(
 backgroundColor: const Color(0xFFF8FAFC),
-appBar: AppBar(
-backgroundColor: primaryBlue,
-elevation: 0,
-centerTitle: true,
-// رابط الإعدادات (ترس الإعدادات)
-leading: IconButton(
-icon: const Icon(Icons.settings, color: Colors.white, size: 24),
-onPressed: () => Get.toNamed(AppRoutes.SETTINGS),
-),
-title: Text(
-'حسابي',
-style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: Colors.white),
-),
-shape: const RoundedRectangleBorder(
-borderRadius: BorderRadius.vertical(bottom: Radius.circular(25)),
-),
+appBar: CustomAppBar(
+  title: 'حسابي',
+  showBackArrow: false, // Main tab, usually no back arrow unless deep linked
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.settings, color: kTextColor, size: 24),
+      onPressed: () => Get.toNamed(AppRoutes.SETTINGS),
+    ),
+  ],
 ),
 body: Directionality(
 textDirection: TextDirection.rtl,

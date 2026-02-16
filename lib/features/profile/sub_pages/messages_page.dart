@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bytore/core/constants/constants.dart';
 import 'package:bytore/core/routes/app_routes.dart';
+import 'package:bytore/core/components/custom_app_bar.dart';
+
 
 class MessagesPage extends StatelessWidget {
   const MessagesPage({super.key});
@@ -10,19 +12,7 @@ class MessagesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kBgColor,
-      appBar: AppBar(
-        title: const Text(
-          "الرسائل",
-          style: TextStyle(color: kTextColor, fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: kTextColor, size: 20),
-          onPressed: () => Get.back(),
-        ),
-      ),
+      appBar: const CustomAppBar(title: "الرسائل"),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [

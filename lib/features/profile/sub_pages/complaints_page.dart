@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:bytore/features/profile/controllers/complaints_controller.dart';
+import 'package:bytore/core/components/custom_app_bar.dart';
+
 
 class ComplaintsPage extends StatelessWidget {
   ComplaintsPage({Key? key}) : super(key: key);
@@ -17,23 +19,7 @@ class ComplaintsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bgCanvas,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(80),
-        child: AppBar(
-          backgroundColor: primaryBlue,
-          elevation: 0,
-          centerTitle: true,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
-          ),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
-            onPressed: () => Get.back(),
-          ),
-          title: Text('مركز الدعم والشكاوى',
-              style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
-        ),
-      ),
+      appBar: const CustomAppBar(title: 'مركز الدعم والشكاوى'),
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: SingleChildScrollView(

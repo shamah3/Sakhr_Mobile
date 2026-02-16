@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:bytore/features/profile/controllers/terms_controller.dart';
+import 'package:bytore/core/components/custom_app_bar.dart';
+
 
 class TermsAndConditionsPage extends StatelessWidget {
   TermsAndConditionsPage({Key? key}) : super(key: key);
@@ -17,11 +19,13 @@ class TermsAndConditionsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
+      appBar: const CustomAppBar(title: 'الشروط والأحكام'),
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: Column(
           children: [
-            _buildCustomAppBar(),
+            // _buildCustomAppBar(), removed
+
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
@@ -48,39 +52,6 @@ class TermsAndConditionsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildCustomAppBar() {
-    return Container(
-      height: 160,
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [primaryColor, Color(0xFF0277BD)],
-        ),
-        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(40), bottomRight: Radius.circular(40)),
-      ),
-      child: SafeArea(
-        child: Stack(
-          children: [
-            Positioned(
-              right: 10, top: 10,
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
-                onPressed: () => Get.back(), // استخدام GetX للرجوع
-              ),
-            ),
-            Center(
-              child: Text(
-                'الشروط والأحكام',
-                style: GoogleFonts.cairo(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildHeaderSection() {
     return Column(
