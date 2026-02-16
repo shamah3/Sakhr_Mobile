@@ -38,7 +38,13 @@ class ReturnedProductsPage extends StatelessWidget {
                   const SizedBox(height: 15),
 
                   // بناء القائمة ديناميكياً من الكنترولر
-                  ...controller.returnedProducts.map((product) => _buildReturnItem(product)).toList(),
+                  if (controller.returnedProducts.isEmpty)
+                    Center(child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Text("لا توجد منتجات مسترجعة حالياً", style: GoogleFonts.cairo(color: Colors.grey)),
+                    ))
+                  else
+                    ...controller.returnedProducts.map((product) => _buildReturnItem(product)).toList(),
 
                   const SizedBox(height: 30),
                   _buildReturnPolicyBox(),
@@ -81,41 +87,61 @@ class ReturnedProductsPage extends StatelessWidget {
         boxShadow: [
           BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
         ],
+        border: Border.all(color: Colors.grey.shade50),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: const Icon(Icons.inventory_2_outlined, color: primaryBlue),
-          ),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(product.name, style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 15)),
-                Text(product.orderId, style: GoogleFonts.cairo(fontSize: 12, color: Colors.grey)),
-                const SizedBox(height: 5),
-                Text(product.price, style: GoogleFonts.cairo(color: primaryBlue, fontWeight: FontWeight.bold, fontSize: 14)),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          Row(
             children: [
-              Icon(product.icon, color: product.statusColor, size: 20),
-              const SizedBox(height: 5),
-              Text(
-                product.status,
-                style: GoogleFonts.cairo(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: product.statusColor,
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: product.statusColor.withOpacity(0.1),
+                  shape: BoxShape.circle,
                 ),
+                child: Icon(product.icon, color: product.statusColor, size: 20),
+              ),
+              const SizedBox(width: 15),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(product.name, style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 14)),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Text("رقم الطلب: ", style: GoogleFonts.cairo(fontSize: 11, color: Colors.grey)),
+                        Text(product.orderId, style: GoogleFonts.cairo(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Text(product.price, style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: primaryBlue, fontSize: 13)),
+            ],
+          ),
+          const SizedBox(height: 15),
+          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: product.statusColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  product.status,
+                  style: GoogleFonts.cairo(color: product.statusColor, fontSize: 11, fontWeight: FontWeight.bold),
+                ),
+              ),
+              TextButton(
+                onPressed: () {},
+                style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(50, 30)),
+                child: Text("عرض التفاصيل", style: GoogleFonts.cairo(fontSize: 11, color: Colors.blue)),
               ),
             ],
           ),

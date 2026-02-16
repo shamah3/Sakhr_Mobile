@@ -66,14 +66,36 @@ class ReviewsPage extends StatelessWidget {
 
 
   Widget _buildList(List<ReviewModel> list, {required bool isReviewed}) {
-    return Obx(() => ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      itemCount: list.length,
-      itemBuilder: (context, index) {
-        final item = list[index];
-        return isReviewed ? _buildReviewCard(item) : _buildPendingCard(item);
-      },
-    ));
+    return Obx(() {
+      if (list.isEmpty) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(isReviewed ? Icons.rate_review_outlined : Icons.pending_actions_outlined, size: 60, color: Colors.grey[300]),
+              const SizedBox(height: 10),
+              Text(
+                isReviewed ? "لا توجد تقييمات سابقة" : "لا توجد منتجات بانتظار التقييم",
+                style: GoogleFonts.cairo(color: Colors.grey, fontSize: 16),
+              ),
+              if (!isReviewed)
+                 Padding(
+                   padding: const EdgeInsets.only(top: 10),
+                   child: Text("قم بشراء منتجات لتقييمها", style: GoogleFonts.cairo(color: Colors.grey[400], fontSize: 12)),
+                 ),
+            ],
+          ),
+        );
+      }
+      return ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        itemCount: list.length,
+        itemBuilder: (context, index) {
+          final item = list[index];
+          return isReviewed ? _buildReviewCard(item) : _buildPendingCard(item);
+        },
+      );
+    });
   }
 
   Widget _buildReviewCard(ReviewModel review) {
@@ -142,7 +164,7 @@ class ReviewsPage extends StatelessWidget {
             ),
           ),
           ElevatedButton(
-            onPressed: () {},
+            onPressed: () => Get.find<ReviewsController>().showRatingDialog(review),
             style: ElevatedButton.styleFrom(
               backgroundColor: secondaryOrange,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

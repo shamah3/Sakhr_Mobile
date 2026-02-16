@@ -68,12 +68,15 @@ class PurchaseReportsPage extends StatelessWidget {
                     }
                     
                     return Column(
-                      children: controller.filteredOrders.map((order) {
-                        return _buildOrderSummaryTile(
-                          order.itemsNames.join(", "), 
-                          "${order.total.toStringAsFixed(0)} ريال", 
-                          order.date
-                        );
+                      children: controller.filteredOrders.expand((order) {
+                        return order.itemsNames.map((itemName) {
+                          return _buildProductCard(
+                            itemName,
+                            "${order.total.toStringAsFixed(0)} ريال",
+                            order.date,
+                            order.id,
+                          );
+                        });
                       }).toList(),
                     );
                   }),
@@ -189,28 +192,75 @@ class PurchaseReportsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildOrderSummaryTile(String name, String price, String date) {
+  Widget _buildProductCard(String name, String price, String date, String orderId) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.grey.shade100),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+        border: Border.all(color: Colors.grey.shade50),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
-
-
             children: [
-              Text(name, style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold)),
-              Text(date, style: GoogleFonts.cairo(fontSize: 11, color: secondaryOrange)),
+              Expanded(
+                child: Text(
+                  name,
+                  style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold, height: 1.4),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: primaryBlue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  price,
+                  style: GoogleFonts.cairo(color: primaryBlue, fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+              ),
             ],
           ),
-          Text(price, style: GoogleFonts.cairo(color: primaryBlue, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.tag, size: 14, color: Colors.grey),
+                  const SizedBox(width: 4),
+                  Text(
+                    orderId,
+                    style: GoogleFonts.cairo(fontSize: 11, color: Colors.grey),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  const Icon(Icons.calendar_month_outlined, size: 14, color: secondaryOrange),
+                  const SizedBox(width: 4),
+                  Text(
+                    date,
+                    style: GoogleFonts.cairo(fontSize: 11, color: secondaryOrange, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ],
       ),
     );
