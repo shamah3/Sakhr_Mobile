@@ -47,6 +47,9 @@ class CartController extends GetxController {
     return total;
   }
 
+  // Cost in USD (approx 1000 YER)
+  double get shippingCost => 2.0;
+
   void addItem(Product product) {
     if (_items.containsKey(product.id)) {
       _items[product.id]!.quantity.value++;

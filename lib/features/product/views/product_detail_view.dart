@@ -11,6 +11,8 @@ import 'package:bytore/core/utils/notification_helper.dart';
 import 'package:bytore/features/product/views/product_list_view.dart';
 import 'package:bytore/features/product/controllers/product_controller.dart';
 import 'package:bytore/features/product/views/components/three_d_viewer.dart';
+import 'package:bytore/core/components/custom_app_bar.dart';
+
 
 
 
@@ -27,31 +29,32 @@ class ProductDetailView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: CustomAppBar(
+        title: "تفاصيل المنتج",
+        showBackArrow: true,
+        actions: [
+          Obx(() => IconButton(
+            onPressed: () => appController.toggleWishlist(product.id),
+            icon: Icon(
+              appController.isWishlisted(product.id) ? Icons.favorite : Icons.favorite_border,
+              color: appController.isWishlisted(product.id) ? Colors.orange : kPrimaryColor,
+            ),
+          )),
+          const SizedBox(width: 10),
+        ],
+      ),
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(
-            expandedHeight: 350,
-            title: const Text(
-              "تفاصيل المنتج",
-              style: TextStyle(color: kTextColor, fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            centerTitle: true,
-            leading: _buildHeaderBtn(Icons.arrow_back_ios_new, () => Get.back()),
-            actions: [
-              Obx(() => _buildHeaderBtn(
-                appController.isWishlisted(product.id) ? Icons.favorite : Icons.favorite_border,
-                    () => appController.toggleWishlist(product.id),
-                color: appController.isWishlisted(product.id) ? Colors.orange : kPrimaryColor,
-              )),
-              const SizedBox(width: 10),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              background: Stack(
+
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: 350,
+              child: Stack(
                 alignment: Alignment.bottomCenter,
                 children: [
                   if (product.threeDImages.isNotEmpty)
                     Padding(
-                      padding: const EdgeInsets.only(top: 60),
+                      padding: const EdgeInsets.only(top: 20),
                       child: ThreeDProductViewer(images: product.threeDImages, height: 280),
                     )
                   else
@@ -68,7 +71,7 @@ class ProductDetailView extends StatelessWidget {
                         ),
                       ),
                     )),
-                  if (product.threeDImages.isEmpty) // Only show page indicator for standard images
+                  if (product.threeDImages.isEmpty)
                     Positioned(
                       bottom: 20,
                       right: 20,
@@ -84,8 +87,6 @@ class ProductDetailView extends StatelessWidget {
                         )),
                       ),
                     ),
-                  // Thumbnails removed as per request
-                  const SizedBox.shrink(),
                 ],
               ),
             ),

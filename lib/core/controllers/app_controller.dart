@@ -148,7 +148,8 @@ class AppController extends GetxController {
   var priceRange = const RangeValues(100, 5000).obs;
   var activeCategory = "الكل".obs;
   var selectedBrand = "الكل".obs;
-  var selectedAvailability = "متوفر".obs;
+  var selectedAvailability = "الكل".obs;
+
   var warrantyText = "".obs;
 
   void updateFilters({RangeValues? range, String? category, String? brand, String? availability, String? warranty}) {

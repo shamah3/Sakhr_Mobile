@@ -38,12 +38,12 @@ class CheckoutController extends GetxController {
 
   // تعريف النوع بوضوح لتجنب أخطاء الـ Dynamic في الـ UI
   final List<Map<String, dynamic>> methods = [
-    {'title': 'محافظ إلكترونية', 'icon': Icons.account_balance_wallet_rounded, 'subtitle': 'جوالي، ون كاش، بيس'},
+    {'title': 'محافظ إلكترونية', 'icon': Icons.account_balance_wallet_rounded, 'subtitle': 'جوالي، ون كاش، بيس، جيب'},
     {'title': 'حوالة مصرفية', 'icon': Icons.account_balance_rounded, 'subtitle': 'الكريمي، النجم، الامتياز'},
     {'title': 'الدفع عند الاستلام', 'icon': Icons.payments_outlined, 'subtitle': 'رسوم إضافية 1000 ر.ي'},
   ];
 
-  final List<String> wallets = ['جوالي (Jawwal Pay)', 'ون كاش (OneCash)', 'بيس (Pyes)'];
+  final List<String> wallets = ['جوالي (Jawwal Pay)', 'ون كاش (OneCash)', 'بيس (Pyes)', 'جيب (Jeeb)'];
 
   void selectAddress(int index) => selectedAddressIndex.value = index;
 

@@ -26,6 +26,17 @@ class FilterBottomSheet extends StatelessWidget {
       maxProductPrice = appController.priceRange.value.end + 100.0;
     }
 
+    // Initialize variables OUTSIDE StatefulBuilder
+    var tempRange = appController.priceRange.value;
+    var tempCategory = appController.activeCategory.value;
+    var tempBrand = appController.selectedBrand.value;
+    var tempAvailability = appController.selectedAvailability.value;
+    var tempWarranty = appController.warrantyText.value;
+
+    final TextEditingController minPriceCtrl = TextEditingController(text: tempRange.start.round().toString());
+    final TextEditingController maxPriceCtrl = TextEditingController(text: tempRange.end.round().toString());
+    final TextEditingController warrantyCtrl = TextEditingController(text: tempWarranty);
+
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: const BoxDecoration(
@@ -37,16 +48,6 @@ class FilterBottomSheet extends StatelessWidget {
         textDirection: TextDirection.rtl,
         child: StatefulBuilder(
             builder: (context, setModalState) {
-              // متغيرات الحالة المحلية
-              var tempRange = appController.priceRange.value;
-              var tempCategory = appController.activeCategory.value;
-              var tempBrand = appController.selectedBrand.value;
-              var tempAvailability = appController.selectedAvailability.value;
-              var tempWarranty = appController.warrantyText.value;
-
-              final TextEditingController minPriceCtrl = TextEditingController(text: tempRange.start.round().toString());
-              final TextEditingController maxPriceCtrl = TextEditingController(text: tempRange.end.round().toString());
-              final TextEditingController warrantyCtrl = TextEditingController(text: tempWarranty);
 
               return SingleChildScrollView(
                 child: Column(

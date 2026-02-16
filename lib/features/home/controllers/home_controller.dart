@@ -53,14 +53,13 @@ class HomeController extends GetxController {
       final matchesPrice = p.price >= appController.priceRange.value.start && 
                            p.price <= appController.priceRange.value.end;
                            
-      // Category match
+      // Category match (Strict)
       final matchesCategory = appController.activeCategory.value == "الكل" || 
-                              p.brandName.contains(appController.activeCategory.value); // Product model maps 'brandName' to category/brand loosely, refining this might be needed in future but sticking to existing logic pattern
+                              p.category == appController.activeCategory.value;
                               
       // Brand match (Strict)
       final matchesBrand = appController.selectedBrand.value == "الكل" || 
-                           p.brandName == appController.selectedBrand.value ||
-                           p.name.contains(appController.selectedBrand.value);
+                           p.brandName == appController.selectedBrand.value;
                            
       // Availability match
       bool matchesAvailability = true;
@@ -68,13 +67,13 @@ class HomeController extends GetxController {
         if (appController.selectedAvailability.value == "متوفر") {
           matchesAvailability = p.stock > 0 && p.status != "On Shipment";
         } else if (appController.selectedAvailability.value == "غير متوفر") {
-          matchesAvailability = p.stock == 0;
+          matchesAvailability = p.stock == 0 || p.status == "Out of Stock";
         } else if (appController.selectedAvailability.value == "قيد الشحن") {
           matchesAvailability = p.status == "On Shipment";
         }
       }
       
-      // Warranty match
+      // Warranty match (Contains)
       final matchesWarranty = appController.warrantyText.value.isEmpty ||
                               p.warranty.contains(appController.warrantyText.value);
       
@@ -93,7 +92,8 @@ class HomeController extends GetxController {
     return searchController.text.isNotEmpty || 
            appController.activeCategory.value != "الكل" ||
            appController.selectedBrand.value != "الكل" ||
-           appController.selectedAvailability.value != "متوفر";
+           appController.selectedAvailability.value != "الكل";
+
   }
 
   @override

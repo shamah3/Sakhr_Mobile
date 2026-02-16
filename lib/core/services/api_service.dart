@@ -68,6 +68,21 @@ class ApiService {
       ];
       final String assignedStore = storeNames[p.id % storeNames.length];
 
+      // Simulate Brands and Categories for filtering
+      final List<String> brands = ["Apple", "HP", "Dell", "Samsung", "Sony", "Canon", "Asus", "Lenovo"];
+      final List<String> categories = ["لابتوبات", "شاشات", "سماعات", "طابعات", "كاميرات", "إكسسوارات"];
+      
+      final String assignedBrand = brands[p.id % brands.length];
+      final String assignedCategory = categories[p.id % categories.length];
+
+      // Simulate generic statuses for testing filters
+      String status = p.status;
+      if (p.id % 7 == 0) {
+         status = 'On Shipment';
+      } else if (p.stock == 0) {
+         status = 'Out of Stock';
+      }
+
       // Augment with mock variants for testing
       return Product(
         id: p.id,
@@ -76,9 +91,10 @@ class ApiService {
         price: p.price,
         oldPrice: p.oldPrice,
         imageUrl: p.imageUrl,
-        brandName: p.brandName,
+        brandName: assignedBrand, // Use simulated brand
+        category: assignedCategory, // Use simulated category
         stock: p.stock,
-        status: p.status,
+        status: status,
         warranty: p.warranty,
         deliveryTime: p.deliveryTime,
         storeName: assignedStore, // Link to real store
@@ -165,7 +181,8 @@ class ApiService {
         price: 999.99,
         oldPrice: 1200.0,
         imageUrl: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500",
-        brandName: "Electronic",
+        brandName: "HP", // Updated to match filter
+        category: "لابتوبات", // Updated to match filter
         stock: 10,
         status: "في المخزن",
         warranty: "سنة واحدة",
@@ -190,7 +207,8 @@ class ApiService {
         price: 199.99,
         oldPrice: 250.0,
         imageUrl: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500",
-        brandName: "Audio",
+        brandName: "Sony", // Updated to match filter
+        category: "سماعات", // Updated to match filter
         stock: 50,
         status: "في المخزن",
         warranty: "6 أشهر",
@@ -207,7 +225,8 @@ class ApiService {
           price: 1500.0, 
           oldPrice: 1800.0,
           imageUrl: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500", 
-          brandName: "Test Brand", 
+          brandName: "Dell", 
+          category: "لابتوبات",
           stock: 0, // غير متوفر
           status: "Out of Stock",
           warranty: "N/A",
@@ -222,7 +241,8 @@ class ApiService {
           price: 2500.0, 
           oldPrice: 2800.0,
           imageUrl: "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=500", 
-          brandName: "Test Brand", 
+          brandName: "Samsung", 
+          category: "شاشات",
           stock: 5, 
           status: "On Shipment", // قيد الشحن
           warranty: "1 Year",

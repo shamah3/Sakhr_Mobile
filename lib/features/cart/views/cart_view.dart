@@ -17,7 +17,7 @@ class CartView extends StatefulWidget {
 }
 
 class _CartViewState extends State<CartView> {
-  final double shippingCost = 500.0;
+
 
   @override
   Widget build(BuildContext context) {
@@ -166,7 +166,7 @@ class _CartViewState extends State<CartView> {
 
   // --- 3. قسم الدفع المحدث (تاريخ التوصيل، المسميات، وزر المتابعة) ---
   Widget _buildCompactCheckoutSection(BuildContext context, CartController cart, AppController appController) {
-    double totalWithShipping = cart.totalAmount + shippingCost;
+    double totalWithShipping = cart.totalAmount + cart.shippingCost;
     String priceLabel = cart.items.length > 1 ? "سعر المنتجات" : "سعر المنتج";
 
     return Container(
@@ -195,7 +195,7 @@ class _CartViewState extends State<CartView> {
               children: [
                 _buildPriceRow(priceLabel, appController.getFormattedPrice(cart.totalAmount)),
                 const SizedBox(height: 10),
-                _buildPriceRow("تكلفة الشحن", appController.getFormattedPrice(shippingCost)),
+                _buildPriceRow("تكلفة الشحن", appController.getFormattedPrice(cart.shippingCost)),
                 const Divider(height: 20, thickness: 0.5),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

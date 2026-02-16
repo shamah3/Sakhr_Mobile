@@ -11,6 +11,7 @@ class Product {
   final String warranty;
   final String deliveryTime;
   final String storeName; // Added to link to specific stores
+  final String category; // Added for precise filtering
 
   final double rating;
   final int buyerCount;
@@ -25,7 +26,9 @@ class Product {
     required this.brandName, required this.stock, required this.status,
     required this.warranty,
     required this.deliveryTime,
+
     this.storeName = "Bytore Official", // Default store
+    this.category = "General", // Default category
     this.rating = 4.5,
     this.buyerCount = 100,
     this.images = const [],
@@ -47,11 +50,13 @@ class Product {
       price: currentPrice,
       oldPrice: currentPrice * 1.2,
       imageUrl: img,
-      brandName: json['category']?.toString() ?? 'General',
+      brandName: "General", // Default brand, will be overwritten in ApiService
+      category: json['category']?.toString() ?? 'General',
       stock: (json['rating'] != null && json['rating']['count'] != null)
           ? json['rating']['count']
           : 0,
-      status: 'In Stock',
+      status: ((json['rating'] != null && json['rating']['count'] != null) ? json['rating']['count'] : 0) > 0 ? 'In Stock' : 'Out of Stock',
+
       warranty: (json['id'] ?? 0) % 2 == 0 ? 'ضمان سنة واحدة' : 'ضمان 6 أشهر',
       deliveryTime: '${(json['id'] ?? 0) % 3 + 2} أيام توصيل',
       rating: (json['rating'] != null && json['rating']['rate'] != null) 

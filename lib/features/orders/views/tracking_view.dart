@@ -26,44 +26,49 @@ class TrackingView extends GetView<AppController> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildModernOrderHeader(),
-              const SizedBox(height: 35),
-              const Row(
-                children: [
-                  Icon(Icons.timeline_rounded, color: kPrimaryColor, size: 20),
-                  SizedBox(width: 10),
-                  Text(
-                    'تتبع مسار الشحنة',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      color: kTextColor,
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildModernOrderHeader(),
+                    const SizedBox(height: 35),
+                    const Row(
+                      children: [
+                        Icon(Icons.timeline_rounded, color: kPrimaryColor, size: 20),
+                        SizedBox(width: 10),
+                        Text(
+                          'تتبع مسار الشحنة',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: kTextColor,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 25),
+                    _buildVisualTimeline(),
+                    const SizedBox(height: 35),
+                    const Text(
+                      'تفاصيل التوصيل',
+                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: kTextColor),
+                    ),
+                    const SizedBox(height: 20),
+                    _buildShippingInfoCard(),
+                    const SizedBox(height: 20),
+                  ],
+                ),
               ),
-              const SizedBox(height: 25),
-              _buildVisualTimeline(),
-              const SizedBox(height: 35),
-              const Text(
-                'تفاصيل التوصيل',
-                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: kTextColor),
-              ),
-              const SizedBox(height: 20),
-              _buildShippingInfoCard(),
-              const SizedBox(height: 40),
-              _buildActionButtons(context),
-              const SizedBox(height: 50),
-            ],
+            ),
           ),
-        ),
+          _buildBottomAction(context),
+        ],
       ),
     );
   }
@@ -315,48 +320,63 @@ class TrackingView extends GetView<AppController> {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          height: 55,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: [
-              BoxShadow(
-                color: kPrimaryColor.withOpacity(0.2),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
-              ),
-            ],
+  Widget _buildBottomAction(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(25),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
           ),
-          child: ElevatedButton.icon(
-            onPressed: () {
-               controller.addNotification(
-                title: "الدعم الفني",
-                body: "تم استلام طلبك، سيقوم مندوبنا بالتواصل معك في أقرب وقت.",
-                color: kPrimaryColor
-              );
-              Get.snackbar("تنبيه", "تم إرسال طلب تواصل للدعم الفني");
-            },
-            icon: const Icon(Icons.support_agent_rounded, color: Colors.white),
-            label: const Text('تواصل مع المندوب', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: kPrimaryColor,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-              elevation: 0,
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            height: 55,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: [
+                BoxShadow(
+                  color: kPrimaryColor.withOpacity(0.2),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: ElevatedButton.icon(
+              onPressed: () {
+                 controller.addNotification(
+                  title: "الدعم الفني",
+                  body: "تم استلام طلبك، سيقوم مندوبنا بالتواصل معك في أقرب وقت.",
+                  color: kPrimaryColor
+                );
+                Get.snackbar("تنبيه", "تم إرسال طلب تواصل للدعم الفني");
+              },
+              icon: const Icon(Icons.support_agent_rounded, color: Colors.white),
+              label: const Text('تواصل مع المندوب', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kPrimaryColor,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                elevation: 0,
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 15),
-        TextButton(
-          onPressed: () => Get.back(),
-          style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
-          child: const Text('إلغاء الطلب', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-        ),
-      ],
+          const SizedBox(height: 15),
+          TextButton(
+            onPressed: () => Get.back(),
+            style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+            child: const Text('إلغاء الطلب', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
     );
   }
 }
