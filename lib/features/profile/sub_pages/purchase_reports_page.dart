@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:bytore/features/profile/controllers/purchase_reports_controller.dart';
 import 'package:bytore/core/components/custom_app_bar.dart';
+import 'package:bytore/features/orders/models/order_model.dart';
 
 
 class PurchaseReportsPage extends StatelessWidget {
@@ -20,9 +22,7 @@ class PurchaseReportsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: bgColor,
       appBar: const CustomAppBar(title: 'تقارير المشتريات'),
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Column(
+      body: Column(
           children: [
             // _buildCurvedAppBar(), removed
 
@@ -68,12 +68,12 @@ class PurchaseReportsPage extends StatelessWidget {
                     }
                     
                     return Column(
-                      children: controller.filteredOrders.expand((order) {
-                        return order.itemsNames.map((itemName) {
+                      children: controller.filteredOrders.expand<Widget>((OrderModel order) {
+                        return order.itemsNames.map<Widget>((String itemName) {
                           return _buildProductCard(
                             itemName,
-                            "${order.total.toStringAsFixed(0)} ريال",
-                            order.date,
+                            "${order.totalPrice.toStringAsFixed(0)} ريال",
+                            DateFormat('dd MMM', 'ar').format(order.dateTime),
                             order.id,
                           );
                         });
@@ -85,7 +85,6 @@ class PurchaseReportsPage extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 
@@ -155,27 +154,60 @@ class PurchaseReportsPage extends StatelessWidget {
             'تحليل الإنفاق',
             style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 25),
           AspectRatio(
-            aspectRatio: 16 / 9,
-            child: Container(
-              decoration: BoxDecoration(
-                color: primaryBlue.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Center(
-                child: Obx(() => Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.bar_chart_rounded, size: 50, color: secondaryOrange.withOpacity(0.5)),
-                    Text(
-                      'الرسم البياني للإنفاق ${controller.selectedFilter.value == TimeFilter.monthly ? "الشهري" : controller.selectedFilter.value == TimeFilter.weekly ? "الأسبوعي" : "السنوي"}',
-                      style: GoogleFonts.cairo(color: primaryBlue.withOpacity(0.5)),
+            aspectRatio: 1.8,
+            child: Obx(() {
+              if (controller.filteredOrders.isEmpty) {
+                 return Center(
+                   child: Column(
+                     mainAxisAlignment: MainAxisAlignment.center,
+                     children: [
+                       Icon(Icons.bar_chart_rounded, size: 40, color: Colors.grey[300]),
+                       Text("لا توجد بيانات للعرض", style: GoogleFonts.cairo(color: Colors.grey[400], fontSize: 12)),
+                     ],
+                   ),
+                 );
+              }
+
+              // تجميع البيانات للرسم البياني (آخر 7 فترات حسب الفلتر)
+              // تبسيط: سنظهر آخر 7 طلبات كأعمدة أو نوزعهم
+              final chartData = controller.filteredOrders.take(7).toList().reversed.toList();
+              final maxTotal = chartData.isEmpty ? 1.0 : chartData.map((e) => e.totalPrice).reduce((a, b) => a > b ? a : b);
+
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: chartData.map((order) {
+                  final barHeight = (order.totalPrice / (maxTotal == 0 ? 1 : maxTotal)) * 100;
+                  return Tooltip(
+                    message: "${order.totalPrice.toStringAsFixed(0)} ر.ي",
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Container(
+                          width: 25,
+                          height: barHeight.clamp(5, 120),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [secondaryOrange, secondaryOrange.withOpacity(0.6)],
+                            ),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          DateFormat('dd/MM', 'ar').format(order.dateTime),
+                          style: GoogleFonts.cairo(fontSize: 10, color: Colors.grey[600]),
+                        ),
+                      ],
                     ),
-                  ],
-                )),
-              ),
-            ),
+                  );
+                }).toList(),
+              );
+            }),
           ),
         ],
       ),

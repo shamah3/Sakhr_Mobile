@@ -38,15 +38,12 @@ class AddressBottomSheet extends StatelessWidget {
               onChanged: (v) => city = v ?? city,
             ),
             const SizedBox(height: 20),
-            Directionality(
-              textDirection: TextDirection.rtl,
-              child: Row(
-                children: [
-                  Expanded(child: FilterWidgets.buildTextField("الاسم الأول*", "الرجاء إدخال الاسم", initialValue: fName, onChanged: (v) => fName = v)),
-                  const SizedBox(width: 15),
-                  Expanded(child: FilterWidgets.buildTextField("الاسم الأخير*", "الرجاء إدخال اللقب", initialValue: lName, onChanged: (v) => lName = v)),
-                ],
-              ),
+            Row(
+              children: [
+                Expanded(child: FilterWidgets.buildTextField("الاسم الأول*", "الرجاء إدخال الاسم", initialValue: fName, onChanged: (v) => fName = v)),
+                const SizedBox(width: 15),
+                Expanded(child: FilterWidgets.buildTextField("الاسم الأخير*", "الرجاء إدخال اللقب", initialValue: lName, onChanged: (v) => lName = v)),
+              ],
             ),
             const SizedBox(height: 20),
             FilterWidgets.buildTextField("اسم الشارع*", "الرجاء إدخال اسم الشارع", initialValue: street, onChanged: (v) => street = v),

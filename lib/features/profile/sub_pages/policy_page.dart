@@ -22,9 +22,7 @@ class PolicyPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: accentBg,
       appBar: const CustomAppBar(title: 'سياسة الاستبدال والاسترجاع'),
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Column(
+      body: Column(
           children: [
             // --- AppBar المنحني الموحد ---
             // _buildCurvedAppBar(), removed
@@ -71,7 +69,6 @@ class PolicyPage extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 

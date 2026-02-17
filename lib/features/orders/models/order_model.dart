@@ -11,19 +11,21 @@ enum OrderStatus {
 
 class OrderModel {
   final String id;
-  final DateTime date;
+  final DateTime dateTime;
   final OrderStatus status;
   final double totalPrice;
   final int itemCount;
   final String shippingAddress;
+  final List<String> itemsNames;
 
   OrderModel({
     required this.id,
-    required this.date,
+    required this.dateTime,
     required this.status,
     required this.totalPrice,
     required this.itemCount,
     required this.shippingAddress,
+    required this.itemsNames,
   });
 
   String get statusText {

@@ -20,9 +20,7 @@ class ComplaintsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: bgCanvas,
       appBar: const CustomAppBar(title: 'مركز الدعم والشكاوى'),
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-        child: SingleChildScrollView(
+      body: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           child: Column(
             children: [
@@ -57,7 +55,6 @@ class ComplaintsPage extends StatelessWidget {
             ],
           ),
         ),
-      ),
     );
   }
 

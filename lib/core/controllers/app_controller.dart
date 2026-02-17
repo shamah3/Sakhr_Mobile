@@ -103,7 +103,7 @@ class AppController extends GetxController {
 
   bool isWishlisted(int productId) => wishlistIds.contains(productId);
 
-  void toggleWishlist(int productId) {
+  void toggleWishlist(int productId, {String? productName}) {
     if (wishlistIds.contains(productId)) {
       wishlistIds.remove(productId);
     } else {
@@ -113,6 +113,16 @@ class AppController extends GetxController {
         title: 'المفضلة',
         body: 'تم إضافة المنتج للمفضلة',
       );
+      
+      // Log Activity
+      try {
+        Get.find<ActivitiesController>().logActivity(
+          title: 'إضافة "${productName ?? "منتج"}" للمفضلة',
+          type: 'fav'
+        );
+      } catch (e) {
+        print("Activity log error: $e");
+      }
     }
   }
 

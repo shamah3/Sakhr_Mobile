@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:bytore/core/controllers/cart_controller.dart';
 import 'package:bytore/features/profile/controllers/purchase_reports_controller.dart';
 import 'package:bytore/features/profile/controllers/activities_controller.dart';
-import 'package:bytore/features/profile/models/order_model.dart';
+import 'package:bytore/features/orders/models/order_model.dart';
 
 class CheckoutController extends GetxController {
   // استخدام lazy find إذا لم يكن موجوداً
@@ -84,9 +84,11 @@ class CheckoutController extends GetxController {
     
     final order = OrderModel(
       id: orderId,
-      date: dateStr,
       dateTime: now,
-      total: cart.totalAmount + cart.shippingCost, // Include shipping
+      status: OrderStatus.pending,
+      totalPrice: cart.totalAmount + cart.shippingCost,
+      itemCount: cart.items.length,
+      shippingAddress: addresses[selectedAddressIndex.value]['address'] ?? "No address",
       itemsNames: cart.items.values.map((e) => e.product.name).toList(),
     );
     

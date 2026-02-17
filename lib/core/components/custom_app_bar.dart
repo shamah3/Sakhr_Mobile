@@ -34,9 +34,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       leading: showBackArrow
           ? IconButton(
               icon: const Icon(
-                Icons.arrow_back_ios_new_rounded,
+                Icons.arrow_back, // Standard arrow that flips in RTL
                 color: kTextColor,
-                size: 20,
+                size: 24,
               ),
               onPressed: onBackPressed ?? () => Get.back(),
             )

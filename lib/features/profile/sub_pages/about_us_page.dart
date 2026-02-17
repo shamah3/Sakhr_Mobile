@@ -18,9 +18,7 @@ class AboutUsPage extends StatelessWidget {
       backgroundColor: const Color(0xFFF8FAFC),
       // استخدام الـ AppBar القياسي
       appBar: const CustomAppBar(title: 'عن محسوب'),
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Column(
+      body: Column(
           children: [
             // --- AppBar المنحني الموحد ---
             // _buildCurvedAppBar(), removed
@@ -51,7 +49,6 @@ class AboutUsPage extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 

@@ -9,7 +9,7 @@ import 'package:bytore/core/components/custom_app_bar.dart';
 class ReviewsPage extends StatelessWidget {
   ReviewsPage({Key? key}) : super(key: key);
 
-  final ReviewsController controller = Get.put(ReviewsController());
+  final ReviewsController controller = Get.find<ReviewsController>();
 
   static const Color primaryBlue = Color(0xFF015C92);
   static const Color secondaryOrange = Color(0xFFFFA931);
@@ -19,9 +19,7 @@ class ReviewsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: const CustomAppBar(title: 'تقييماتي'),
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Column(
+      body: Column(
           children: [
             // _buildCurvedAppBar(), removed
 
@@ -60,7 +58,6 @@ class ReviewsPage extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 

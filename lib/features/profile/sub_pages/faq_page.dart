@@ -40,9 +40,7 @@ class FaqPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: bgColor,
       appBar: const CustomAppBar(title: 'الأسئلة الشائعة'),
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Column(
+      body: Column(
           children: [
             // --- AppBar المنحني الموحد ---
             // _buildCurvedAppBar(), removed
@@ -64,7 +62,6 @@ class FaqPage extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 

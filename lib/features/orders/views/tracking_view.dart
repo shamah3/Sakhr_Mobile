@@ -16,7 +16,7 @@ class TrackingView extends GetView<AppController> {
         title: const Text("تتبع الطلب", style: TextStyle(color: kTextColor, fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: kTextColor, size: 20),
+          icon: const Icon(Icons.arrow_back, color: kTextColor, size: 24),
           onPressed: () => Get.back(),
         ),
         actions: [

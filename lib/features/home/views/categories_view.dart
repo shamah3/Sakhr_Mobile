@@ -16,15 +16,12 @@ class CategoriesView extends GetView<CategoriesController> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: _buildDynamicAppBar(),
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Row(
+      body: Row(
           children: [
             _buildSidebar(),
             Expanded(child: _buildMainContent()),
           ],
         ),
-      ),
     );
   }
 

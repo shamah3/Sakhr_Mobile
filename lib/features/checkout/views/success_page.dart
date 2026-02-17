@@ -6,7 +6,7 @@ import 'package:bytore/core/controllers/cart_controller.dart';
 import 'package:bytore/features/home/controllers/main_controller.dart';
 import 'package:bytore/features/orders/views/tracking_view.dart';
 
-import 'package:bytore/features/profile/models/order_model.dart';
+import 'package:bytore/features/orders/models/order_model.dart';
 
 class SuccessPage extends StatelessWidget {
   final OrderModel? order;
@@ -152,7 +152,7 @@ class SuccessPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text("الإجمالي", style: TextStyle(color: kTextLightColor, fontSize: 12)),
-              Text("${(order?.total ?? 0).toStringAsFixed(0)} ر.ي", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: kSecondaryColor)),
+              Text("${(order?.totalPrice ?? 0).toStringAsFixed(0)} ر.ي", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: kSecondaryColor)),
             ],
           ),
         ],

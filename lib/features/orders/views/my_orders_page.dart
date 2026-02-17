@@ -5,47 +5,14 @@ import 'package:bytore/features/orders/models/order_model.dart';
 import 'package:bytore/core/routes/app_routes.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:bytore/features/profile/controllers/purchase_reports_controller.dart';
 
 class MyOrdersPage extends StatelessWidget {
   const MyOrdersPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Dummy Data
-    final List<OrderModel> orders = [
-      OrderModel(
-        id: "BTR-45892",
-        date: DateTime.now().subtract(const Duration(days: 1)),
-        status: OrderStatus.outForDelivery,
-        totalPrice: 250.0,
-        itemCount: 3,
-        shippingAddress: "صنعاء، حي حدة",
-      ),
-      OrderModel(
-        id: "BTR-45893",
-        date: DateTime.now().subtract(const Duration(days: 5)),
-        status: OrderStatus.delivered,
-        totalPrice: 120.0,
-        itemCount: 1,
-        shippingAddress: "عدن، المنصورة",
-      ),
-      OrderModel(
-        id: "BTR-45894",
-        date: DateTime.now().subtract(const Duration(days: 2)),
-        status: OrderStatus.pending,
-        totalPrice: 450.0,
-        itemCount: 5,
-        shippingAddress: "تعز، شارع جمال",
-      ),
-      OrderModel(
-        id: "BTR-45895",
-        date: DateTime.now().subtract(const Duration(days: 10)),
-        status: OrderStatus.late,
-        totalPrice: 80.0,
-        itemCount: 2,
-        shippingAddress: "صنعاء، التحرير",
-      ),
-    ];
+    final purchaseController = Get.find<PurchaseReportsController>();
 
     return DefaultTabController(
       length: 5,
@@ -64,7 +31,7 @@ class MyOrdersPage extends StatelessWidget {
           ),
           centerTitle: true,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: kTextColor, size: 20),
+            icon: const Icon(Icons.arrow_back, color: kTextColor, size: 24),
             onPressed: () => Get.back(),
           ),
           bottom: TabBar(
@@ -85,15 +52,18 @@ class MyOrdersPage extends StatelessWidget {
             ],
           ),
         ),
-        body: TabBarView(
-          children: [
-            _buildOrderList(orders),
-            _buildOrderList(orders.where((o) => o.status == OrderStatus.pending).toList()),
-            _buildOrderList(orders.where((o) => o.status == OrderStatus.outForDelivery).toList()),
-            _buildOrderList(orders.where((o) => o.status == OrderStatus.delivered).toList()),
-            _buildOrderList(orders.where((o) => o.status == OrderStatus.late).toList()),
-          ],
-        ),
+        body: Obx(() {
+          final orders = purchaseController.orders;
+          return TabBarView(
+            children: [
+              _buildOrderList(orders),
+              _buildOrderList(orders.where((o) => o.status == OrderStatus.pending).toList()),
+              _buildOrderList(orders.where((o) => o.status == OrderStatus.outForDelivery).toList()),
+              _buildOrderList(orders.where((o) => o.status == OrderStatus.delivered).toList()),
+              _buildOrderList(orders.where((o) => o.status == OrderStatus.late).toList()),
+            ],
+          );
+        }),
       ),
     );
   }
@@ -207,8 +177,8 @@ class MyOrdersPage extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      _buildInfoColumn("التاريخ", DateFormat('dd MMM, yyyy').format(order.date)),
-                      _buildInfoColumn("السعر الإجمالي", "${order.totalPrice} \$", isPrimary: true),
+                      _buildInfoColumn("التاريخ", DateFormat('dd MMM, yyyy', 'ar').format(order.dateTime)),
+                      _buildInfoColumn("السعر الإجمالي", "${order.totalPrice.toStringAsFixed(0)} ر.ي", isPrimary: true),
                       _buildInfoColumn("المنتجات", "${order.itemCount} عناصر"),
                     ],
                   ),

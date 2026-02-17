@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:bytore/features/profile/controllers/settings_controller.dart';
-import 'package:bytore/features/profile/sub_pages/edit_profile_page.dart';
 import 'package:bytore/core/routes/app_routes.dart';
 import 'package:bytore/core/components/custom_app_bar.dart';
 
@@ -20,9 +19,7 @@ class SettingsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: const CustomAppBar(title: 'الإعدادات'),
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Column(
+      body: Column(
           children: [
             // _buildCurvedAppBar('الإعدادات'), removed
             Expanded(
@@ -41,10 +38,10 @@ class SettingsPage extends StatelessWidget {
                     title: 'تغيير كلمة المرور',
                     onTap: () => Get.to(() => const SizedBox()), // Placeholder for change password
                   ),
-
+  
                   const SizedBox(height: 25),
                   _buildSectionHeader('التفضيلات'),
-
+  
                   // اختيار المحافظة
                   Obx(() => _buildSelectionItem(
                     icon: Icons.map_outlined,
@@ -57,20 +54,10 @@ class SettingsPage extends StatelessWidget {
                       controller.updateGovernorate,
                     ),
                   )),
-
-                  // اختيار العملة
-                  Obx(() => _buildSelectionItem(
-                    icon: Icons.monetization_on_outlined,
-                    title: 'عملة العرض',
-                    value: controller.selectedCurrency.value,
-                    onTap: () => _showPicker(
-                      context,
-                      'اختر العملة',
-                      ['ريال يمني (YR)', 'سعودي (SAR)', 'دولار (USD)'],
-                      controller.updateCurrency,
-                    ),
-                  )),
-
+  
+                  // اختيار العملة (بتنسيق مشابه للشاشة الرئيسية)
+                  Obx(() => _buildCurrencySelectionItem(context)),
+  
                   // مفتاح الإشعارات
                   Obx(() => _buildSwitchItem(
                     icon: Icons.notifications_active_outlined,
@@ -78,7 +65,7 @@ class SettingsPage extends StatelessWidget {
                     value: controller.notificationsEnabled.value,
                     onChanged: controller.toggleNotifications,
                   )),
-
+  
                   const SizedBox(height: 40),
                   _buildLogoutButton(),
                 ],
@@ -86,7 +73,6 @@ class SettingsPage extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 
@@ -104,6 +90,64 @@ class SettingsPage extends StatelessWidget {
         leading: Icon(icon, color: primaryBlue),
         title: Text(title, style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.w600)),
         trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+      ),
+    );
+  }
+
+  Widget _buildCurrencySelectionItem(BuildContext context) {
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: ListTile(
+        leading: const Icon(Icons.currency_exchange_rounded, color: secondaryOrange),
+        title: Text('عملة العرض', style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.w600)),
+        trailing: PopupMenuButton<String>(
+          onSelected: (String newValue) {
+            controller.updateCurrency(newValue);
+          },
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          offset: const Offset(0, 40),
+          itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+            _buildCurrencyMenuItem('ريال يمني قديم (ر.ي.ق)'),
+            _buildCurrencyMenuItem('ريال يمني جديد (ر.ي.ج)'),
+            _buildCurrencyMenuItem('ريال سعودي (ر.س)'),
+            _buildCurrencyMenuItem('دولار (\$)'),
+          ],
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  controller.selectedCurrency,
+                  style: GoogleFonts.cairo(
+                    color: primaryBlue,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.grey, size: 16),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  PopupMenuItem<String> _buildCurrencyMenuItem(String text) {
+    return PopupMenuItem<String>(
+      value: text,
+      child: Text(
+        text,
+        textAlign: TextAlign.right,
+        style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13),
       ),
     );
   }

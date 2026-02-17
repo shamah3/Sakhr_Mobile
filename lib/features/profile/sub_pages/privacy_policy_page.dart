@@ -17,9 +17,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: bgColor,
       appBar: const CustomAppBar(title: 'سياسة الخصوصية'),
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Column(
+      body: Column(
           children: [
             // --- AppBar المنحني (نفس نمط صفحة الشروط) ---
             // _buildCurvedAppBar(context), removed
@@ -70,7 +68,6 @@ class PrivacyPolicyScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 

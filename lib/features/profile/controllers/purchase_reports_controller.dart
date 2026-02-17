@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:bytore/features/profile/models/order_model.dart';
+import 'package:bytore/features/orders/models/order_model.dart';
 
 enum TimeFilter { weekly, monthly, yearly }
 
@@ -55,7 +55,7 @@ class PurchaseReportsController extends GetxController {
     
     // Calculate stats
     double sum = 0;
-    for (var o in filteredOrders) sum += o.total;
+    for (var o in filteredOrders) sum += o.totalPrice;
     
     // Format currency (assuming YER for now or use AppController)
     // Using simple formatting for now

@@ -20,9 +20,7 @@ class TermsAndConditionsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: const CustomAppBar(title: 'الشروط والأحكام'),
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Column(
+      body: Column(
           children: [
             // _buildCustomAppBar(), removed
 
@@ -48,7 +46,6 @@ class TermsAndConditionsPage extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 

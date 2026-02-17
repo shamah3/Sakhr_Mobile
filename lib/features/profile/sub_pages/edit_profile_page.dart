@@ -19,9 +19,7 @@ class EditProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const CustomAppBar(title: 'إعدادات الملف الشخصي'),
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Form(
+      body: Form(
           key: controller.formKey,
           child: ListView(
             padding: const EdgeInsets.all(24),
@@ -94,7 +92,6 @@ class EditProfileScreen extends StatelessWidget {
             ],
           ),
         ),
-      ),
     );
   }
 

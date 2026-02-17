@@ -29,9 +29,7 @@ appBar: CustomAppBar(
     ),
   ],
 ),
-body: Directionality(
-textDirection: TextDirection.rtl,
-child: ListView(
+  body: ListView(
 padding: const EdgeInsets.symmetric(horizontal: 20),
 children: [
 const SizedBox(height: 20),
@@ -77,7 +75,6 @@ _buildLogoutButton(),
 
 const SizedBox(height: 120),
 ],
-),
 ),
 );
 }

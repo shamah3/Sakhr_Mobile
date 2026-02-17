@@ -20,9 +20,7 @@ class ActivitiesPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: bgColor,
       appBar: const CustomAppBar(title: 'سجل الأنشطة'),
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Column(
+      body: Column(
           children: [
             // _buildCurvedAppBar(), removed
 
@@ -32,6 +30,10 @@ class ActivitiesPage extends StatelessWidget {
                 // إظهار مؤشر التحميل إذا كانت البيانات لم تصل بعد
                 if (controller.isLoading.value) {
                   return const Center(child: CircularProgressIndicator(color: primaryBlue));
+                }
+
+                if (controller.activities.isEmpty) {
+                  return _buildEmptyState();
                 }
 
                 return ListView.builder(
@@ -62,7 +64,6 @@ class ActivitiesPage extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 
@@ -144,6 +145,50 @@ class ActivitiesPage extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(30),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                )
+              ],
+            ),
+            child: Icon(Icons.history_rounded, size: 60, color: Colors.grey[300]),
+          ),
+          const SizedBox(height: 25),
+          Text(
+            'سجل الأنشطة فارغ',
+            style: GoogleFonts.cairo(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: primaryBlue,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'لم تقم بأي أنشطة في التطبيق بعد.\nابدأ بالتسوق أو إضافة منتجات للمفضلة.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.cairo(
+              fontSize: 13,
+              color: Colors.grey[600],
+              height: 1.5,
             ),
           ),
         ],

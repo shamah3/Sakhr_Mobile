@@ -44,9 +44,7 @@ class FilterBottomSheet extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
       ),
       padding: const EdgeInsets.all(25),
-      child: Directionality(
-        textDirection: TextDirection.rtl,
-        child: StatefulBuilder(
+      child: StatefulBuilder(
             builder: (context, setModalState) {
 
               return SingleChildScrollView(
@@ -164,7 +162,6 @@ class FilterBottomSheet extends StatelessWidget {
               );
             }
         ),
-      ),
     );
   }
 }

@@ -375,9 +375,7 @@ class ProductDetailView extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: Container(
+      builder: (context) => Container(
           height: MediaQuery.of(context).size.height * 0.8,
           decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
           padding: const EdgeInsets.all(20),
@@ -399,7 +397,6 @@ class ProductDetailView extends StatelessWidget {
             ],
           ),
         ),
-      ),
     );
   }
 

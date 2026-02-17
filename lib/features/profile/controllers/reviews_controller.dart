@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bytore/features/profile/models/review_model.dart';
+import 'package:intl/intl.dart';
 import 'package:bytore/features/profile/controllers/purchase_reports_controller.dart';
+import 'package:bytore/features/profile/controllers/activities_controller.dart';
+import 'package:bytore/features/orders/models/order_model.dart';
 
 class ReviewsController extends GetxController with GetSingleTickerProviderStateMixin {
   late TabController tabController;
@@ -32,14 +35,14 @@ class ReviewsController extends GetxController with GetSingleTickerProviderState
     
     try {
       final purchaseController = Get.find<PurchaseReportsController>();
-      for (var order in purchaseController.orders) {
+      for (OrderModel order in purchaseController.orders) {
         // إضافة كل منتج في الطلب كعنصر قابل للتقييم
-        for (var itemName in order.itemsNames) {
+        for (String itemName in order.itemsNames) {
           // نتأكد أنه لم يتم تقييمه مسبقاً
           if (!reviewedList.any((r) => r.productName == itemName)) {
              pendingList.add(ReviewModel(
               productName: itemName,
-              date: "تم الشراء في ${order.date}",
+              date: "تم الشراء في ${DateFormat('dd/MM/yyyy', 'ar').format(order.dateTime)}",
               icon: Icons.shopping_bag_outlined,
               isPending: true,
             ));
@@ -64,6 +67,16 @@ class ReviewsController extends GetxController with GetSingleTickerProviderState
     
     // حذفه من قائمة الانتظار
     pendingList.remove(pendingItem);
+
+    // تسجيل النشاط
+    try {
+      Get.find<ActivitiesController>().logActivity(
+        title: "تقييم منتج: ${pendingItem.productName}",
+        type: 'star' // نفترض وجود أيقونة للتقييم
+      );
+    } catch (e) {
+      print("Activity log error: $e");
+    }
     
     Get.snackbar(
       "شكراً لك", 

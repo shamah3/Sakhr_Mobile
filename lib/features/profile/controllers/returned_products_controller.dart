@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bytore/features/profile/models/returned_product_model.dart';
 import 'package:bytore/features/profile/controllers/purchase_reports_controller.dart';
-import 'package:bytore/features/profile/models/order_model.dart';
+import 'package:bytore/features/profile/controllers/activities_controller.dart';
+import 'package:bytore/features/orders/models/order_model.dart';
 
 class ReturnedProductsController extends GetxController {
   // ألوان ثابتة للحالات
@@ -80,11 +81,21 @@ class ReturnedProductsController extends GetxController {
     returnedProducts.insert(0, ReturnedProductModel(
       name: itemName,
       orderId: order.id,
-      price: "${(order.total / order.itemsNames.length).toStringAsFixed(0)} ريال", // تقسيم افتراضي للسعر
+      price: "${(order.totalPrice / order.itemsNames.length).toStringAsFixed(0)} ريال", // تقسيم افتراضي للسعر
       status: 'تحت المراجعة',
       statusColor: secondaryOrange,
       icon: Icons.access_time,
     ));
+
+    // تسجيل النشاط
+    try {
+      Get.find<ActivitiesController>().logActivity(
+        title: "طلب استرجاع: $itemName",
+        type: 'return'
+      );
+    } catch (e) {
+      print("Activity log error: $e");
+    }
     
     Get.snackbar(
       'تم بنجاح',

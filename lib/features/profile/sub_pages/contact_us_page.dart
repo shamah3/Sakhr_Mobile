@@ -26,9 +26,7 @@ class ContactUsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: const CustomAppBar(title: 'تواصل معنا'),
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Column(
+      body: Column(
           children: [
             // --- AppBar المنحني الموحد ---
             // _buildCurvedAppBar(), removed
@@ -93,7 +91,6 @@ class ContactUsPage extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 

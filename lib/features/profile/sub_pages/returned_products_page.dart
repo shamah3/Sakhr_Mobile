@@ -11,7 +11,7 @@ class ReturnedProductsPage extends StatelessWidget {
   ReturnedProductsPage({Key? key}) : super(key: key);
 
   // ربط الكنترولر
-  final ReturnedProductsController controller = Get.put(ReturnedProductsController());
+  final ReturnedProductsController controller = Get.find<ReturnedProductsController>();
 
   // ألوان الهوية البصرية
   static const Color primaryBlue = Color(0xFF015C92);
@@ -23,9 +23,7 @@ class ReturnedProductsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: bgColor,
       appBar: const CustomAppBar(title: 'المنتجات المسترجعة'),
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Column(
+      body: Column(
           children: [
             // --- AppBar المنحني الموحد ---
             // _buildCurvedAppBar(), removed
@@ -53,7 +51,6 @@ class ReturnedProductsPage extends StatelessWidget {
             ),
           ],
         ),
-      ),
       // زر عائم لطلب استرجاع جديد مربوط بدالة في الكنترولر
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => controller.addNewReturnRequest(),

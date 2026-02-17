@@ -19,9 +19,7 @@ class WalletPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: const CustomAppBar(title: 'المحفظة المالية'),
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Column(
+      body: Column(
           children: [
             // AppBar الموحد لمتجر محسوب
             // _buildCurvedAppBar(), removed
@@ -59,7 +57,6 @@ class WalletPage extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 
