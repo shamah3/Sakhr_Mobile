@@ -45,12 +45,10 @@ class MainView extends GetView<MainController> {
       child: Scaffold(
         resizeToAvoidBottomInset: false, // Prevents FAB from moving up when keyboard appears
         extendBody: true, // Important for the notch effect
-        body: Expanded(
-          child: Obx(() => IndexedStack(
-            index: controller.selectedIndex.value,
-            children: pages,
-          )),
-        ),
+        body: Obx(() => IndexedStack(
+          index: controller.selectedIndex.value,
+          children: pages,
+        )),
         floatingActionButton: Padding(
           padding: const EdgeInsets.only(bottom: 10), // Raise it above the bar
           child: SizedBox(

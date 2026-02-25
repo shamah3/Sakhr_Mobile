@@ -1,6 +1,5 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:bytore/core/constants/constants.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class CustomImage extends StatelessWidget {
   final String imageUrl;
@@ -20,37 +19,40 @@ class CustomImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (imageUrl.isEmpty) {
-      return Container(
-        width: width,
-        height: height,
-        color: Colors.grey[100],
-        child: const Icon(Icons.image_not_supported_outlined, color: Colors.grey),
-      );
-    }
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(borderRadius),
-      child: CachedNetworkImage(
-        imageUrl: imageUrl,
-        width: width,
-        height: height,
-        fit: fit,
-        placeholder: (context, url) => Center(
-          child: SizedBox(
-            width: 20, 
-            height: 20, 
-            child: CircularProgressIndicator(strokeWidth: 2, color: kPrimaryColor.withOpacity(0.5))
-          )
-        ),
-        errorWidget: (context, url, error) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.broken_image_outlined, color: Colors.grey, size: 20),
-              if (height != null && height! > 50)
-                const Text("خطأ في التحميل", style: TextStyle(fontSize: 10, color: Colors.grey)),
-            ],
+    return SizedBox(
+      width: width,
+      height: height,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: CachedNetworkImage(
+          imageUrl: imageUrl,
+          fit: fit ?? BoxFit.cover,
+          placeholder: (context, url) => Container(
+            color: Colors.grey.shade100,
+            child: const Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+                ),
+              ),
+            ),
+          ),
+          errorWidget: (context, url, error) => Container(
+            color: Colors.grey.shade50,
+            child: const Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.image_not_supported_outlined, color: Colors.grey, size: 24),
+                SizedBox(height: 4),
+                Text(
+                  "فشل التحميل",
+                  style: TextStyle(color: Colors.grey, fontSize: 10),
+                ),
+              ],
+            ),
           ),
         ),
       ),
