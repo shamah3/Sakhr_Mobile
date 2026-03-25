@@ -190,7 +190,7 @@ class AppController extends GetxController {
   void clearNotifications() => notifications.clear();
 
   // Filter State
-  var priceRange = const RangeValues(100, 5000).obs;
+  var priceRange = const RangeValues(0, 50000).obs;
   var activeCategory = "الكل".obs;
   var selectedBrand = "الكل".obs;
   var selectedAvailability = "الكل".obs;

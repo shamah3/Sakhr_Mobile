@@ -15,20 +15,32 @@ class FilterBottomSheet extends StatelessWidget {
     final homeController = Get.find<HomeController>();
     final catController = Get.put(CategoriesController());
 
-    // حساب السعر الأقصى ديناميكياً مع وضع حماية لتجنب خطأ الـ Assertion
+    // حساب السعر الأدنى والأقصى ديناميكياً لتأطير نطاق الأسعار
     double maxProductPrice = 10000.0;
+    double minProductPrice = 0.0;
+    
     if (homeController.allProducts.isNotEmpty) {
       maxProductPrice = homeController.allProducts.fold(0.0, (prev, curr) => curr.price > prev ? curr.price : prev);
+      minProductPrice = homeController.allProducts.fold(maxProductPrice, (prev, curr) => curr.price < prev ? curr.price : prev);
     }
 
-    // تأمين القيمة لئلا تكون صفر أو أصغر من القيم المختارة حالياً لمنع الشاشة الحمراء
-    if (maxProductPrice <= 0) maxProductPrice = 1000.0;
-    if (maxProductPrice < appController.priceRange.value.end) {
-      maxProductPrice = appController.priceRange.value.end + 100.0;
-    }
+    if (maxProductPrice <= minProductPrice) maxProductPrice = minProductPrice + 100.0;
+    if (minProductPrice < 0) minProductPrice = 0.0;
 
     // Initialize variables OUTSIDE StatefulBuilder
     var tempRange = appController.priceRange.value;
+
+    // Clamp initial tempRange to new dynamic bounds to prevent crashes
+    double clampedStart = tempRange.start;
+    double clampedEnd = tempRange.end;
+    
+    if (clampedStart < minProductPrice) clampedStart = minProductPrice;
+    if (clampedStart > maxProductPrice) clampedStart = maxProductPrice;
+    
+    if (clampedEnd > maxProductPrice) clampedEnd = maxProductPrice;
+    if (clampedEnd < clampedStart) clampedEnd = clampedStart;
+
+    tempRange = RangeValues(clampedStart, clampedEnd);
     var tempCategory = appController.activeCategory.value;
     var tempBrand = appController.selectedBrand.value;
     var tempAvailability = appController.selectedAvailability.value;
@@ -64,13 +76,35 @@ class FilterBottomSheet extends StatelessWidget {
                     const SizedBox(height: 30),
                     const Text("نطاق السعر", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                     const SizedBox(height: 10),
+                    
+                    RangeSlider(
+                      values: tempRange,
+                      min: minProductPrice,
+                      max: maxProductPrice,
+                      activeColor: kPrimaryColor,
+                      inactiveColor: Colors.grey.shade300,
+                      labels: RangeLabels(
+                        appController.getFormattedPrice(tempRange.start),
+                        appController.getFormattedPrice(tempRange.end),
+                      ),
+                      onChanged: (RangeValues values) {
+                        setModalState(() {
+                          tempRange = values;
+                          minPriceCtrl.text = values.start.round().toString();
+                          maxPriceCtrl.text = values.end.round().toString();
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 15),
+
                     Row(
                       children: [
                         Expanded(
-                          child: FilterWidgets.buildTextField("أقل سعر", "", controller: minPriceCtrl, onChanged: (val) {
+                          child: FilterWidgets.buildTextField("أقل سعر", "", controller: minPriceCtrl, keyboardType: TextInputType.number, onChanged: (val) {
+                             if (val.isEmpty) return;
                              double? minVal = double.tryParse(val);
                              if (minVal != null) {
-                               if (minVal < 0) minVal = 0;
+                               if (minVal < minProductPrice) minVal = minProductPrice;
                                if (minVal > tempRange.end) minVal = tempRange.end;
                                setModalState(() {
                                  tempRange = RangeValues(minVal!, tempRange.end);
@@ -80,7 +114,8 @@ class FilterBottomSheet extends StatelessWidget {
                         ),
                         const SizedBox(width: 15),
                         Expanded(
-                          child: FilterWidgets.buildTextField("أعلى سعر", "", controller: maxPriceCtrl, onChanged: (val) {
+                          child: FilterWidgets.buildTextField("أعلى سعر", "", controller: maxPriceCtrl, keyboardType: TextInputType.number, onChanged: (val) {
+                             if (val.isEmpty) return;
                              double? maxVal = double.tryParse(val);
                              if (maxVal != null) {
                                if (maxVal > maxProductPrice) maxVal = maxProductPrice;
@@ -121,7 +156,7 @@ class FilterBottomSheet extends StatelessWidget {
                       null,
                       label: "التوفر والحالة",
                       hint: "اختيار الحالة",
-                      items: ["الكل", "متوفر", "غير متوفر", "قيد الشحن"],
+                      items: ["الكل", "متوفر"],
                       onChanged: (v) {
                         setModalState(() => tempAvailability = v ?? tempAvailability);
                       },

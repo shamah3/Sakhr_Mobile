@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bytore/core/constants/constants.dart';
 
 class FilterWidgets {
-  static Widget buildTextField(String label, String hint, {String? initialValue, Function(String)? onChanged, TextEditingController? controller}) {
+  static Widget buildTextField(String label, String hint, {String? initialValue, Function(String)? onChanged, TextEditingController? controller, TextInputType keyboardType = TextInputType.text}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -13,7 +13,7 @@ class FilterWidgets {
           initialValue: controller != null ? null : initialValue,
           onChanged: onChanged,
           textAlign: TextAlign.right,
-          keyboardType: TextInputType.text,
+          keyboardType: keyboardType,
           decoration: InputDecoration(
             hintText: hint,
             filled: true,
