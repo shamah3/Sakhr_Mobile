@@ -103,11 +103,11 @@ class ProductDetailView extends StatelessWidget {
                   const SizedBox(height: 25),
                   
                   // 2. Statistics Row (Rating, Buyer Count)
-                  _buildStatsRow(),
+                  _buildStatsRow(controller),
                   const SizedBox(height: 25),
 
                   // 3. Service Cards (Warranty, Delivery, Store)
-                  _buildServiceSection(context),
+                  _buildServiceSection(context, controller),
                   const SizedBox(height: 30),
 
                   // 4. Variant Selectors (Colors & Sizes)
@@ -154,12 +154,20 @@ class ProductDetailView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Directionality(
-          textDirection: controller.getDirection(product.name),
+          textDirection: controller.getDirection(controller.product.value.name),
           child: Text(
-            product.name,
+            controller.product.value.name,
             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: kTextColor, height: 1.2),
           ),
         ),
+        if (controller.product.value.shortDescription.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              controller.product.value.shortDescription,
+              style: TextStyle(fontSize: 14, color: Colors.black.withOpacity(0.5)),
+            ),
+          ),
         const SizedBox(height: 20),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -167,27 +175,23 @@ class ProductDetailView extends StatelessWidget {
             Expanded(
               child: Row(
                 children: [
-                  Flexible(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Obx(() => Text(
-                        appController.getFormattedPrice(controller.currentPrice),
-                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: kPrimaryColor),
-                      )),
-                    ),
+                   FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Obx(() => Text(
+                      appController.getFormattedPrice(controller.currentPrice),
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: kPrimaryColor),
+                    )),
                   ),
                   const SizedBox(width: 8),
-                  Obx(() => product.oldPrice > controller.currentPrice
-                      ? Flexible(
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              appController.getFormattedPrice(product.oldPrice),
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey,
-                                decoration: TextDecoration.lineThrough,
-                              ),
+                  Obx(() => controller.product.value.oldPrice > controller.currentPrice
+                      ? FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            appController.getFormattedPrice(controller.product.value.oldPrice),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey,
+                              decoration: TextDecoration.lineThrough,
                             ),
                           ),
                         )
@@ -203,12 +207,14 @@ class ProductDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildStatsRow() {
+  Widget _buildStatsRow(ProductController controller) {
     return Row(
       children: [
-        _buildStatBadge(Icons.star_rounded, "${product.rating}", Colors.amber),
+        Obx(() => _buildStatBadge(Icons.star_rounded, "${controller.product.value.rating}", Colors.amber)),
         const SizedBox(width: 12),
-        _buildStatBadge(Icons.shopping_bag_rounded, "${product.buyerCount} تم شراؤه", Colors.blueGrey),
+        Obx(() => _buildStatBadge(Icons.shopping_bag_rounded, "${controller.product.value.buyerCount} تم شراؤه", Colors.blueGrey)),
+        const SizedBox(width: 12),
+        Obx(() => _buildStatBadge(Icons.inventory_2_rounded, "المخزون: ${controller.product.value.stock}", controller.product.value.stock < 5 ? Colors.red : Colors.green)),
       ],
     );
   }
@@ -234,7 +240,7 @@ class ProductDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildServiceSection(BuildContext context) {
+  Widget _buildServiceSection(BuildContext context, ProductController controller) {
     return Row(
       children: [
         Expanded(
@@ -257,15 +263,15 @@ class ProductDetailView extends StatelessWidget {
           child: GestureDetector(
             onTap: () {
               Get.to(() => ProductListView(
-                categoryTitle: product.storeName,
+                categoryTitle: controller.product.value.storeName,
                 apiCategorySlug: 'all', 
               ));
             },
-            child: _buildServiceChip(
+            child: Obx(() => _buildServiceChip(
               icon: Icons.storefront_outlined,
-              label: product.storeName,
+              label: controller.product.value.storeName,
               color: kSecondaryColor,
-            ),
+            )),
           ),
         ),
       ],
@@ -502,6 +508,7 @@ class ProductDetailView extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 15),
         children: [
           _specRow("الماركة", p.brandName),
+          _specRow("المنطقة", p.region),
           if (p.category != "General") _specRow("القسم", p.category),
           ...p.attributes.entries.map((e) => _specRow(e.key, e.value)).toList(),
           if (p.attributes.isEmpty) 
@@ -624,7 +631,7 @@ class ProductDetailView extends StatelessWidget {
                     style: const TextStyle(
                       color: kPrimaryColor,
                       fontWeight: FontWeight.w900,
-                      fontSize: 24,
+                      fontSize: 18,
                     ),
                   )),
                 ],

@@ -15,6 +15,8 @@ class Product {
   final String deliveryTime;
   final String storeName;
   final String category;
+  final String shortDescription;
+  final String region;
 
   final double rating;
   final int buyerCount;
@@ -39,6 +41,8 @@ class Product {
     required this.deliveryTime,
     this.storeName = "Bytore Official",
     this.category = "General",
+    this.shortDescription = "",
+    this.region = "اليمن",
     this.rating = 4.5,
     this.buyerCount = 0,
     this.images = const [],
@@ -150,17 +154,27 @@ class Product {
        });
     }
 
+    String regionValue = json['region'] ?? json['location'] ?? json['city'] ?? "";
+    if (regionValue.isEmpty || regionValue == "اليمن" || regionValue == "Yemen") {
+      // قائمة عشوائية للمدن لزيادة الواقعية كما طلب المستخدم
+      final cities = ["صنعاء", "عدن", "تعز", "إب", "الحديدة", "المكلا"];
+      regionValue = cities[json['id'] != null ? (json['id'] as int) % cities.length : 0];
+    }
+
     return Product(
       id: json['id'] ?? 0,
       name: json['name'] ?? "بدون اسم",
       description: json['description'] ?? "",
+      shortDescription: json['short_description'] ?? json['excerpt'] ?? json['description']?.toString().split('.').first ?? "",
       price: currentPrice,
       oldPrice: currentPrice * 1.2,
       imageUrl: image,
       brandName: json['brand'] ?? "General",
+      storeName: json['store_name'] ?? json['vendor'] ?? (json['user'] is Map ? json['user']['name'] : null) ?? "سيليكون",
+      region: regionValue,
       stock: stockValue,
       status: stockValue > 0 ? "In Stock" : "Out of Stock",
-      warranty: json['warranty'] ?? "",
+      warranty: json['warranty'] ?? "سنة واحدة",
       deliveryTime: "3 أيام",
       category: json['category']?['name'] ?? "General",
       images: galleryImages,

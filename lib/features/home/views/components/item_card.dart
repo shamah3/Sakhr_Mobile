@@ -117,18 +117,39 @@ class ItemCard extends StatelessWidget {
                       // Product Name
                       Text(
                         product.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis, // Ensure ellipsis
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: isCompact ? 11 : 12,
                           color: kTextColor,
-                          height: 1.2,
                         ),
                       ),
+                      const SizedBox(height: 2),
                       
+                      // Short Description (2 lines)
+                      SizedBox(
+                        height: 28, // Fix height for 2 lines
+                        child: Text(
+                          product.shortDescription.isNotEmpty ? product.shortDescription : product.name,
+                          style: TextStyle(fontSize: 10, color: Colors.black.withOpacity(0.5), height: 1.2),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-
+                      
+                      // Stock indicator
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            "المخزون: ${product.stock}",
+                            style: TextStyle(fontSize: 9, color: product.stock < 5 ? Colors.red.shade700 : Colors.green.shade700, fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
+                      
                       // Rating
                       Row(
                         children: [
