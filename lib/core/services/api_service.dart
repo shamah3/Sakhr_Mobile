@@ -175,4 +175,67 @@ class ApiService {
       return [];
     }
   }
+
+  // ==================================================
+  // ❤️ جلب المفضلة
+  // ==================================================
+  Future<List<int>> fetchWishlist({String? token}) async {
+    token ??= "YOUR_TEMP_TOKEN_HERE"; // توكن مؤقت للاستخدام لاحقاً حسب طلبك
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/wishlist"),
+        headers: {
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      if (response.statusCode != 200) return [];
+
+      final decoded = jsonDecode(response.body);
+
+      List<dynamic> list = [];
+      if (decoded is Map && decoded.containsKey('data')) {
+         list = decoded['data'] is List ? decoded['data'] : [];
+      } else if (decoded is List) {
+         list = decoded;
+      }
+
+      return list.map((e) {
+        if (e is int) return e;
+        if (e is Map && e.containsKey('product_id')) return int.tryParse(e['product_id'].toString()) ?? 0;
+        if (e is Map && e.containsKey('id')) return int.tryParse(e['id'].toString()) ?? 0;
+        return 0;
+      }).where((id) => id != 0).toList();
+
+    } catch (e) {
+      debugPrint("Fetch Wishlist Error: $e");
+      return [];
+    }
+  }
+
+  // ==================================================
+  // ❤️ إضافة / إزالة المفضلة (Toggle)
+  // ==================================================
+  Future<bool> toggleWishlistApi(int productId, {String? token}) async {
+    token ??= "YOUR_TEMP_TOKEN_HERE";
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/wishlist/toggle"),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({
+          "product_id": productId,
+        }),
+      );
+
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint("Toggle Wishlist Error: $e");
+      return false;
+    }
+  }
 }

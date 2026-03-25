@@ -7,8 +7,11 @@ import 'package:bytore/core/services/notification_service.dart';
 import 'package:bytore/core/services/whatsapp_service.dart';
 import 'package:bytore/features/profile/controllers/purchase_reports_controller.dart';
 import 'package:bytore/features/profile/controllers/activities_controller.dart';
+import 'package:bytore/core/services/api_service.dart';
 
 class AppController extends GetxController {
+  final ApiService _apiService = ApiService();
+
   // Address State
   var selectedCity = "صنعاء".obs;
   var firstName = "".obs;
@@ -30,6 +33,14 @@ class AppController extends GetxController {
     // Initialize Purchase & Activity Controllers permanently
     Get.put(PurchaseReportsController(), permanent: true);
     Get.put(ActivitiesController(), permanent: true);
+
+    // Fetch initial wishlist
+    fetchInitialWishlist();
+  }
+  
+  Future<void> fetchInitialWishlist() async {
+    final ids = await _apiService.fetchWishlist();
+    wishlistIds.assignAll(ids);
   }
   
   final Map<String, String> _users = {"777777777": "123456"}.obs;
@@ -103,8 +114,11 @@ class AppController extends GetxController {
 
   bool isWishlisted(int productId) => wishlistIds.contains(productId);
 
-  void toggleWishlist(int productId, {String? productName}) {
-    if (wishlistIds.contains(productId)) {
+  void toggleWishlist(int productId, {String? productName}) async {
+    final bool wasWishlisted = wishlistIds.contains(productId);
+
+    // 1. التحديث اللحظي للواجهة
+    if (wasWishlisted) {
       wishlistIds.remove(productId);
     } else {
       wishlistIds.add(productId);
@@ -114,15 +128,30 @@ class AppController extends GetxController {
         body: 'تم إضافة المنتج للمفضلة',
       );
       
-      // Log Activity
       try {
         Get.find<ActivitiesController>().logActivity(
           title: 'إضافة "${productName ?? "منتج"}" للمفضلة',
-          type: 'fav'
+          type: 'fav' // Added type 'fav' to conform to existing
         );
       } catch (e) {
-        print("Activity log error: $e");
+        debugPrint("Activity log error: $e");
       }
+    }
+
+    // 2. تحديث السيرفر
+    final bool success = await _apiService.toggleWishlistApi(productId);
+
+    // 3. التراجع لو فشل الاتصال مع إشعار
+    if (!success) {
+      if (wasWishlisted) {
+        wishlistIds.add(productId);
+      } else {
+        wishlistIds.remove(productId);
+      }
+      Get.snackbar("خطأ", "فشل في تحديث المفضلة. تأكد من اتصالك بالإنترنت.", 
+           snackPosition: SnackPosition.BOTTOM, 
+           backgroundColor: Colors.redAccent, 
+           colorText: Colors.white);
     }
   }
 
