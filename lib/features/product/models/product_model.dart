@@ -79,9 +79,13 @@ class Product {
 
       if (rawUrl.isEmpty) return "https://via.placeholder.com/300";
       
-      // Replace localhost/127.0.0.1 with correct IP
-      String fixedUrl = rawUrl.replaceAll("localhost", ApiService.baseIp)
-                               .replaceAll("127.0.0.1", ApiService.baseIp);
+      // Replace legacy localhost/127.0.0.1 with correct URL
+      String fixedUrl = rawUrl.replaceAll("http://localhost:8000", ApiService.serverUrl)
+                              .replaceAll("http://127.0.0.1:8000", ApiService.serverUrl)
+                              .replaceAll("localhost:8000", ApiService.serverUrl)
+                              .replaceAll("127.0.0.1:8000", ApiService.serverUrl)
+                              .replaceAll("localhost", ApiService.baseIp)
+                              .replaceAll("127.0.0.1", ApiService.baseIp);
       
       // If it's still not absolute, prepend server path
       if (!fixedUrl.startsWith("http")) {

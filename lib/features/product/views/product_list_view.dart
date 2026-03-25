@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bytore/core/constants/constants.dart';
-import 'package:bytore/data/category_data.dart';
 import 'package:bytore/features/home/views/components/item_card.dart';
 import 'package:bytore/core/controllers/app_controller.dart';
+import 'package:bytore/features/home/controllers/categories_controller.dart';
 import '../controllers/product_list_controller.dart';
 
 class ProductListView extends StatelessWidget {
@@ -129,16 +129,20 @@ class ProductListView extends StatelessWidget {
   // =====================================================
 
   Widget _buildCategoriesBar(ProductListController controller) {
-    final categories = CategoryData.categories;
+    final catController = Get.put(CategoriesController());
 
-    return SizedBox(
-      height: 50,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        itemCount: categories.length,
-        itemBuilder: (context, index) {
-          final cat = categories[index];
+    return Obx(() {
+      final categories = catController.apiCategories;
+      if (categories.isEmpty) return const SizedBox.shrink();
+
+      return SizedBox(
+        height: 50,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          itemCount: categories.length,
+          itemBuilder: (context, index) {
+            final cat = categories[index];
 
           return Obx(() {
             final bool isSelected =
@@ -177,16 +181,21 @@ class ProductListView extends StatelessWidget {
         },
       ),
     );
-  }
+  });
+}
 
   // =====================================================
   // SUB CATEGORIES
   // =====================================================
 
   Widget _buildSubCategoriesBar(ProductListController controller) {
+    final catController = Get.find<CategoriesController>();
+
     return Obx(() {
-      final currentCategory =
-      CategoryData.categories.firstWhere(
+      final categories = catController.apiCategories;
+      if (categories.isEmpty) return const SizedBox.shrink();
+
+      final currentCategory = categories.firstWhere(
             (c) => c['slug'] == controller.categorySlug.value,
         orElse: () => {},
       );

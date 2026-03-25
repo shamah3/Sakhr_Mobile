@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:bytore/core/constants/constants.dart';
 import 'package:bytore/core/controllers/app_controller.dart';
 import 'package:bytore/features/home/controllers/home_controller.dart';
-import 'package:bytore/data/category_data.dart';
+import 'package:bytore/features/home/controllers/categories_controller.dart';
 import 'package:bytore/features/home/views/components/filter_widgets.dart';
 
 class FilterBottomSheet extends StatelessWidget {
@@ -13,6 +13,7 @@ class FilterBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final appController = Get.find<AppController>();
     final homeController = Get.find<HomeController>();
+    final catController = Get.put(CategoriesController());
 
     // حساب السعر الأقصى ديناميكياً مع وضع حماية لتجنب خطأ الـ Assertion
     double maxProductPrice = 10000.0;
@@ -98,7 +99,7 @@ class FilterBottomSheet extends StatelessWidget {
                       tempCategory,
                       null,
                       label: "الفئة",
-                      items: CategoryData.categories.map((c) => c['name'] as String).toList(),
+                      items: catController.apiCategories.map((c) => (c['name'] ?? "").toString()).toList(),
                       onChanged: (v) {
                         setModalState(() => tempCategory = v ?? tempCategory);
                       },

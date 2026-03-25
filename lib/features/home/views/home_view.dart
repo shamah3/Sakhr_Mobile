@@ -9,8 +9,8 @@ import 'package:bytore/features/home/views/components/item_card.dart';
 import 'package:bytore/core/constants/constants.dart';
 import 'package:get/get.dart';
 import 'package:bytore/core/controllers/app_controller.dart';
-import 'package:bytore/data/category_data.dart';
 import 'package:bytore/features/home/controllers/home_controller.dart';
+import 'package:bytore/features/home/controllers/categories_controller.dart';
 import 'package:bytore/features/product/views/product_list_view.dart';
 import 'package:bytore/features/notifications/views/notification_view.dart';
 import 'package:bytore/features/search/views/search_view.dart';
@@ -514,46 +514,51 @@ class HomeView extends GetView<HomeController> {
   }
 
   Widget _buildCategoriesSection(AppController appController) {
-    final categories = CategoryData.categories;
+    final catController = Get.put(CategoriesController());
 
     return SliverToBoxAdapter(
       child: SizedBox(
         height: 50,
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 15),
-          itemCount: categories.length,
-          itemBuilder: (context, index) {
-            final cat = categories[index];
-            final isSelected = index == 0;
+        child: Obx(() {
+          final categories = catController.apiCategories;
+          if (categories.isEmpty) return const SizedBox.shrink();
 
-            return GestureDetector(
-              onTap: () => Get.toNamed(
-                  AppRoutes.PRODUCT_LIST,
-                  arguments: {'categoryTitle': cat['name'], 'apiCategorySlug': cat['slug']},
-                  id: 1 // الحفاظ على الشريط السفلي
-              ),
-              child: Container(
-                margin: const EdgeInsets.only(left: 10),
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                decoration: BoxDecoration(
-                  color: isSelected ? kPrimaryColor : Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: isSelected ? null : Border.all(color: Colors.grey.shade300),
+          return ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            itemCount: categories.length,
+            itemBuilder: (context, index) {
+              final cat = categories[index];
+              final isSelected = index == 0;
+
+              return GestureDetector(
+                onTap: () => Get.toNamed(
+                    AppRoutes.PRODUCT_LIST,
+                    arguments: {'categoryTitle': cat['name'], 'apiCategorySlug': cat['slug']},
+                    id: 1 // الحفاظ على الشريط السفلي
                 ),
-                child: Row(
-                  children: [
-                    if (cat['icon'] != null) ...[
-                      Icon(cat['icon'], color: isSelected ? Colors.white : kTextColor, size: 20),
-                      const SizedBox(width: 8),
+                child: Container(
+                  margin: const EdgeInsets.only(left: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: isSelected ? kPrimaryColor : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: isSelected ? null : Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Row(
+                    children: [
+                      if (cat['icon'] != null) ...[
+                        Icon(cat['icon'], color: isSelected ? Colors.white : kTextColor, size: 20),
+                        const SizedBox(width: 8),
+                      ],
+                      Text((cat['name'] ?? "").toString(), style: TextStyle(color: isSelected ? Colors.white : kTextColor, fontWeight: FontWeight.bold, fontSize: 13)),
                     ],
-                    Text(cat['name'], style: TextStyle(color: isSelected ? Colors.white : kTextColor, fontWeight: FontWeight.bold, fontSize: 13)),
-                  ],
+                  ),
                 ),
-              ),
-            );
-          },
-        ),
+              );
+            },
+          );
+        }),
       ),
     );
   }

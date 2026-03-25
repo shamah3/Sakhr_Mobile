@@ -5,10 +5,10 @@ import 'package:bytore/features/product/models/product_model.dart';
 
 class ApiService {
 
-  static const String baseIp = "192.168.8.94";
-  static String get baseUrl => "http://$baseIp:8000/api";
-  static String get storageUrl => "http://$baseIp:8000/storage";
-  static String get serverUrl => "http://$baseIp:8000";
+  static const String baseIp = "sakhr.etezaz.com";
+  static String get baseUrl => "https://$baseIp/api";
+  static String get storageUrl => "https://$baseIp/storage";
+  static String get serverUrl => "https://$baseIp";
 
   // ==================================================
   // 🔥 جلب المنتجات

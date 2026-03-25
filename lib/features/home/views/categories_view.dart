@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bytore/core/constants/constants.dart';
-import 'package:bytore/data/category_data.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../controllers/categories_controller.dart';
 
@@ -60,12 +59,18 @@ class CategoriesView extends GetView<CategoriesController> {
         color: const Color(0xFFFBFBFB),
         border: Border(left: BorderSide(color: Colors.grey.shade100)),
       ),
-      child: ListView.builder(
-        itemCount: CategoryData.categories.length,
-        itemBuilder: (context, index) {
-          return Obx(() {
+      child: Obx(() {
+        if (controller.isLoading.value) {
+          return const Center(child: CircularProgressIndicator(color: kPrimaryColor));
+        }
+        if (controller.apiCategories.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        return ListView.builder(
+          itemCount: controller.apiCategories.length,
+          itemBuilder: (context, index) {
             final isSelected = controller.selectedCategoryIndex.value == index;
-            final cat = CategoryData.categories[index];
+            final cat = controller.apiCategories[index];
             return GestureDetector(
               onTap: () => controller.selectCategory(index),
               child: AnimatedContainer(
@@ -77,10 +82,10 @@ class CategoriesView extends GetView<CategoriesController> {
                 ),
                 child: Column(
                   children: [
-                    Icon(cat['icon'] ?? Icons.apps,
+                    Icon(cat['icon'] ?? Icons.category_rounded,
                         color: isSelected ? kPrimaryColor : Colors.grey.shade400, size: 22),
                     const SizedBox(height: 8),
-                    Text(cat['name'],
+                    Text(cat['name']?.toString() ?? "",
                         textAlign: TextAlign.center,
                         style: TextStyle(
                             fontSize: 11,
@@ -91,14 +96,20 @@ class CategoriesView extends GetView<CategoriesController> {
                 ),
               ),
             );
-          });
-        },
-      ),
+          },
+        );
+      }),
     );
   }
 
   Widget _buildMainContent() {
     return Obx(() {
+      if (controller.isLoading.value) {
+        return const Center(child: CircularProgressIndicator(color: kPrimaryColor));
+      }
+      if (controller.apiCategories.isEmpty) {
+        return const Center(child: Text("لا توجد أقسام متاحة", style: TextStyle(color: Colors.grey)));
+      }
       final cat = controller.currentCategory;
       final filteredSubs = controller.getFilteredSubCategories();
 
@@ -161,15 +172,19 @@ class CategoriesView extends GetView<CategoriesController> {
   }
 
   Widget _buildMainBanner(Map cat) {
+    String imgUrl = cat['image_url'] ?? cat['image'] ?? "";
     return Container(
       height: 130,
       width: double.infinity,
       decoration: BoxDecoration(
+        color: kPrimaryColor.withOpacity(0.05),
         borderRadius: BorderRadius.circular(20),
-        image: DecorationImage(
-          image: CachedNetworkImageProvider(cat['image'] ?? ""),
-          fit: BoxFit.cover,
-        ),
+        image: imgUrl.isNotEmpty
+            ? DecorationImage(
+                image: CachedNetworkImageProvider(imgUrl),
+                fit: BoxFit.cover,
+              )
+            : null,
       ),
       child: Container(
         decoration: BoxDecoration(
@@ -181,7 +196,7 @@ class CategoriesView extends GetView<CategoriesController> {
         ),
         padding: const EdgeInsets.all(15),
         alignment: Alignment.bottomRight,
-        child: Text(cat['name'],
+        child: Text(cat['name']?.toString() ?? "",
             style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
       ),
     );
@@ -214,7 +229,7 @@ class CategoriesView extends GetView<CategoriesController> {
                     child: Icon(sub['icon'] ?? Icons.category_rounded, color: kPrimaryColor, size: 24),
                   ),
                   const SizedBox(height: 8),
-                  Text(sub['name'],
+                  Text(sub['name']?.toString() ?? "",
                       textAlign: TextAlign.center,
                       maxLines: 1,
                       style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kTextColor)),
