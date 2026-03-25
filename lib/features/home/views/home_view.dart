@@ -294,144 +294,161 @@ class HomeView extends GetView<HomeController> {
   }
 
   Widget _buildBlueBanner() {
-    return Column(
-      children: [
-        CarouselSlider(
-          options: CarouselOptions(
-            height: 180,
-            viewportFraction: 1.0,
-            autoPlay: true,
-            enlargeCenterPage: false,
-            onPageChanged: (index, reason) => controller.updateCarouselIndex(index),
-          ),
-          items: [1, 2, 3].map((i) {
-            return GestureDetector(
-              onTap: () {
-                Get.dialog(
-                  Dialog(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    child: Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text("عروض حصرية", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                              IconButton(onPressed: () => Get.back(), icon: const Icon(Icons.close)),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(15),
-                            child: CustomImage(
-                              imageUrl: i == 1 
-                              ? "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=600&auto=format&fit=crop" 
-                              : (i == 2 ? "https://images.unsplash.com/photo-1546435770-a3e426bf472b?q=80&w=600&auto=format&fit=crop" : "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=600&auto=format&fit=crop"),
-                              height: 150,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
+    return Obx(() {
+      if (controller.advertisements.isEmpty) {
+         return const SizedBox.shrink();
+      }
+
+      return Column(
+        children: [
+          CarouselSlider(
+            options: CarouselOptions(
+              height: 180,
+              viewportFraction: 1.0,
+              autoPlay: true,
+              enlargeCenterPage: false,
+              onPageChanged: (index, reason) => controller.updateCarouselIndex(index),
+            ),
+            items: controller.advertisements.map((ad) {
+              String imageUrl = ad['image_url'] ?? ad['image'] ?? "";
+              String title = ad['title'] ?? "";
+              String subtitle = ad['subtitle'] ?? ad['description'] ?? "";
+
+              return GestureDetector(
+                onTap: () {
+                  Get.dialog(
+                    Dialog(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      child: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(title.isNotEmpty ? title : "عروض حصرية", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                IconButton(onPressed: () => Get.back(), icon: const Icon(Icons.close)),
+                              ],
                             ),
-                          ),
-                          const SizedBox(height: 15),
-                          Text(
-                            i == 1 ? "احصل على خصم 20% على جميع اللابتوبات!" : (i == 2 ? "اشتري ملحقين واحصل على الثالث مجاناً!" : "خصومات تصل إلى 50% على الأجهزة الذكية"),
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                          ),
-                          const SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: () {
-                              Get.back();
-                              Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': 'الاعلانات', 'apiCategorySlug': 'all'}, id: 1);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: kPrimaryColor,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-                            ),
-                            child: const Text("تصفح العروض", style: TextStyle(color: Colors.white)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-              child: Builder(
-                builder: (BuildContext context) {
-                  return Container(
-                    width: MediaQuery.of(context).size.width,
-                    margin: const EdgeInsets.symmetric(horizontal: 5.0),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [kPrimaryColor, kPrimaryColor.withAlpha((0.8 * 255).round())],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    child: Stack(
-                      children: [
-                        Positioned(
-                          right: 25, top: 0, bottom: 0,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                i == 1 ? "أقوى\nاللابتوبات" : (i == 2 ? "أفضل\nالملحقات" : "أجهزة\nذكية"),
-                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 26, height: 1.1),
-                              ),
-                              const SizedBox(height: 15),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                                decoration: BoxDecoration(color: kSecondaryColor, borderRadius: BorderRadius.circular(20)),
-                                child: const Text("تسوق الآن", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
+                            if (imageUrl.isNotEmpty) ...[
+                              const SizedBox(height: 10),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(15),
+                                child: CustomImage(
+                                  imageUrl: imageUrl,
+                                  height: 150,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                ),
                               ),
                             ],
-                          ),
-                        ),
-                        Positioned(
-                          left: -10, bottom: 0, top: 0, width: 180,
-                          child: ClipRRect(
-                            borderRadius: const BorderRadius.only(topLeft: Radius.circular(25), bottomLeft: Radius.circular(25)),
-                            child: CustomImage(
-                              imageUrl: i == 1 ? "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=600&auto=format&fit=crop" : (i == 2 ? "https://images.unsplash.com/photo-1546435770-a3e426bf472b?q=80&w=600&auto=format&fit=crop" : "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=600&auto=format&fit=crop"),
-                              fit: i == 3 ? BoxFit.contain : BoxFit.cover,
+                            const SizedBox(height: 15),
+                            Text(
+                              subtitle.isNotEmpty ? subtitle : "تصفح أحدث العروض لدينا",
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                             ),
-                          ),
+                            const SizedBox(height: 20),
+                            ElevatedButton(
+                              onPressed: () {
+                                Get.back();
+                                Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': 'الاعلانات', 'apiCategorySlug': 'all'}, id: 1);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: kPrimaryColor,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                              ),
+                              child: const Text("تصفح العروض", style: TextStyle(color: Colors.white)),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   );
                 },
-              ),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 20),
-        Obx(() => Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [1, 2, 3].asMap().entries.map((entry) {
-            return Container(
-              width: controller.carouselIndex.value == entry.key ? 20.0 : 8.0,
-              height: 8.0,
-              margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(4),
-                color: controller.carouselIndex.value == entry.key ? kSecondaryColor : Colors.grey.shade300,
-              ),
-            );
-          }).toList(),
-        )),
-      ],
-    );
+                child: Builder(
+                  builder: (BuildContext context) {
+                    return Container(
+                      width: MediaQuery.of(context).size.width,
+                      margin: const EdgeInsets.symmetric(horizontal: 5.0),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [kPrimaryColor, kPrimaryColor.withAlpha((0.8 * 255).round())],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      child: Stack(
+                        children: [
+                          if (title.isNotEmpty || subtitle.isNotEmpty)
+                            Positioned(
+                              right: 25, top: 0, bottom: 0,
+                              child: SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.4,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      title,
+                                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 24, height: 1.1),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 15),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                      decoration: BoxDecoration(color: kSecondaryColor, borderRadius: BorderRadius.circular(20)),
+                                      child: const Text("تسوق الآن", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          if (imageUrl.isNotEmpty)
+                            Positioned(
+                              left: 0, bottom: 0, top: 0, width: (title.isNotEmpty) ? 180 : MediaQuery.of(context).size.width,
+                              child: ClipRRect(
+                                borderRadius: (title.isNotEmpty) ? const BorderRadius.only(topLeft: Radius.circular(25), bottomLeft: Radius.circular(25)) : BorderRadius.circular(25),
+                                child: CustomImage(
+                                  imageUrl: imageUrl,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 20),
+          Obx(() => Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: controller.advertisements.asMap().entries.map((entry) {
+              return Container(
+                width: controller.carouselIndex.value == entry.key ? 20.0 : 8.0,
+                height: 8.0,
+                margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(4),
+                  color: controller.carouselIndex.value == entry.key ? kSecondaryColor : Colors.grey.shade300,
+                ),
+              );
+            }).toList(),
+          )),
+        ],
+      );
+    });
   }
 
   Widget _buildHorizontalProductList(String category, AppController appController) {

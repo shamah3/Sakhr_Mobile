@@ -238,4 +238,32 @@ class ApiService {
       return false;
     }
   }
+
+  // ==================================================
+  // 📣 جلب الإعلانات البانر
+  // ==================================================
+  Future<List<dynamic>> fetchAdvertisements() async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/advertisements"),
+        headers: {
+          "Accept": "application/json",
+        },
+      );
+
+      if (response.statusCode != 200) return [];
+
+      final decoded = jsonDecode(response.body);
+
+      if (decoded is Map && decoded.containsKey('data')) {
+         return decoded['data'] is List ? decoded['data'] : [];
+      } else if (decoded is List) {
+         return decoded;
+      }
+      return [];
+    } catch (e) {
+      debugPrint("Fetch Advertisements Error: $e");
+      return [];
+    }
+  }
 }

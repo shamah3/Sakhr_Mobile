@@ -9,6 +9,7 @@ class HomeController extends GetxController {
   
   var allProducts = <Product>[].obs;
   var filteredProducts = <Product>[].obs;
+  var advertisements = <dynamic>[].obs;
   var isLoading = true.obs;
   var carouselIndex = 0.obs;
   
@@ -18,6 +19,16 @@ class HomeController extends GetxController {
   void onInit() {
     super.onInit();
     fetchProducts();
+    fetchAds();
+  }
+
+  Future<void> fetchAds() async {
+    try {
+      final ads = await _apiService.fetchAdvertisements();
+      advertisements.assignAll(ads);
+    } catch (e) {
+      debugPrint("Error fetching ads: $e");
+    }
   }
 
   Future<void> fetchProducts() async {
