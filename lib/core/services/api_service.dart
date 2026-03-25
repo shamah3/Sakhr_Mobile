@@ -11,15 +11,26 @@ class ApiService {
   static String get serverUrl => "https://$baseIp";
 
   // ==================================================
-  // 🔥 جلب المنتجات
+  // 🔥 جلب المنتجات (قائمة)
   // ==================================================
-  Future<List<Product>> fetchProducts({String? categorySlug}) async {
+  Future<List<Product>> fetchProducts({String? categorySlug, int? categoryId, String? search}) async {
     try {
 
       String url = "$baseUrl/products";
-
+      List<String> params = [];
+      
       if (categorySlug != null && categorySlug != "all") {
-        url = "$url?category=$categorySlug";
+        params.add("category=$categorySlug");
+      }
+      if (categoryId != null) {
+        params.add("category_id=$categoryId");
+      }
+      if (search != null && search.isNotEmpty) {
+        params.add("search=$search");
+      }
+
+      if (params.isNotEmpty) {
+        url = "$url?${params.join("&")}";
       }
 
       debugPrint("📡 REQUEST URL: $url");
@@ -38,36 +49,36 @@ class ApiService {
         return [];
       }
 
-      final decoded = jsonDecode(response.body);
+      final dynamic decoded = jsonDecode(response.body);
 
       List<dynamic> productsList = [];
 
       // ✅ حالة Laravel Pagination
-      if (decoded is Map &&
-          decoded.containsKey('data')) {
-
-        if (decoded['data'] is Map &&
-            decoded['data'].containsKey('data')) {
-
-          productsList = decoded['data']['data'];
-
-        }
-        // ✅ لو رجع data مباشرة List
-        else if (decoded['data'] is List) {
-
-          productsList = decoded['data'];
-
+      if (decoded is Map) {
+        if (decoded.containsKey('data')) {
+           final dynamic dataKey = decoded['data'];
+           if (dataKey is List) {
+             productsList = dataKey;
+           } else if (dataKey is Map && dataKey.containsKey('data')) {
+             productsList = dataKey['data'] is List ? dataKey['data'] : [];
+           }
+        } else {
+           // لو مش Pagination وأعطانا الماب فيها داتا مباشرة (مش تحت مفتاح داتا)
+           // هذا احتمال ضعيف للـ Laravel بس بنسوي كفر للأساسي
+           if (decoded.containsKey('products')) {
+             productsList = decoded['products'] is List ? decoded['products'] : [];
+           }
         }
       }
       // ✅ لو API رجع List مباشرة
       else if (decoded is List) {
-
         productsList = decoded;
       }
 
       debugPrint("🟢 PRODUCTS COUNT: ${productsList.length}");
 
       return productsList
+          .where((e) => e is Map)
           .map((e) => Product.fromJson(
         Map<String, dynamic>.from(e),
       ))
@@ -264,6 +275,42 @@ class ApiService {
     } catch (e) {
       debugPrint("Fetch Advertisements Error: $e");
       return [];
+    }
+  }
+
+  // ==================================================
+  // 🔥 جلب تفاصيل منتج واحد (بالـ ID)
+  // ==================================================
+  Future<Product?> fetchProductDetail(int id) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/products/$id"),
+        headers: {
+          "Accept": "application/json",
+        },
+      );
+
+      if (response.statusCode != 200) return null;
+
+      final dynamic decoded = jsonDecode(response.body);
+      
+      Map<String, dynamic>? productData;
+      if (decoded is Map) {
+        if (decoded.containsKey('data')) {
+           final dynamic d = decoded['data'];
+           productData = d is Map ? Map<String, dynamic>.from(d) : null;
+        } else {
+           productData = Map<String, dynamic>.from(decoded);
+        }
+      }
+
+      if (productData != null) {
+        return Product.fromJson(productData);
+      }
+      return null;
+    } catch (e) {
+      debugPrint("Fetch Product Detail Error ($id): $e");
+      return null;
     }
   }
 }

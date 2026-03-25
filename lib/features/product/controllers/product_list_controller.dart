@@ -28,7 +28,10 @@ class ProductListController extends GetxController {
   Future<void> fetchProducts() async {
     isLoading.value = true;
     try {
-      final result = await _apiService.fetchProducts(categorySlug: categorySlug.value);
+      final result = await _apiService.fetchProducts(
+        categorySlug: categorySlug.value,
+        search: searchText.value.isEmpty ? null : searchText.value,
+      );
       products.assignAll(result);
     } catch (e) {
       Get.snackbar("خطأ", "فشل تحميل المنتجات");
@@ -41,21 +44,30 @@ class ProductListController extends GetxController {
     categorySlug.value = slug;
     categoryTitle.value = title;
     subCategorySlug.value = "all";
+    searchText.value = ""; // Reset search when changing category
     fetchProducts();
   }
 
   void updateSubCategory(String slug) {
     subCategorySlug.value = slug;
-    // For now, we just update slugs, but real filtering would happen here or in fetch
+    // Note: If the API supports subcategories, add it here
   }
 
   void toggleSearch() {
     isSearching.value = !isSearching.value;
-    if (!isSearching.value) searchText.value = "";
+    if (!isSearching.value) {
+      searchText.value = "";
+      fetchProducts(); // Refresh list when clearing search
+    }
   }
 
   void updateSearch(String value) {
     searchText.value = value;
+    // debounce or manual search trigger
+  }
+
+  void performSearch() {
+    fetchProducts();
   }
 
   List<Product> get filteredProducts {

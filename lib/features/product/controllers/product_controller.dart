@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bytore/features/product/models/product_model.dart';
+import 'package:bytore/core/services/api_service.dart';
 
 class ProductController extends GetxController {
-  final Product product;
+  final Rx<Product> product;
+  final ApiService _apiService = ApiService();
+  var isRefreshing = false.obs;
   
-  ProductController({required this.product});
+  ProductController({required Product product}) : product = product.obs;
 
   var quantity = 1.obs;
   var currentImageIndex = 0.obs;
@@ -19,24 +22,48 @@ class ProductController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    displayImageUrl.value = product.imageUrl;
+    _initializeStates();
+    refreshProduct();
+  }
+
+  void _initializeStates() {
+    displayImageUrl.value = product.value.imageUrl;
     
-    if (product.colors != null && product.colors!.isNotEmpty) {
-      selectedColor.value = product.colors![0];
+    if (product.value.colors.isNotEmpty) {
+      selectedColor.value = product.value.colors[0];
       displayImageUrl.value = selectedColor.value!['image'];
-      overriddenPrice.value = selectedColor.value!['price'];
+      overriddenPrice.value = double.tryParse(selectedColor.value!['price']?.toString() ?? "");
     }
     
-    if (product.sizes != null && product.sizes!.isNotEmpty) {
-      selectedSize.value = product.sizes![0];
-      overriddenPrice.value = selectedSize.value!['price'];
+    if (product.value.sizes.isNotEmpty) {
+      selectedSize.value = product.value.sizes[0];
+      overriddenPrice.value = double.tryParse(selectedSize.value!['price']?.toString() ?? "");
     }
   }
 
-  double get currentPrice => overriddenPrice.value ?? product.price;
+  Future<void> refreshProduct() async {
+    isRefreshing.value = true;
+    try {
+      final updatedProduct = await _apiService.fetchProductDetail(product.value.id);
+      if (updatedProduct != null) {
+        product.value = updatedProduct;
+        _initializeStates();
+      }
+    } catch (e) {
+      debugPrint("Error refreshing product info: $e");
+    } finally {
+      isRefreshing.value = false;
+    }
+  }
+
+  double get currentPrice {
+    if (overriddenPrice.value != null) return overriddenPrice.value!;
+    return product.value.price;
+  }
 
   List<String> get productImages {
-    List<String> imgs = product.images.isNotEmpty ? List<String>.from(product.images) : [product.imageUrl];
+    final p = product.value;
+    List<String> imgs = p.images.isNotEmpty ? List<String>.from(p.images) : [p.imageUrl];
     if (displayImageUrl.value.isNotEmpty) {
       imgs.remove(displayImageUrl.value);
       imgs.insert(0, displayImageUrl.value);
@@ -47,7 +74,7 @@ class ProductController extends GetxController {
   void updateColor(Map<String, dynamic> color) {
     selectedColor.value = color;
     displayImageUrl.value = color['image'];
-    overriddenPrice.value = color['price'];
+    overriddenPrice.value = double.tryParse(color['price']?.toString() ?? "");
     currentImageIndex.value = 0;
     if (pageController.hasClients) {
       pageController.jumpToPage(0);
@@ -56,7 +83,7 @@ class ProductController extends GetxController {
 
   void updateSize(Map<String, dynamic> size) {
     selectedSize.value = size;
-    overriddenPrice.value = size['price'];
+    overriddenPrice.value = double.tryParse(size['price']?.toString() ?? "");
   }
 
   void incrementQuantity() => quantity.value++;

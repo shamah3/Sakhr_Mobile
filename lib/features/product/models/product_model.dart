@@ -23,6 +23,7 @@ class Product {
   final List<String> threeDImages;
   final List<Map<String, dynamic>> colors;
   final List<Map<String, dynamic>> sizes;
+  final Map<String, String> attributes;
 
   Product({
     required this.id,
@@ -44,6 +45,7 @@ class Product {
     this.threeDImages = const [],
     this.colors = const [],
     this.sizes = const [],
+    this.attributes = const {},
   });
 
   /// ==========================================================
@@ -100,7 +102,6 @@ class Product {
         }
       }
       
-      debugPrint("🖼️ FINAL IMAGE URL: $fixedUrl");
       return fixedUrl;
     }
 
@@ -135,6 +136,20 @@ class Product {
     int stockValue =
         int.tryParse(json['stock']?.toString() ?? "0") ?? 0;
 
+    /// ==========================================================
+    /// ✅ معالجة الخصائص (Attributes/Characteristics)
+    /// ==========================================================
+    Map<String, String> extractedAttributes = {};
+    if (json['attributes'] != null && json['attributes'] is Map) {
+       (json['attributes'] as Map).forEach((key, value) {
+         extractedAttributes[key.toString()] = value.toString();
+       });
+    } else if (json['characteristics'] != null && json['characteristics'] is Map) {
+       (json['characteristics'] as Map).forEach((key, value) {
+         extractedAttributes[key.toString()] = value.toString();
+       });
+    }
+
     return Product(
       id: json['id'] ?? 0,
       name: json['name'] ?? "بدون اسم",
@@ -148,24 +163,20 @@ class Product {
       warranty: json['warranty'] ?? "",
       deliveryTime: "3 أيام",
       category: json['category']?['name'] ?? "General",
-
-      /// ✅ أهم تعديل هنا
       images: galleryImages,
-
       threeDImages: json['three_d_images'] != null
           ? List<String>.from(
         (json['three_d_images'] as List)
             .map((e) => fixImageUrl(e.toString())),
       )
           : [],
-
       colors: json['colors'] != null
           ? List<Map<String, dynamic>>.from(json['colors'])
           : [],
-
       sizes: json['sizes'] != null
           ? List<Map<String, dynamic>>.from(json['sizes'])
           : [],
+      attributes: extractedAttributes,
     );
   }
 }

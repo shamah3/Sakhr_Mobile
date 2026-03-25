@@ -52,10 +52,10 @@ class ProductDetailView extends StatelessWidget {
               child: Stack(
                 alignment: Alignment.bottomCenter,
                 children: [
-                  if (product.threeDImages.isNotEmpty)
+                  if (controller.product.value.threeDImages.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 20),
-                      child: ThreeDProductViewer(images: product.threeDImages, height: 280),
+                      child: ThreeDProductViewer(images: controller.product.value.threeDImages, height: 280),
                     )
                   else
                     Obx(() => PageView.builder(
@@ -71,7 +71,7 @@ class ProductDetailView extends StatelessWidget {
                         ),
                       ),
                     )),
-                  if (product.threeDImages.isEmpty)
+                  if (controller.product.value.threeDImages.isEmpty)
                     Positioned(
                       bottom: 20,
                       right: 20,
@@ -129,14 +129,14 @@ class ProductDetailView extends StatelessWidget {
                   // 6. Description
                   const Text("عن المنتج", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: kTextColor)),
                   const SizedBox(height: 12),
-                  Text(
-                    product.description.isNotEmpty ? product.description : "هذا المنتج يوفر لك تجربة فريدة بجودة خامات عالية وتصميم مريح للاستخدام اليومي المكثف مع مراعاة أدق التفاصيل.",
+                  Obx(() => Text(
+                    controller.product.value.description.isNotEmpty ? controller.product.value.description : "هذا المنتج يوفر لك تجربة فريدة بجودة خامات عالية وتصميم مريح للاستخدام اليومي المكثف مع مراعاة أدق التفاصيل.",
                     style: TextStyle(fontSize: 14, color: Colors.black.withOpacity(0.6), height: 1.7),
-                  ),
+                  )),
                   const SizedBox(height: 30),
                   
                   // 7. Detailed Tabs
-                  _buildDetailedTabs(context),
+                  _buildDetailedTabs(context, controller),
                 ],
               ),
             ),
@@ -326,7 +326,7 @@ class ProductDetailView extends StatelessWidget {
 
   // --- دوال بناء التبويبات والمحتوى المنبثق ---
 
-  Widget _buildDetailedTabs(BuildContext context) {
+  Widget _buildDetailedTabs(BuildContext context, ProductController controller) {
     return DefaultTabController(
       length: 3,
       child: Column(
@@ -343,7 +343,7 @@ class ProductDetailView extends StatelessWidget {
             height: 350,
             child: TabBarView(
               children: [
-                _buildSpecsTable(),
+                _buildSpecsTable(controller),
                 _buildCommentsSummary(context),
                 _buildRecommendations(),
               ],
@@ -494,16 +494,24 @@ class ProductDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildSpecsTable() {
-    return ListView(
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(vertical: 15),
-      children: [
-        _specRow("الماركة", "Bytore Line"),
-        _specRow("الوزن", "0.85 KG"),
-        _specRow("الخامة", "كربون مقوى"),
-      ],
-    );
+  Widget _buildSpecsTable(ProductController controller) {
+    return Obx(() {
+       final p = controller.product.value;
+       return ListView(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(vertical: 15),
+        children: [
+          _specRow("الماركة", p.brandName),
+          if (p.category != "General") _specRow("القسم", p.category),
+          ...p.attributes.entries.map((e) => _specRow(e.key, e.value)).toList(),
+          if (p.attributes.isEmpty) 
+            const Padding(
+              padding: EdgeInsets.all(20.0),
+              child: Center(child: Text("لا توجد مواصفات إضافية حالياً", style: TextStyle(color: Colors.grey))),
+            ),
+        ],
+      );
+    });
   }
 
   Widget _specRow(String t, String v) {

@@ -152,14 +152,43 @@ class ItemCard extends StatelessWidget {
                       const Spacer(), // Push bottom elements down
 
                       // Status
-                      Text(
-                        product.stock == 0 ? "غير متوفر" : (product.status == 'On Shipment' ? "قيد الشحن" : "متوفر"),
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                          color: product.stock == 0 ? Colors.red : (product.status == 'On Shipment' ? Colors.blue : Colors.green),
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            product.stock == 0 ? "غير متوفر" : (product.status == 'On Shipment' ? "قيد الشحن" : "متوفر"),
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: product.stock == 0 ? Colors.red : (product.status == 'On Shipment' ? Colors.blue : Colors.green),
+                            ),
+                          ),
+                          if (product.attributes.isNotEmpty)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.blueGrey.withOpacity(0.05),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                product.attributes.entries.take(1).map((e) => "${e.key}: ${e.value}").join(", "),
+                                style: const TextStyle(fontSize: 8, color: Colors.blueGrey, fontWeight: FontWeight.bold),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                        ],
                       ),
+                      
+                      if (product.attributes.length > 1)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            product.attributes.entries.skip(1).take(2).map((e) => "${e.key}: ${e.value}").join(" | "),
+                            style: TextStyle(fontSize: 7.5, color: Colors.grey.shade600),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       const SizedBox(height: 4),
 
                       // Price and Cart

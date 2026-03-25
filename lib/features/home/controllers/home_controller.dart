@@ -44,8 +44,22 @@ class HomeController extends GetxController {
     }
   }
 
-  void searchProducts(String query) {
-    applyFilters();
+  Future<void> searchProducts(String query) async {
+    if (query.isEmpty) {
+      fetchProducts();
+      return;
+    }
+    
+    try {
+      isLoading.value = true;
+      final products = await _apiService.fetchProducts(search: query);
+      allProducts.assignAll(products); // Temporarily replace allProducts with search results
+      applyFilters();
+    } catch (e) {
+      debugPrint("Search error: $e");
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   void applyFilters() {
