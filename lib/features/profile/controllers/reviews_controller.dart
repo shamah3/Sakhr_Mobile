@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bytore/features/profile/models/review_model.dart';
 import 'package:intl/intl.dart';
+import 'package:bytore/core/controllers/app_controller.dart';
+import 'package:bytore/core/services/api_service.dart';
 import 'package:bytore/features/profile/controllers/purchase_reports_controller.dart';
 import 'package:bytore/features/profile/controllers/activities_controller.dart';
 import 'package:bytore/features/orders/models/order_model.dart';
 
 class ReviewsController extends GetxController with GetSingleTickerProviderStateMixin {
   late TabController tabController;
+  final ApiService _apiService = ApiService();
+  final AppController _appController = Get.find<AppController>();
 
   // قائمة التقييمات المكتملة
   var reviewedList = <ReviewModel>[].obs;
@@ -21,69 +25,106 @@ class ReviewsController extends GetxController with GetSingleTickerProviderState
     tabController = TabController(length: 2, vsync: this);
     
     // تحميل البيانات
-    _loadData();
+    fetchUserReviews();
+    _loadPendingData();
     
     // الاستماع للتغييرات في الطلبات
     final purchaseController = Get.find<PurchaseReportsController>();
-    ever(purchaseController.orders, (_) => _loadData());
+    ever(purchaseController.orders, (_) => _loadPendingData());
   }
 
-  void _loadData() {
-    // 1. تحديث قائمة "بانتظار التقييم" من الطلبات الحديثة
-    // نفترض أن كل عنصر في الطلبات يحتاج تقييم
+  var isLoading = false.obs;
+
+  Future<void> fetchUserReviews() async {
+    try {
+      isLoading.value = true;
+      final token = _appController.token.value;
+      if (token.isEmpty) return;
+
+      // This is a list of all reviews by this user
+      // Note: The API might need a specific endpoint for user reviews, 
+      // but for now we often fetch all reviews and filter or use a dedicated endpoint.
+      // If sakhr.etezaz.com/api/reviews (GET) exists for current user:
+      // final fetched = await _apiService.fetchUserReviews(token); 
+      // reviewedList.assignAll(fetched);
+    } catch (e) {
+      debugPrint("Error fetching user reviews: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  void _loadPendingData() {
     pendingList.clear();
     
     try {
       final purchaseController = Get.find<PurchaseReportsController>();
       for (OrderModel order in purchaseController.orders) {
-        // إضافة كل منتج في الطلب كعنصر قابل للتقييم
-        for (String itemName in order.itemsNames) {
+        for (int i = 0; i < order.itemsNames.length; i++) {
+          final itemName = order.itemsNames[i];
+          final productId = order.productIds.length > i ? order.productIds[i] : null;
+
+          if (productId == null) continue;
+
           // نتأكد أنه لم يتم تقييمه مسبقاً
-          if (!reviewedList.any((r) => r.productName == itemName)) {
+          if (!reviewedList.any((r) => r.productId == productId)) {
              pendingList.add(ReviewModel(
+              id: 0,
+              productId: productId,
               productName: itemName,
               date: "تم الشراء في ${DateFormat('dd/MM/yyyy', 'ar').format(order.dateTime)}",
               icon: Icons.shopping_bag_outlined,
               isPending: true,
+              rating: 0,
+              comment: "",
             ));
           }
         }
       }
     } catch (e) {
-      print("Error loading reviews: $e");
+      print("Error loading pending reviews: $e");
     }
   }
 
-  // دالة لإضافة تقييم جديد
-  void addReview(ReviewModel pendingItem, double rating, String comment) {
-    reviewedList.insert(0, ReviewModel(
-      productName: pendingItem.productName,
-      date: "${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}",
-      rating: rating.toInt(),
-      comment: comment,
-      icon: Icons.check_circle,
-      isPending: false,
-    ));
-    
-    // حذفه من قائمة الانتظار
-    pendingList.remove(pendingItem);
+  // دالة لإضافة تقييم جديد مدمجة مع API
+  void addReview(ReviewModel pendingItem, double rating, String comment) async {
+    if (pendingItem.productId == null) return;
 
-    // تسجيل النشاط
     try {
-      Get.find<ActivitiesController>().logActivity(
-        title: "تقييم منتج: ${pendingItem.productName}",
-        type: 'star' // نفترض وجود أيقونة للتقييم
-      );
+      isLoading.value = true;
+      final token = _appController.token.value;
+      if (token.isEmpty) return;
+
+      final data = {
+        "product_id": pendingItem.productId,
+        "rating": rating.toInt(),
+        "comment": comment,
+      };
+
+      final success = await _apiService.createReview(data, token);
+      
+      if (success) {
+        // حذفه من قائمة الانتظار
+        pendingList.remove(pendingItem);
+
+        // إضافة للأنشطة
+        try {
+          Get.find<ActivitiesController>().logActivity(
+            title: "تقييم منتج: ${pendingItem.productName}",
+            type: 'star'
+          );
+        } catch (e) {}
+        
+        Get.snackbar("شكراً لك", "تم إضافة تقييمك بنجاح", 
+            backgroundColor: Colors.green, colorText: Colors.white);
+      } else {
+        Get.snackbar("خطأ", "فشل إضافة التقييم", backgroundColor: Colors.redAccent, colorText: Colors.white);
+      }
     } catch (e) {
-      print("Activity log error: $e");
+      debugPrint("Error adding review: $e");
+    } finally {
+      isLoading.value = false;
     }
-    
-    Get.snackbar(
-      "شكراً لك", 
-      "تم إضافة تقييمك بنجاح", 
-      backgroundColor: Colors.green, 
-      colorText: Colors.white
-    );
   }
 
   // إظهار نافذة التقييم

@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bytore/features/product/models/product_model.dart';
 import 'package:bytore/core/services/api_service.dart';
+import 'package:bytore/features/profile/models/review_model.dart';
 
 class ProductController extends GetxController {
   final Rx<Product> product;
   final ApiService _apiService = ApiService();
   var isRefreshing = false.obs;
+  var isFetchingReviews = false.obs;
+  var reviews = <ReviewModel>[].obs;
   
   ProductController({required Product product}) : product = product.obs;
 
@@ -24,6 +27,7 @@ class ProductController extends GetxController {
     super.onInit();
     _initializeStates();
     refreshProduct();
+    fetchReviews();
   }
 
   void _initializeStates() {
@@ -53,6 +57,18 @@ class ProductController extends GetxController {
       debugPrint("Error refreshing product info: $e");
     } finally {
       isRefreshing.value = false;
+    }
+  }
+
+  Future<void> fetchReviews() async {
+    try {
+      isFetchingReviews.value = true;
+      final fetched = await _apiService.fetchProductReviews(product.value.id);
+      reviews.assignAll(fetched);
+    } catch (e) {
+      debugPrint("Error fetching reviews: $e");
+    } finally {
+      isFetchingReviews.value = false;
     }
   }
 

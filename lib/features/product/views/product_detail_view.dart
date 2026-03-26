@@ -350,7 +350,7 @@ class ProductDetailView extends StatelessWidget {
             child: TabBarView(
               children: [
                 _buildSpecsTable(controller),
-                _buildCommentsSummary(context),
+                _buildCommentsSummary(context, controller),
                 _buildRecommendations(),
               ],
             ),
@@ -360,23 +360,42 @@ class ProductDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildCommentsSummary(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.symmetric(vertical: 15),
-      children: [
-        _commentTile("أحمد منصور", "الجودة ممتازة جداً والتوصيل كان سريعاً!", 5),
-        _commentTile("سارة علي", "تصميم مريح جداً للاستخدام اليومي.", 4),
-        const SizedBox(height: 10),
-        OutlinedButton(
-          onPressed: () => _showAllReviewsSheet(context),
-          style: OutlinedButton.styleFrom(side: const BorderSide(color: kSecondaryColor)),
-          child: const Text("عرض المزيد", style: TextStyle(color: kSecondaryColor, fontWeight: FontWeight.bold)),
-        )
-      ],
-    );
+  Widget _buildCommentsSummary(BuildContext context, ProductController controller) {
+    return Obx(() {
+      if (controller.isFetchingReviews.value) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      
+      if (controller.reviews.isEmpty) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.rate_review_outlined, size: 40, color: Colors.grey[300]),
+              const SizedBox(height: 10),
+              Text("لا توجد مراجعات حالياً", style: TextStyle(color: Colors.grey[400], fontSize: 13)),
+            ],
+          ),
+        );
+      }
+
+      return ListView(
+        padding: const EdgeInsets.symmetric(vertical: 15),
+        children: [
+          ...controller.reviews.take(3).map((r) => _commentTile(r.userName ?? "مستخدم لايت", r.comment, r.rating)).toList(),
+          const SizedBox(height: 10),
+          if (controller.reviews.length > 3)
+            OutlinedButton(
+              onPressed: () => _showAllReviewsSheet(context, controller),
+              style: OutlinedButton.styleFrom(side: const BorderSide(color: kSecondaryColor)),
+              child: const Text("عرض المزيد", style: TextStyle(color: kSecondaryColor, fontWeight: FontWeight.bold)),
+            )
+        ],
+      );
+    });
   }
 
-  void _showAllReviewsSheet(BuildContext context) {
+  void _showAllReviewsSheet(BuildContext context, ProductController controller) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -392,13 +411,14 @@ class ProductDetailView extends StatelessWidget {
               const Text("المراجعات والتعليقات", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const Divider(height: 30),
               Expanded(
-                child: ListView.builder(
-                  itemCount: 5,
-                  itemBuilder: (context, index) => _commentTile("مستخدم ${index + 1}", "تجربة ممتازة وجودة تستحق السعر.", 5),
-                ),
+                child: Obx(() => ListView.builder(
+                  itemCount: controller.reviews.length,
+                  itemBuilder: (context, index) {
+                    final r = controller.reviews[index];
+                    return _commentTile(r.userName ?? "مستخدم", r.comment, r.rating);
+                  },
+                )),
               ),
-                  const Divider(),
-                  // Writing review section removed as per request
               const SizedBox(height: 20),
             ],
           ),

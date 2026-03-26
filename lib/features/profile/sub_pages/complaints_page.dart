@@ -40,10 +40,10 @@ class ComplaintsPage extends StatelessWidget {
                     _buildDropdownField(),
                     const SizedBox(height: 20),
                     _buildLabel('رقم الطلب'),
-                    _buildInputField(hint: 'أدخل الرقم هنا...', icon: Icons.confirmation_number_outlined),
+                    _buildInputField(hint: 'أدخل الرقم هنا...', icon: Icons.confirmation_number_outlined, controller: controller.orderIdController),
                     const SizedBox(height: 20),
                     _buildLabel('ما المشكلة بالتفصيل؟'),
-                    _buildInputField(hint: 'اكتب رسالتك هنا...', icon: Icons.message_outlined, maxLines: 2),
+                    _buildInputField(hint: 'اكتب رسالتك هنا...', icon: Icons.message_outlined, maxLines: 2, controller: controller.messageController),
                     const SizedBox(height: 25),
                     _buildLabel('إثبات الحالة (صور)'),
                     _buildUploadBox(),
@@ -52,9 +52,52 @@ class ComplaintsPage extends StatelessWidget {
               ),
               const SizedBox(height: 40),
               _buildModernSubmitBtn(),
+              const SizedBox(height: 30),
+              _buildComplaintsList(),
             ],
           ),
         ),
+    );
+  }
+
+  Widget _buildComplaintsList() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Text("شكاواك السابقة", style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 16)),
+        ),
+        Obx(() {
+          if (controller.isFetching.value) return const Center(child: CircularProgressIndicator());
+          if (controller.complaints.isEmpty) return Center(child: Text("لا توجد شكاوى سابقة", style: GoogleFonts.cairo(color: Colors.grey)));
+          
+          return ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: controller.complaints.length,
+            itemBuilder: (context, index) {
+              final complaint = controller.complaints[index];
+              return Card(
+                margin: const EdgeInsets.only(bottom: 15),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                child: ListTile(
+                  title: Text(complaint.type, style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                  subtitle: Text(complaint.message, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.cairo(fontSize: 12)),
+                  trailing: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: complaint.statusColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(complaint.statusText, style: GoogleFonts.cairo(color: complaint.statusColor, fontSize: 10, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              );
+            },
+          );
+        }),
+      ],
     );
   }
 
@@ -93,8 +136,9 @@ class ComplaintsPage extends StatelessWidget {
   }
 
 
-  Widget _buildInputField({required String hint, required IconData icon, int maxLines = 1}) {
+  Widget _buildInputField({required String hint, required IconData icon, int maxLines = 1, TextEditingController? controller}) {
     return TextField(
+      controller: controller,
       maxLines: maxLines,
       style: const TextStyle(color: Colors.black),
       decoration: InputDecoration(

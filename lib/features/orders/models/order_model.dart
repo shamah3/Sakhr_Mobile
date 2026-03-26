@@ -17,6 +17,7 @@ class OrderModel {
   final int itemCount;
   final String shippingAddress;
   final List<String> itemsNames;
+  final List<int> productIds;
 
   OrderModel({
     required this.id,
@@ -26,6 +27,7 @@ class OrderModel {
     required this.itemCount,
     required this.shippingAddress,
     required this.itemsNames,
+    required this.productIds,
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
@@ -40,6 +42,9 @@ class OrderModel {
       shippingAddress: json['address'] ?? "",
       itemsNames: (json['items_names'] as List? ?? [])
           .map((e) => e.toString())
+          .toList(),
+      productIds: (json['product_ids'] as List? ?? [])
+          .map((e) => int.tryParse(e.toString()) ?? 0)
           .toList(),
     );
   }

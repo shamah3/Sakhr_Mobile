@@ -8,6 +8,8 @@ import 'package:bytore/features/notifications/models/notification_model.dart';
 import 'package:bytore/features/checkout/models/payment_method_model.dart';
 import 'package:bytore/features/orders/models/order_model.dart';
 import 'package:bytore/features/profile/models/wallet_model.dart';
+import 'package:bytore/features/profile/models/complaint_model.dart';
+import 'package:bytore/features/profile/models/review_model.dart';
 
 class ApiService {
 
@@ -741,4 +743,103 @@ class ApiService {
       return null;
     }
   }
-}
+
+  // ==========================================
+  // 📨 الشكاوى (Complaints)
+  // ==========================================
+
+  Future<List<ComplaintModel>> fetchComplaints(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/complaints"),
+        headers: {
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      if (response.statusCode != 200) return [];
+
+      final decoded = jsonDecode(response.body);
+      List<dynamic> list = [];
+      if (decoded is Map && decoded.containsKey('data')) {
+        list = decoded['data'] is List ? decoded['data'] : [];
+      } else if (decoded is List) {
+        list = decoded;
+      }
+
+      return list.map((json) => ComplaintModel.fromJson(json)).toList();
+    } catch (e) {
+      debugPrint("Fetch Complaints Error: $e");
+      return [];
+    }
+  }
+
+  Future<bool> createComplaint(Map<String, dynamic> data, String token) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/complaints"),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode(data),
+      );
+
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint("Create Complaint Error: $e");
+      return false;
+    }
+  }
+
+  // ==========================================
+  // ⭐ التقييمات (Reviews)
+  // ==========================================
+
+  Future<List<ReviewModel>> fetchProductReviews(int productId) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/products/$productId/reviews"),
+        headers: {
+          "Accept": "application/json",
+        },
+      );
+
+      if (response.statusCode != 200) return [];
+
+      final decoded = jsonDecode(response.body);
+      List<dynamic> list = [];
+      if (decoded is Map && decoded.containsKey('data')) {
+        list = decoded['data'] is List ? decoded['data'] : [];
+      } else if (decoded is List) {
+        list = decoded;
+      }
+
+      return list.map((json) => ReviewModel.fromJson(json)).toList();
+    } catch (e) {
+      debugPrint("Fetch Reviews Error: $e");
+      return [];
+    }
+  }
+
+  Future<bool> createReview(Map<String, dynamic> data, String token) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/reviews"),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode(data),
+      );
+
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint("Create Review Error: $e");
+      return false;
+    }
+  }
+}
