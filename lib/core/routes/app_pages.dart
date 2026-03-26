@@ -60,10 +60,7 @@ class AppPages {
     GetPage(
       name: AppRoutes.MAIN,
       page: () => const MainView(),
-      binding: BindingsBuilder(() {
-        Get.lazyPut(() => MainController());
-        Get.lazyPut(() => HomeController());
-      }),
+      // No extra binding here as core controllers are in InitialBinding
     ),
     GetPage(
       name: AppRoutes.HOME,

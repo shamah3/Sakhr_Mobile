@@ -60,6 +60,12 @@ class PurchaseReportsPage extends StatelessWidget {
                   _buildSectionTitle('ملخص المشتريات الأخيرة'),
                   
                   Obx(() {
+                    if (controller.isLoading.value) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 40),
+                        child: Center(child: CircularProgressIndicator(color: secondaryOrange)),
+                      );
+                    }
                     if (controller.filteredOrders.isEmpty) {
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 20),
@@ -224,7 +230,7 @@ class PurchaseReportsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildProductCard(String name, String price, String date, String orderId) {
+  Widget _buildProductCard(String name, String price, String date, dynamic orderId) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -276,7 +282,7 @@ class PurchaseReportsPage extends StatelessWidget {
                   const Icon(Icons.tag, size: 14, color: Colors.grey),
                   const SizedBox(width: 4),
                   Text(
-                    orderId,
+                    "#${orderId.toString()}",
                     style: GoogleFonts.cairo(fontSize: 11, color: Colors.grey),
                   ),
                 ],

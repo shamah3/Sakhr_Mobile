@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bytore/core/controllers/cart_controller.dart';
+import 'package:bytore/core/controllers/app_controller.dart';
+import 'package:bytore/core/services/api_service.dart';
 import 'package:bytore/features/profile/controllers/purchase_reports_controller.dart';
 import 'package:bytore/features/profile/controllers/activities_controller.dart';
 import 'package:bytore/features/orders/models/order_model.dart';
+import '../models/payment_method_model.dart';
 
 class CheckoutController extends GetxController {
-  // استخدام lazy find إذا لم يكن موجوداً
+  final ApiService _apiService = ApiService();
+  final AppController _appController = Get.find<AppController>();
   final CartController cartController = Get.find<CartController>();
 
   // Addressing
@@ -30,29 +34,40 @@ class CheckoutController extends GetxController {
 
   // Payment
   var selectedMethodIndex = 0.obs;
+  var paymentMethods = <PaymentMethodModel>[].obs;
+  var isLoadingMethods = false.obs;
   var selectedWallet = RxnString();
 
-  // تأكد من تهيئة الـ Controllers
   final walletPhoneController = TextEditingController();
   final couponController = TextEditingController();
 
   var isCouponApplied = false.obs;
   var couponStatus = "".obs;
+  var isCompletingOrder = false.obs;
+  var wallets = ["محفظة كاش", "كريمي موني", "جوال"].obs;
 
-  // تعريف النوع بوضوح لتجنب أخطاء الـ Dynamic في الـ UI
-  final List<Map<String, dynamic>> methods = [
-    {'title': 'محافظ إلكترونية', 'icon': Icons.account_balance_wallet_rounded, 'subtitle': 'جوالي، ون كاش، بيس، جيب'},
-    {'title': 'حوالة مصرفية', 'icon': Icons.account_balance_rounded, 'subtitle': 'الكريمي، النجم، الامتياز'},
-    {'title': 'الدفع عند الاستلام', 'icon': Icons.payments_outlined, 'subtitle': 'رسوم إضافية 1000 ر.ي'},
-  ];
+  @override
+  void onInit() {
+    super.onInit();
+    loadPaymentMethods();
+  }
 
-  final List<String> wallets = ['جوالي (Jawwal Pay)', 'ون كاش (OneCash)', 'بيس (Pyes)', 'جيب (Jeeb)'];
+  Future<void> loadPaymentMethods() async {
+    try {
+      isLoadingMethods.value = true;
+      final methods = await _apiService.fetchPaymentMethods();
+      paymentMethods.assignAll(methods);
+    } catch (e) {
+      debugPrint("Error loading payment methods: $e");
+    } finally {
+      isLoadingMethods.value = false;
+    }
+  }
 
   void selectAddress(int index) => selectedAddressIndex.value = index;
 
   void selectMethod(int index) {
     selectedMethodIndex.value = index;
-    // تحديث الواجهة عند تغيير الاختيار
     update();
   }
 
@@ -73,42 +88,62 @@ class CheckoutController extends GetxController {
     couponStatus.value = success ? "تم تطبيق الخصم بنجاح!" : "الكود غير صحيح";
   }
 
-  OrderModel? completeOrder() {
-    // 1. Create Order
-    final cart = cartController;
-    if (cart.items.isEmpty) return null;
-    
-    final orderId = "#ORD-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}"; // Simple ID
-    final now = DateTime.now();
-    final dateStr = "${now.day}/${now.month}";
-    
-    final order = OrderModel(
-      id: orderId,
-      dateTime: now,
-      status: OrderStatus.pending,
-      totalPrice: cart.totalAmount + cart.shippingCost,
-      itemCount: cart.items.length,
-      shippingAddress: addresses[selectedAddressIndex.value]['address'] ?? "No address",
-      itemsNames: cart.items.values.map((e) => e.product.name).toList(),
-    );
-    
-    // 2. Add to Reports
-    try {
-      Get.find<PurchaseReportsController>().addOrder(order);
-    } catch (e) { print(e); }
-    
-    // 3. Log Activity
-    try {
-      Get.find<ActivitiesController>().logActivity(
-        title: 'إتمام طلب جديد $orderId',
-        type: 'buy'
-      );
-    } catch (e) { print(e); }
+  Future<OrderModel?> completeOrder() async {
+    if (cartController.items.isEmpty) return null;
 
-    // 4. Clear Cart
-    cartController.clearCart();
-    
-    return order;
+    try {
+      isCompletingOrder.value = true;
+      final token = _appController.token.value;
+      if (token.isEmpty) {
+        Get.snackbar("تنبيه", "يجب تسجيل الدخول أولاً", backgroundColor: Colors.orange, colorText: Colors.white);
+        return null;
+      }
+
+      final orderData = {
+        "address": addresses[selectedAddressIndex.value]['address'],
+        "payment_method_id": paymentMethods.isNotEmpty ? paymentMethods[selectedMethodIndex.value].id : 1,
+        "items": cartController.items.values.map((item) => {
+          "product_id": item.product.id,
+          "quantity": item.quantity.value,
+          "price": item.product.price,
+        }).toList(),
+        "total_price": cartController.totalAmount + (cartController.shippingCost ?? 0.0),
+      };
+
+      final order = await _apiService.createOrder(orderData, token);
+      
+      if (order != null) {
+        // Log Activity
+        try {
+          if (Get.isRegistered<ActivitiesController>()) {
+            Get.find<ActivitiesController>().logActivity(
+              title: 'إتمام طلب جديد بنجاح',
+              type: 'buy'
+            );
+          }
+        } catch (e) {}
+
+        // Clear Cart
+        cartController.clearCart();
+        
+        // Refresh Purchase Reports
+        try {
+          if (Get.isRegistered<PurchaseReportsController>()) {
+            Get.find<PurchaseReportsController>().loadOrders();
+          }
+        } catch (e) {}
+        
+        return order;
+      } else {
+        Get.snackbar("خطأ", "فشل في إتمام الطلب، يرجى المحاولة لاحقاً", backgroundColor: Colors.redAccent, colorText: Colors.white);
+        return null;
+      }
+    } catch (e) {
+      debugPrint("Error completing order: $e");
+      return null;
+    } finally {
+      isCompletingOrder.value = false;
+    }
   }
 
   @override

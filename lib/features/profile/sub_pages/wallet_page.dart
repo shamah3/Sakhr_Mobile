@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:bytore/features/profile/controllers/wallet_controller.dart';
+import 'package:bytore/features/profile/models/wallet_model.dart';
 import 'package:bytore/core/components/custom_app_bar.dart';
 
 
@@ -86,7 +87,9 @@ class WalletPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTransactionItem(transaction) {
+  Widget _buildTransactionItem(WalletTransaction transaction) {
+    final bool isCredit = transaction.type == 'credit';
+    final dateStr = "${transaction.createdAt.day}-${transaction.createdAt.month}-${transaction.createdAt.year}";
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -98,18 +101,18 @@ class WalletPage extends StatelessWidget {
       child: ListTile(
         contentPadding: EdgeInsets.zero,
         leading: CircleAvatar(
-          backgroundColor: transaction.isCredit ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+          backgroundColor: isCredit ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
           child: Icon(
-            transaction.isCredit ? Icons.add : Icons.remove,
-            color: transaction.isCredit ? Colors.green : Colors.red,
+            isCredit ? Icons.add : Icons.remove,
+            color: isCredit ? Colors.green : Colors.red,
           ),
         ),
-        title: Text(transaction.title, style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 14)),
-        subtitle: Text(transaction.date, style: const TextStyle(fontSize: 11)),
+        title: Text(transaction.description, style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 14)),
+        subtitle: Text(dateStr, style: const TextStyle(fontSize: 11)),
         trailing: Text(
           '${transaction.amount.toStringAsFixed(0)} ريال',
           style: TextStyle(
-            color: transaction.isCredit ? Colors.green : Colors.red,
+            color: isCredit ? Colors.green : Colors.red,
             fontWeight: FontWeight.bold,
           ),
         ),

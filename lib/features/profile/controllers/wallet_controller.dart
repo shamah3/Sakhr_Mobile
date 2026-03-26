@@ -1,19 +1,37 @@
+import 'package:bytore/core/controllers/app_controller.dart';
+import 'package:bytore/core/services/api_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:bytore/features/profile/models/wallet_model.dart';
 
 class WalletController extends GetxController {
-  // قائمة العمليات المالية (Observable)
-  var transactions = <TransactionModel>[
-    TransactionModel(title: 'إيداع رصيد', date: '20-12-2025', amount: 50000, isCredit: true),
-    TransactionModel(title: 'شراء منتج #12345', date: '25-12-2025', amount: -15000, isCredit: false),
-    TransactionModel(title: 'استرجاع منتج #12322', date: '26-12-2025', amount: 4500, isCredit: true),
-  ].obs;
+  final ApiService _apiService = ApiService();
+  final AppController _appController = Get.find<AppController>();
 
-  // حساب الرصيد الحالي تلقائياً (Computed Property)
-  double get currentBalance => transactions.fold(0.0, (sum, item) => sum + item.amount);
+  var wallet = Rxn<WalletModel>();
+  var isLoading = false.obs;
 
-  // دالة لإضافة عملية جديدة (مثلاً عند الشحن)
-  void addTransaction(TransactionModel transaction) {
-    transactions.add(transaction);
+  @override
+  void onInit() {
+    super.onInit();
+    loadWallet();
   }
+
+  Future<void> loadWallet() async {
+    try {
+      isLoading.value = true;
+      final token = _appController.token.value;
+      if (token.isEmpty) return;
+
+      final data = await _apiService.fetchWallet(token);
+      wallet.value = data;
+    } catch (e) {
+      debugPrint("Error loading wallet: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  double get currentBalance => wallet.value?.balance ?? 0.0;
+  List<WalletTransaction> get transactions => wallet.value?.transactions ?? [];
 }

@@ -15,16 +15,21 @@ import 'package:bytore/features/profile/controllers/reviews_controller.dart';
 class InitialBinding extends Bindings {
   @override
   void dependencies() {
+    // Core Controllers (Essential on start)
     Get.put(AppController(), permanent: true);
     Get.put(CartController(), permanent: true);
-    Get.put(HomeController(), permanent: true);
-    Get.put(PurchaseReportsController(), permanent: true);
-    Get.put(ActivitiesController(), permanent: true);
-    Get.put(ReturnedProductsController(), permanent: true);
-    Get.put(ReviewsController(), permanent: true);
-    Get.lazyPut(() => CategoriesController());
-    Get.lazyPut(() => AuthController());
-    Get.lazyPut(() => CheckoutController());
     Get.put(MainController(), permanent: true);
+
+    // Business Logic (Lazy loading when needed)
+    Get.lazyPut(() => HomeController(), fenix: true);
+    Get.lazyPut(() => CategoriesController(), fenix: true);
+    Get.lazyPut(() => AuthController(), fenix: true);
+    Get.lazyPut(() => CheckoutController(), fenix: true);
+    
+    // Profile features
+    Get.lazyPut(() => PurchaseReportsController(), fenix: true);
+    Get.lazyPut(() => ActivitiesController(), fenix: true);
+    Get.lazyPut(() => ReturnedProductsController(), fenix: true);
+    Get.lazyPut(() => ReviewsController(), fenix: true);
   }
 }

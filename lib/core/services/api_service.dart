@@ -5,6 +5,9 @@ import 'package:bytore/features/product/models/product_model.dart';
 import 'package:bytore/features/stores/models/store_model.dart';
 import 'package:bytore/features/stores/models/advertisement_model.dart';
 import 'package:bytore/features/notifications/models/notification_model.dart';
+import 'package:bytore/features/checkout/models/payment_method_model.dart';
+import 'package:bytore/features/orders/models/order_model.dart';
+import 'package:bytore/features/profile/models/wallet_model.dart';
 
 class ApiService {
 
@@ -576,6 +579,166 @@ class ApiService {
     } catch (e) {
       debugPrint("Logout Error: $e");
       return false;
+    }
+  }
+
+  // ==================================================
+  // 💳 طرق الدفع
+  // ==================================================
+
+  Future<List<PaymentMethodModel>> fetchPaymentMethods() async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/payment-methods"),
+        headers: {
+          "Accept": "application/json",
+        },
+      );
+
+      if (response.statusCode != 200) return [];
+
+      final decoded = jsonDecode(response.body);
+      List<dynamic> list = [];
+
+      if (decoded is Map && decoded.containsKey('data')) {
+        list = decoded['data'] is List ? decoded['data'] : [];
+      } else if (decoded is List) {
+        list = decoded;
+      }
+
+      return list
+          .where((e) => e is Map)
+          .map((e) => PaymentMethodModel.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    } catch (e) {
+      debugPrint("Fetch Payment Methods Error: $e");
+      return [];
+    }
+  }
+
+  // ==================================================
+  // 📦 الطلبات
+  // ==================================================
+
+  Future<List<OrderModel>> fetchOrders(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/orders"),
+        headers: {
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      if (response.statusCode != 200) return [];
+
+      final decoded = jsonDecode(response.body);
+      List<dynamic> list = [];
+
+      if (decoded is Map && decoded.containsKey('data')) {
+        list = decoded['data'] is List ? decoded['data'] : [];
+      } else if (decoded is List) {
+        list = decoded;
+      }
+
+      return list
+          .where((e) => e is Map)
+          .map((e) => OrderModel.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    } catch (e) {
+      debugPrint("Fetch Orders Error: $e");
+      return [];
+    }
+  }
+
+  Future<OrderModel?> fetchOrderDetail(int id, String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/orders/$id"),
+        headers: {
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      if (response.statusCode != 200) return null;
+
+      final decoded = jsonDecode(response.body);
+      Map<String, dynamic>? data;
+
+      if (decoded is Map) {
+        data = decoded.containsKey('data') ? (decoded['data'] is Map ? decoded['data'] : null) : decoded;
+      }
+
+      if (data != null) {
+        return OrderModel.fromJson(data);
+      }
+      return null;
+    } catch (e) {
+      debugPrint("Fetch Order Detail Error ($id): $e");
+      return null;
+    }
+  }
+
+  Future<OrderModel?> createOrder(Map<String, dynamic> data, String token) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/orders"),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final decoded = jsonDecode(response.body);
+        Map<String, dynamic>? orderData;
+        if (decoded is Map) {
+          orderData = decoded.containsKey('data') ? (decoded['data'] is Map ? decoded['data'] : null) : decoded;
+        }
+        if (orderData != null) {
+          return OrderModel.fromJson(orderData);
+        }
+      }
+      return null;
+    } catch (e) {
+      debugPrint("Create Order Error: $e");
+      return null;
+    }
+  }
+
+  // ==================================================
+  // 💰 المحفظة
+  // ==================================================
+
+  Future<WalletModel?> fetchWallet(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/wallet"),
+        headers: {
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      if (response.statusCode != 200) return null;
+
+      final decoded = jsonDecode(response.body);
+      Map<String, dynamic>? data;
+
+      if (decoded is Map) {
+        data = decoded.containsKey('data') ? (decoded['data'] is Map ? decoded['data'] : null) : decoded;
+      }
+
+      if (data != null) {
+        return WalletModel.fromJson(data);
+      }
+      return null;
+    } catch (e) {
+      debugPrint("Fetch Wallet Error: $e");
+      return null;
     }
   }
 }

@@ -80,7 +80,7 @@ class ReturnedProductsController extends GetxController {
     // محاكاة إضافة طلب استرجاع لمنتج محدد
     returnedProducts.insert(0, ReturnedProductModel(
       name: itemName,
-      orderId: order.id,
+      orderId: order.id.toString(),
       price: "${(order.totalPrice / order.itemsNames.length).toStringAsFixed(0)} ريال", // تقسيم افتراضي للسعر
       status: 'تحت المراجعة',
       statusColor: secondaryOrange,

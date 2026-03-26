@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bytore/core/constants/constants.dart';
-import 'package:bytore/core/controllers/app_controller.dart';
+import 'package:bytore/features/orders/controllers/tracking_controller.dart';
+import 'package:bytore/features/orders/models/order_model.dart';
+import 'package:intl/intl.dart';
 
-class TrackingView extends GetView<AppController> {
+class TrackingView extends GetView<TrackingController> {
   const TrackingView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Ensure controller is registered
+    if (!Get.isRegistered<TrackingController>()) {
+      Get.put(TrackingController());
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -19,61 +26,66 @@ class TrackingView extends GetView<AppController> {
           icon: const Icon(Icons.arrow_back, color: kTextColor, size: 24),
           onPressed: () => Get.back(),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.help_outline_rounded, color: kTextColor),
-            onPressed: () {},
-          ),
-        ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildModernOrderHeader(),
-                    const SizedBox(height: 35),
-                    const Row(
-                      children: [
-                        Icon(Icons.timeline_rounded, color: kPrimaryColor, size: 20),
-                        SizedBox(width: 10),
-                        Text(
-                          'تتبع مسار الشحنة',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
-                            color: kTextColor,
+      body: Obx(() {
+        if (controller.isLoading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        
+        final order = controller.order.value;
+        if (order == null) {
+          return const Center(child: Text("لم يتم العثور على بيانات الطلب"));
+        }
+
+        return Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildModernOrderHeader(order),
+                      const SizedBox(height: 35),
+                      const Row(
+                        children: [
+                          Icon(Icons.timeline_rounded, color: kPrimaryColor, size: 20),
+                          SizedBox(width: 10),
+                          Text(
+                            'تتبع مسار الشحنة',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: kTextColor,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 25),
-                    _buildVisualTimeline(),
-                    const SizedBox(height: 35),
-                    const Text(
-                      'تفاصيل التوصيل',
-                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: kTextColor),
-                    ),
-                    const SizedBox(height: 20),
-                    _buildShippingInfoCard(),
-                    const SizedBox(height: 20),
-                  ],
+                        ],
+                      ),
+                      const SizedBox(height: 25),
+                      _buildVisualTimeline(order),
+                      const SizedBox(height: 35),
+                      const Text(
+                        'تفاصيل التوصيل',
+                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: kTextColor),
+                      ),
+                      const SizedBox(height: 20),
+                      _buildShippingInfoCard(order),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          _buildBottomAction(context),
-        ],
-      ),
+            _buildBottomAction(context),
+          ],
+        );
+      }),
     );
   }
 
-  Widget _buildModernOrderHeader() {
+  Widget _buildModernOrderHeader(OrderModel order) {
     return Container(
       padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
@@ -92,12 +104,12 @@ class TrackingView extends GetView<AppController> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('رقم الطلب', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                  SizedBox(height: 4),
-                  Text('#BTR-45892', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20)),
+                  const Text('رقم الطلب', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                  const SizedBox(height: 4),
+                  Text('#${order.id}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20)),
                 ],
               ),
               Container(
@@ -106,7 +118,7 @@ class TrackingView extends GetView<AppController> {
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Text('قيد التوصيل', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                child: Text(order.statusText, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -120,11 +132,11 @@ class TrackingView extends GetView<AppController> {
                 child: Icon(Icons.calendar_today_rounded, color: Colors.white, size: 16),
               ),
               const SizedBox(width: 15),
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('تاريخ الطلب', style: TextStyle(color: Colors.white70, fontSize: 11)),
-                  Text('04 يناير، 2026', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                  const Text('تاريخ الطلب', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                  Text(DateFormat('dd MMMM, yyyy', 'ar').format(order.dateTime), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
                 ],
               ),
               const Spacer(),
@@ -140,7 +152,9 @@ class TrackingView extends GetView<AppController> {
     );
   }
 
-  Widget _buildVisualTimeline() {
+  Widget _buildVisualTimeline(OrderModel order) {
+    final status = order.status;
+    
     return Container(
       padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
@@ -161,43 +175,44 @@ class TrackingView extends GetView<AppController> {
             icon: Icons.receipt_long_rounded,
             title: "تم استلام الطلب",
             sub: "تلقينا طلبك وبانتظار المراجعة",
-            time: "09:00 ص",
-            isDone: true,
-            isLineActive: true,
+            time: "",
+            isDone: status.index >= OrderStatus.pending.index,
+            isLineActive: status.index > OrderStatus.pending.index,
           ),
           _buildStep(
-            icon: Icons.checklist_rtl_rounded,
+            icon: Icons.check_circle_rounded,
             title: "تم التأكيد",
             sub: "تم التحقق من الطلب وتأكيده",
-            time: "10:30 ص",
-            isDone: true,
-            isLineActive: true,
+            time: "",
+            isDone: status.index >= OrderStatus.confirmed.index,
+            isLineActive: status.index > OrderStatus.confirmed.index,
           ),
           _buildStep(
             icon: Icons.inventory_2_rounded,
             title: "جاري التجهيز",
             sub: "يتم الآن تغليف طلبك في المستودع",
-            time: "01:00 م",
-            isDone: true,
-            isLineActive: true,
+            time: "",
+            isDone: status.index >= OrderStatus.processing.index,
+            isLineActive: status.index > OrderStatus.processing.index,
           ),
           _buildStep(
             icon: Icons.local_shipping_rounded,
             title: "خرج للتوصيل",
             sub: "المندوب في طريقه إلى عنوانك",
-            time: "03:15 م",
-            isDone: false,
-            isLineActive: false,
-            isCurrent: true,
+            time: "",
+            isDone: status.index >= OrderStatus.outForDelivery.index,
+            isLineActive: status.index > OrderStatus.outForDelivery.index,
+            isCurrent: status == OrderStatus.outForDelivery,
           ),
           _buildStep(
             icon: Icons.home_rounded,
             title: "تم التوصيل",
             sub: "استلام الطلب في الموقع المحدد",
-            time: "قريباً",
-            isDone: false,
+            time: "",
+            isDone: status == OrderStatus.delivered,
             isLineActive: false,
             isLast: true,
+            isCurrent: status == OrderStatus.delivered,
           ),
         ],
       ),
@@ -272,7 +287,7 @@ class TrackingView extends GetView<AppController> {
     );
   }
 
-  Widget _buildShippingInfoCard() {
+  Widget _buildShippingInfoCard(OrderModel order) {
     return Container(
       padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
@@ -283,12 +298,12 @@ class TrackingView extends GetView<AppController> {
       ),
       child: Column(
         children: [
-          _buildInfoRow(Icons.location_on_rounded, "عنوان التسليم", "صنعاء، حي حدة، شارع صفر"),
+          _buildInfoRow(Icons.location_on_rounded, "عنوان التسليم", order.shippingAddress),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 20),
             child: Divider(height: 1, color: Color(0xFFF5F5F5)),
           ),
-          _buildInfoRow(Icons.person_pin_rounded, "المستلم", "محمد الكبسي (777123456)"),
+          _buildInfoRow(Icons.person_pin_rounded, "المستلم", "الطلب يحتوي على ${order.itemCount} عناصر"),
         ],
       ),
     );

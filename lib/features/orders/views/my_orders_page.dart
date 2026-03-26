@@ -53,6 +53,9 @@ class MyOrdersPage extends StatelessWidget {
           ),
         ),
         body: Obx(() {
+          if (purchaseController.isLoading.value) {
+            return const Center(child: CircularProgressIndicator());
+          }
           final orders = purchaseController.orders;
           return TabBarView(
             children: [
@@ -189,7 +192,7 @@ class MyOrdersPage extends StatelessWidget {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => Get.toNamed(AppRoutes.TRACKING),
+                          onPressed: () => Get.toNamed(AppRoutes.TRACKING, arguments: order.id),
                           style: OutlinedButton.styleFrom(
                             side: BorderSide(color: Colors.grey.shade200),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -204,7 +207,7 @@ class MyOrdersPage extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () => Get.toNamed(AppRoutes.TRACKING),
+                          onPressed: () => Get.toNamed(AppRoutes.TRACKING, arguments: order.id),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: kPrimaryColor,
                             foregroundColor: Colors.white,

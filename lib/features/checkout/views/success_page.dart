@@ -52,7 +52,7 @@ class SuccessPage extends StatelessWidget {
               // زر تتبع الطلب
               _buildActionButton(
                 label: 'تتبع حالة الطلب',
-                onPressed: () => Get.to(() => const TrackingView()),
+                onPressed: () => Get.to(() => const TrackingView(), arguments: order?.id),
                 isPrimary: true,
               ),
 
@@ -144,7 +144,7 @@ class SuccessPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text("رقم الطلب", style: TextStyle(color: kTextLightColor, fontSize: 12)),
-                Text(order?.id ?? "#UNKNOWN", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: kTextColor)),
+                Text(order?.id != null ? "#${order!.id}" : "#UNKNOWN", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: kTextColor)),
               ],
             ),
           ),

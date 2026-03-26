@@ -1,39 +1,49 @@
+import 'package:bytore/core/controllers/app_controller.dart';
+import 'package:bytore/core/services/api_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:bytore/features/orders/models/order_model.dart';
 
 enum TimeFilter { weekly, monthly, yearly }
 
-
 class PurchaseReportsController extends GetxController {
-  // الفلتر المختار حالياً (Reactive)
-  var selectedFilter = TimeFilter.monthly.obs;
-  
-  // قائمة الطلبات الحقيقية
-  var orders = <OrderModel>[].obs;
-  
-  // القائمة المفلترة للعرض
-  var filteredOrders = <OrderModel>[].obs;
+  final ApiService _apiService = ApiService();
+  final AppController _appController = Get.find<AppController>();
 
-  // إحصائيات تتغير بناءً على الفلتر
+  var selectedFilter = TimeFilter.monthly.obs;
+  var orders = <OrderModel>[].obs;
+  var filteredOrders = <OrderModel>[].obs;
+  var isLoading = false.obs;
+
   var totalSpending = "0 ريال".obs;
   var ordersCount = "0 طلبات".obs;
   
   @override
   void onInit() {
     super.onInit();
-    // Initialize with some dummy data if needed or empty
-    changeFilter(selectedFilter.value);
-    
-    // Listen to changes in orders
+    loadOrders();
     ever(orders, (_) => changeFilter(selectedFilter.value));
   }
   
-  void addOrder(OrderModel order) {
-    orders.insert(0, order);
-    changeFilter(selectedFilter.value);
+  Future<void> loadOrders() async {
+    try {
+      isLoading.value = true;
+      final token = _appController.token.value;
+      if (token.isEmpty) return;
+
+      final fetched = await _apiService.fetchOrders(token);
+      orders.assignAll(fetched);
+    } catch (e) {
+      debugPrint("Error loading orders: $e");
+    } finally {
+      isLoading.value = false;
+    }
   }
 
-  // دالة لتغيير الفلتر وتحديث البيانات
+  void addOrder(OrderModel order) {
+    orders.insert(0, order);
+  }
+
   void changeFilter(TimeFilter filter) {
     selectedFilter.value = filter;
     
@@ -53,12 +63,9 @@ class PurchaseReportsController extends GetxController {
       if (include) filteredOrders.add(order);
     }
     
-    // Calculate stats
     double sum = 0;
     for (var o in filteredOrders) sum += o.totalPrice;
     
-    // Format currency (assuming YER for now or use AppController)
-    // Using simple formatting for now
     totalSpending.value = "${sum.toStringAsFixed(0)} ريال";
     ordersCount.value = "${filteredOrders.length} طلبات";
   }

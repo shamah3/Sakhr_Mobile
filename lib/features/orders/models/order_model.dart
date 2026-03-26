@@ -10,7 +10,7 @@ enum OrderStatus {
 }
 
 class OrderModel {
-  final String id;
+  final int id;
   final DateTime dateTime;
   final OrderStatus status;
   final double totalPrice;
@@ -28,7 +28,37 @@ class OrderModel {
     required this.itemsNames,
   });
 
+  factory OrderModel.fromJson(Map<String, dynamic> json) {
+    return OrderModel(
+      id: json['id'] ?? 0,
+      dateTime: json['created_at'] != null 
+          ? DateTime.parse(json['created_at']) 
+          : DateTime.now(),
+      status: _mapStatus(json['status'] ?? "pending"),
+      totalPrice: (json['total_price'] ?? 0).toDouble(),
+      itemCount: json['items_count'] ?? 0,
+      shippingAddress: json['address'] ?? "",
+      itemsNames: (json['items_names'] as List? ?? [])
+          .map((e) => e.toString())
+          .toList(),
+    );
+  }
+
+  static OrderStatus _mapStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending': return OrderStatus.pending;
+      case 'confirmed': return OrderStatus.confirmed;
+      case 'processing': return OrderStatus.processing;
+      case 'outfordelivery': 
+      case 'out_for_delivery': return OrderStatus.outForDelivery;
+      case 'delivered': return OrderStatus.delivered;
+      case 'late': return OrderStatus.late;
+      default: return OrderStatus.pending;
+    }
+  }
+
   String get statusText {
+// ... (rest of old code)
     switch (status) {
       case OrderStatus.pending:
         return "قيد الانتظار";

@@ -44,12 +44,20 @@ class PaymentPage extends GetView<CheckoutController> {
                 ),
                 const SizedBox(height: 15),
 
-                Obx(() => Column(
-                  children: List.generate(
-                      controller.methods.length,
-                          (index) => _buildPaymentMethod(index)
-                  ),
-                )),
+                Obx(() {
+                  if (controller.isLoadingMethods.value) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (controller.paymentMethods.isEmpty) {
+                    return const Center(child: Text("لا توجد طرق دفع متاحة"));
+                  }
+                  return Column(
+                    children: List.generate(
+                        controller.paymentMethods.length,
+                            (index) => _buildPaymentMethod(index)
+                    ),
+                  );
+                }),
 
                 Obx(() {
                   if (controller.selectedMethodIndex.value == 0) {
@@ -170,6 +178,7 @@ class PaymentPage extends GetView<CheckoutController> {
   }
 
   Widget _buildPaymentMethod(int index) {
+    final method = controller.paymentMethods[index];
     final isSelected = controller.selectedMethodIndex.value == index;
     return GestureDetector(
       onTap: () => controller.selectMethod(index),
@@ -195,9 +204,18 @@ class PaymentPage extends GetView<CheckoutController> {
               child: Icon(Icons.check, size: 12, color: isSelected ? Colors.white : Colors.transparent),
             ),
             const SizedBox(width: 20),
-            Icon(controller.methods[index]['icon'] as IconData, color: isSelected ? kPrimaryColor : Colors.grey, size: 24),
+            Icon(method.defaultIcon, color: isSelected ? kPrimaryColor : Colors.grey, size: 24),
             const SizedBox(width: 15),
-            Text(controller.methods[index]['title'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(method.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  if (method.description != null)
+                    Text(method.description!, style: const TextStyle(fontSize: 12, color: kTextLightColor)),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -238,21 +256,28 @@ class PaymentPage extends GetView<CheckoutController> {
                 boxShadow: [BoxShadow(color: kPrimaryColor.withOpacity(0.2), blurRadius: 15, offset: const Offset(0, 8))],
               ),
               child: ElevatedButton(
-                onPressed: () {
-                  final order = controller.completeOrder();
+                  onPressed: controller.isCompletingOrder.value 
+                  ? null 
+                  : () async {
+                  final order = await controller.completeOrder();
                   if (order != null) {
                     Get.offAll(() => SuccessPage(order: order));
-                  } else {
-                    Get.snackbar("تنبيه", "السلة فارغة!", backgroundColor: Colors.redAccent, colorText: Colors.white);
                   }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimaryColor,
                   foregroundColor: Colors.white,
+                  disabledBackgroundColor: kPrimaryColor.withOpacity(0.6),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                   elevation: 0,
                 ),
-                child: const Text("إتمام الدفع وتأكيد الطلب", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                child: controller.isCompletingOrder.value 
+                  ? const SizedBox(
+                      width: 24, 
+                      height: 24, 
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                    )
+                  : const Text("إتمام الدفع وتأكيد الطلب", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(height: 40), // Increased from 20 to 40
