@@ -33,14 +33,6 @@ class AppController extends GetxController {
     // Initialize Purchase & Activity Controllers permanently
     Get.put(PurchaseReportsController(), permanent: true);
     Get.put(ActivitiesController(), permanent: true);
-
-    // Fetch initial wishlist
-    fetchInitialWishlist();
-  }
-  
-  Future<void> fetchInitialWishlist() async {
-    final ids = await _apiService.fetchWishlist();
-    wishlistIds.assignAll(ids);
   }
   
   final Map<String, String> _users = {"777777777": "123456"}.obs;
@@ -108,16 +100,15 @@ class AppController extends GetxController {
     if (street != null) streetName.value = street;
     if (landmark != null) this.landmark.value = landmark;
   }
-
+  
   // Wishlist State
   var wishlistIds = <int>{}.obs;
 
   bool isWishlisted(int productId) => wishlistIds.contains(productId);
 
-  void toggleWishlist(int productId, {String? productName}) async {
+  void toggleWishlist(int productId, {String? productName}) {
     final bool wasWishlisted = wishlistIds.contains(productId);
 
-    // 1. التحديث اللحظي للواجهة
     if (wasWishlisted) {
       wishlistIds.remove(productId);
     } else {
@@ -131,27 +122,11 @@ class AppController extends GetxController {
       try {
         Get.find<ActivitiesController>().logActivity(
           title: 'إضافة "${productName ?? "منتج"}" للمفضلة',
-          type: 'fav' // Added type 'fav' to conform to existing
+          type: 'fav'
         );
       } catch (e) {
         debugPrint("Activity log error: $e");
       }
-    }
-
-    // 2. تحديث السيرفر
-    final bool success = await _apiService.toggleWishlistApi(productId);
-
-    // 3. التراجع لو فشل الاتصال مع إشعار
-    if (!success) {
-      if (wasWishlisted) {
-        wishlistIds.add(productId);
-      } else {
-        wishlistIds.remove(productId);
-      }
-      Get.snackbar("خطأ", "فشل في تحديث المفضلة. تأكد من اتصالك بالإنترنت.", 
-           snackPosition: SnackPosition.BOTTOM, 
-           backgroundColor: Colors.redAccent, 
-           colorText: Colors.white);
     }
   }
 

@@ -5,6 +5,7 @@ import 'package:bytore/features/product/views/product_list_view.dart';
 import 'package:carousel_slider/carousel_slider.dart'; // Import Carousel
 import 'package:bytore/core/components/custom_image.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:bytore/features/stores/models/store_model.dart';
 import '../controllers/stores_controller.dart';
 
 class StoresView extends GetView<StoresController> {
@@ -27,9 +28,14 @@ class StoresView extends GetView<StoresController> {
             _buildBanners(), // Added banners as requested
             _buildSearchField(),
             Expanded(
-              child: Obx(() => controller.filteredStores.isEmpty 
-                ? const Center(child: Text("لا توجد نتائج"))
-                : GridView.builder(
+              child: Obx(() {
+                if (controller.isLoading.value) {
+                  return const Center(child: CircularProgressIndicator(color: kPrimaryColor));
+                }
+                if (controller.filteredStores.isEmpty) {
+                  return const Center(child: Text("لا توجد نتائج"));
+                }
+                return GridView.builder(
                     padding: const EdgeInsets.all(20),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
@@ -39,7 +45,8 @@ class StoresView extends GetView<StoresController> {
                     ),
                     itemCount: controller.filteredStores.length,
                     itemBuilder: (context, index) => _buildStoreCard(controller.filteredStores[index]),
-                  )),
+                  );
+              }),
             ),
           ],
         ),
@@ -105,12 +112,13 @@ class StoresView extends GetView<StoresController> {
     );
   }
 
-  Widget _buildStoreCard(Map<String, dynamic> store) {
+  Widget _buildStoreCard(StoreModel store) {
     return GestureDetector(
       onTap: () {
         Get.to(() => ProductListView(
-          categoryTitle: store['name'],
+          categoryTitle: store.name,
           apiCategorySlug: 'all', 
+          storeId: store.id,
         ));
       },
       child: Container(
@@ -152,11 +160,11 @@ class StoresView extends GetView<StoresController> {
                               ]
                             ),
                             child: CustomImage(
-                              imageUrl: store['logo'],
+                              imageUrl: store.logo ?? "",
                               fit: BoxFit.contain,
                             ),
                           ),
-                          if (store['isVerified'])
+                          if (store.isVerified)
                             Positioned(
                               bottom: 2,
                               right: 2,
@@ -170,7 +178,7 @@ class StoresView extends GetView<StoresController> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        store['name'],
+                        store.name,
                         textAlign: TextAlign.center,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -178,7 +186,7 @@ class StoresView extends GetView<StoresController> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        store['category'],
+                        store.category,
                         textAlign: TextAlign.center,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -197,7 +205,7 @@ class StoresView extends GetView<StoresController> {
                              const Icon(Icons.star_rounded, color: Colors.amber, size: 14),
                              const SizedBox(width: 4),
                              Text(
-                               '${store['rating']}',
+                               '${store.rating}',
                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
                              ),
                           ],
@@ -214,47 +222,54 @@ class StoresView extends GetView<StoresController> {
     );
   }
   Widget _buildBanners() {
-    return Column(
-      children: [
-        CarouselSlider(
-          options: CarouselOptions(
-            height: 160,
-            viewportFraction: 0.92,
-            autoPlay: true,
-            enlargeCenterPage: true,
-          ),
-          items: [1, 2].map((i) {
-            return Builder(
-              builder: (BuildContext context) {
-                return Container(
-                  width: MediaQuery.of(context).size.width,
-                  margin: const EdgeInsets.symmetric(horizontal: 0.0),
-                  decoration: BoxDecoration(
-                    color: i == 1 ? Colors.indigoAccent : Colors.teal,
-                    borderRadius: BorderRadius.circular(15),
-                    image: DecorationImage(
-                      image: CachedNetworkImageProvider(
-                        i == 1 
-                        ? "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=600&auto=format&fit=crop" // Camera/Lens
-                        : "https://images.unsplash.com/photo-1546435770-a3e426bf472b?q=80&w=600&auto=format&fit=crop" // Headphones/Tech
+    return Obx(() {
+      if (controller.advertisements.isEmpty) return const SizedBox.shrink();
+      
+      return Column(
+        children: [
+          CarouselSlider(
+            options: CarouselOptions(
+              height: 160,
+              viewportFraction: 0.92,
+              autoPlay: true,
+              enlargeCenterPage: true,
+            ),
+            items: controller.advertisements.map((ad) {
+              return Builder(
+                builder: (BuildContext context) {
+                  return Container(
+                    width: MediaQuery.of(context).size.width,
+                    margin: const EdgeInsets.symmetric(horizontal: 0.0),
+                    decoration: BoxDecoration(
+                      color: kPrimaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(15),
+                      image: DecorationImage(
+                        image: CachedNetworkImageProvider(ad.image),
+                        fit: BoxFit.cover,
+                        colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.3), BlendMode.darken),
                       ),
-                      fit: BoxFit.cover,
-                      colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.3), BlendMode.darken),
                     ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      i == 1 ? "خصومات متجر كانون\nعلى الكاميرات الاحترافية" : "متجر سوني\nعالم من الصوتيات",
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22, shadows: [Shadow(blurRadius: 10, color: Colors.black, offset: Offset(0, 2))]),
-                    ),
-                  ),
-                );
-              },
-            );
-          }).toList(),
-        ),
-      ],
-    );
+                    child: (ad.title != null || ad.description != null) 
+                      ? Center(
+                          child: Text(
+                            "${ad.title ?? ''}\n${ad.description ?? ''}".trim(),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white, 
+                              fontWeight: FontWeight.bold, 
+                              fontSize: 18, 
+                              shadows: [Shadow(blurRadius: 10, color: Colors.black, offset: Offset(0, 2))]
+                            ),
+                          ),
+                        )
+                      : null,
+                  );
+                },
+              );
+            }).toList(),
+          ),
+        ],
+      );
+    });
   }
 }

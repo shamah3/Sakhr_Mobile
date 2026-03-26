@@ -1,65 +1,40 @@
 import 'package:get/get.dart';
-import 'package:bytore/core/constants/constants.dart';
+import 'package:bytore/core/services/api_service.dart';
+import 'package:bytore/features/stores/models/store_model.dart';
+import 'package:bytore/features/stores/models/advertisement_model.dart';
+import 'package:flutter/foundation.dart';
 
 class StoresController extends GetxController {
-  final List<Map<String, dynamic>> allStores = [
-    {
-      'name': 'عالم التقنية',
-      'logo': 'https://cdn-icons-png.flaticon.com/512/3067/3067260.png',
-      'category': 'إلكترونيات ولابتوبات',
-      'rating': 4.8,
-      'isVerified': true,
-      'color': kSecondaryColor,
-    },
-    {
-      'name': 'آفاق الكمبيوتر',
-      'logo': 'https://cdn-icons-png.flaticon.com/512/2586/2586488.png',
-      'category': 'شاشات وقطع هاردوير',
-      'rating': 4.5,
-      'isVerified': true,
-      'color': kSecondaryColor,
-    },
-    {
-      'name': 'مركز الحلول',
-      'logo': 'https://cdn-icons-png.flaticon.com/512/27/27130.png',
-      'category': 'إكسسوارات وملحقات',
-      'rating': 4.9,
-      'isVerified': false,
-      'color': kSecondaryColor,
-    },
-    {
-      'name': 'المتجر الذكي',
-      'logo': 'https://cdn-icons-png.flaticon.com/512/2906/2906231.png',
-      'category': 'أجهزة ذكية وساعات',
-      'rating': 4.2,
-      'isVerified': true,
-      'color': kSecondaryColor,
-    },
-    {
-      'name': 'كمبيوتك',
-      'logo': 'https://cdn-icons-png.flaticon.com/512/2171/2171344.png',
-      'category': 'صيانة وقطع غيار',
-      'rating': 4.7,
-      'isVerified': true,
-      'color': kSecondaryColor,
-    },
-    {
-      'name': 'متجر النخبة',
-      'logo': 'https://cdn-icons-png.flaticon.com/512/2888/2888407.png',
-      'category': 'برمجيات وألعاب',
-      'rating': 4.6,
-      'isVerified': false,
-      'color': kSecondaryColor,
-    },
-  ];
+  final ApiService _apiService = ApiService();
 
-  var filteredStores = <Map<String, dynamic>>[].obs;
+  var allStores = <StoreModel>[].obs;
+  var filteredStores = <StoreModel>[].obs;
+  var advertisements = <AdvertisementModel>[].obs;
+  var isLoading = false.obs;
   var searchText = "".obs;
 
   @override
   void onInit() {
     super.onInit();
-    filteredStores.assignAll(allStores);
+    loadStores();
+  }
+
+  Future<void> loadStores() async {
+    try {
+      isLoading.value = true;
+      final results = await Future.wait([
+        _apiService.fetchStores(),
+        _apiService.fetchAdvertisements(),
+      ]);
+      
+      allStores.assignAll(results[0] as List<StoreModel>);
+      filteredStores.assignAll(results[0] as List<StoreModel>);
+      advertisements.assignAll(results[1] as List<AdvertisementModel>);
+    } catch (e) {
+      debugPrint("Error loading stores: $e");
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   void filterStores(String query) {
@@ -68,9 +43,29 @@ class StoresController extends GetxController {
       filteredStores.assignAll(allStores);
     } else {
       filteredStores.assignAll(allStores.where((store) => 
-        store['name'].toString().toLowerCase().contains(query.toLowerCase()) ||
-        store['category'].toString().toLowerCase().contains(query.toLowerCase())
+        store.name.toLowerCase().contains(query.toLowerCase()) ||
+        (store.category.toLowerCase().contains(query.toLowerCase()))
       ).toList());
     }
+  }
+
+  // --- Protected Methods ---
+
+  Future<bool> createNewStore(Map<String, dynamic> data, String token) async {
+    final success = await _apiService.createStore(data, token);
+    if (success) await loadStores();
+    return success;
+  }
+
+  Future<bool> updateExistingStore(int id, Map<String, dynamic> data, String token) async {
+    final success = await _apiService.updateStore(id, data, token);
+    if (success) await loadStores();
+    return success;
+  }
+
+  Future<bool> deleteExistingStore(int id, String token) async {
+    final success = await _apiService.deleteStore(id, token);
+    if (success) await loadStores();
+    return success;
   }
 }

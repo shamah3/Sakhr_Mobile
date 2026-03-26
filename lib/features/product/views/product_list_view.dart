@@ -4,16 +4,20 @@ import 'package:bytore/core/constants/constants.dart';
 import 'package:bytore/features/home/views/components/item_card.dart';
 import 'package:bytore/core/controllers/app_controller.dart';
 import 'package:bytore/features/home/controllers/categories_controller.dart';
+import 'package:carousel_slider/carousel_slider.dart'; // Import carousel
+import 'package:cached_network_image/cached_network_image.dart'; // Import network image
 import '../controllers/product_list_controller.dart';
 
 class ProductListView extends StatelessWidget {
   final String categoryTitle;
   final String apiCategorySlug;
+  final int? storeId;
 
   const ProductListView({
     super.key,
     this.categoryTitle = "",
     this.apiCategorySlug = "",
+    this.storeId,
   });
 
   @override
@@ -33,6 +37,7 @@ class ProductListView extends StatelessWidget {
       ProductListController(
         initialSlug: actualSlug,
         initialTitle: actualTitle,
+        initialStoreId: storeId ?? args?['storeId'],
       ),
       tag: actualSlug,
       permanent: false,
@@ -53,6 +58,7 @@ class ProductListView extends StatelessWidget {
       // ✅ الحل هنا — لا تستخدم LayoutBuilder مع Expanded
       body: Column(
         children: [
+          _buildStoreBanners(controller),
           _buildCategoriesBar(controller),
           _buildSubCategoriesBar(controller),
 
@@ -291,5 +297,69 @@ class ProductListView extends StatelessWidget {
         ));
       },
     );
+  }
+
+  // =====================================================
+  // STORE BANNERS
+  // =====================================================
+
+  Widget _buildStoreBanners(ProductListController controller) {
+    return Obx(() {
+      if (controller.advertisements.isEmpty) return const SizedBox.shrink();
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: CarouselSlider(
+          options: CarouselOptions(
+            height: 140,
+            viewportFraction: 0.9,
+            autoPlay: true,
+            enlargeCenterPage: true,
+          ),
+          items: controller.advertisements.map((ad) {
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 5),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(15),
+                image: DecorationImage(
+                  image: CachedNetworkImageProvider(ad.image),
+                  fit: BoxFit.cover,
+                ),
+              ),
+              child: (ad.title != null || ad.description != null) 
+                ? Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [Colors.black.withOpacity(0.6), Colors.transparent],
+                      ),
+                    ),
+                    padding: const EdgeInsets.all(15),
+                    alignment: Alignment.bottomRight,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (ad.title != null)
+                          Text(
+                            ad.title!,
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                        if (ad.description != null)
+                          Text(
+                            ad.description!,
+                            style: const TextStyle(color: Colors.white70, fontSize: 12),
+                          ),
+                      ],
+                    ),
+                  )
+                : null,
+            );
+          }).toList(),
+        ),
+      );
+    });
   }
 }
