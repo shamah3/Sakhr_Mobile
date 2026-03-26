@@ -11,7 +11,7 @@ class LoginView extends GetView<AuthController> {
 
   final _formKey = GlobalKey<FormState>();
 
-  String? _validatePhone(String? v) => (v == null || v.length < 9) ? 'رقم الهاتف غير صحيح' : null;
+  String? _validateEmail(String? v) => (v == null || !v.contains('@')) ? 'البريد الإلكتروني غير صحيح' : null;
   String? _validatePass(String? v) => (v == null || v.length < 6) ? 'كلمة المرور قصيرة' : null;
 
   @override
@@ -101,8 +101,8 @@ class LoginView extends GetView<AuthController> {
                               color: kTextColor)),
                       const SizedBox(height: 35),
 
-                      // حقل الهاتف (بدون Obx لتجنب الخطأ)
-                      _buildPhoneField(authController),
+                      // حقل البريد الإلكتروني
+                      _buildEmailField(authController),
 
                       const SizedBox(height: 20),
 
@@ -148,24 +148,24 @@ class LoginView extends GetView<AuthController> {
     );
   }
 
-  // دالة حقل الهاتف (تم إصلاحها بإزالة Obx غير الضروري)
-  Widget _buildPhoneField(AuthController authController) {
+  // دالة حقل البريد الإلكتروني
+  Widget _buildEmailField(AuthController authController) {
     return Container(
       decoration: BoxDecoration(
         color: kBgColor,
         borderRadius: BorderRadius.circular(15),
       ),
       child: TextFormField(
-        controller: authController.phoneController,
+        controller: authController.emailController,
         textAlign: TextAlign.right,
-        keyboardType: TextInputType.phone,
-        validator: _validatePhone,
+        keyboardType: TextInputType.emailAddress,
+        validator: _validateEmail,
         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
         decoration: InputDecoration(
-          hintText: "رقم الهاتف",
+          hintText: "البريد الإلكتروني",
           hintStyle: const TextStyle(
               color: kTextLightColor, fontSize: 14, fontWeight: FontWeight.normal),
-          prefixIcon: const Icon(Icons.phone_android_rounded, color: kPrimaryColor, size: 20),
+          prefixIcon: const Icon(Icons.email_outlined, color: kPrimaryColor, size: 20),
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
@@ -224,19 +224,11 @@ class LoginView extends GetView<AuthController> {
         ],
       ),
       child: Obx(() => ElevatedButton(
-        onPressed: authController.isSendingOtp.value
+        onPressed: authController.isLoading.value
             ? null
             : () async {
           if (_formKey.currentState!.validate()) {
-            bool success = await authController.sendOtp(authController.phoneController.text);
-            if (success) {
-              Get.to(() => OtpVerificationView(
-                phoneNumber: authController.phoneController.text,
-                redirectToAddress: redirectToAddress,
-              ));
-            } else {
-              Get.snackbar("خطأ", "فشل إرسال الرمز. تأكد من اتصالك بالإنترنت");
-            }
+            await authController.login();
           }
         },
         style: ElevatedButton.styleFrom(
@@ -245,12 +237,12 @@ class LoginView extends GetView<AuthController> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           elevation: 0,
         ),
-        child: authController.isSendingOtp.value
+        child: authController.isLoading.value
             ? const SizedBox(
             width: 20,
             height: 20,
             child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-            : const Text("إرسال رمز التحقق",
+            : const Text("تسجيل الدخول",
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
       )),
     );

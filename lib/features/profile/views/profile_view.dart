@@ -4,6 +4,7 @@ import 'package:bytore/core/constants/constants.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:bytore/core/controllers/app_controller.dart';
 import 'package:bytore/core/routes/app_routes.dart';
+import 'package:bytore/features/authentication/controllers/auth_controller.dart';
 
 class ProfileView extends GetView<AppController> {
   const ProfileView({super.key});
@@ -202,7 +203,12 @@ class ProfileView extends GetView<AppController> {
       if (!controller.isLoggedIn.value) return const SizedBox.shrink();
       
       return InkWell(
-        onTap: () => controller.updateLoginStatus(false),
+        onTap: () {
+          final authController = Get.isRegistered<AuthController>() 
+              ? Get.find<AuthController>() 
+              : Get.put(AuthController());
+          authController.logout();
+        },
         borderRadius: BorderRadius.circular(kDefaultRadius),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 16),

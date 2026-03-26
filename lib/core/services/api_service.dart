@@ -98,37 +98,6 @@ class ApiService {
   }
 
   // ==================================================
-  // 🔐 تسجيل الدخول
-  // ==================================================
-  Future<Map<String, dynamic>> login(
-      String email,
-      String password,
-      ) async {
-    try {
-
-      final response = await http.post(
-        Uri.parse("$baseUrl/login"),
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        },
-        body: jsonEncode({
-          "email": email,
-          "password": password,
-        }),
-      );
-
-      return jsonDecode(response.body);
-
-    } catch (e) {
-      return {
-        "status": "error",
-        "message": e.toString(),
-      };
-    }
-  }
-
-  // ==================================================
   // 📝 إرسال شكوى
   // ==================================================
   Future<bool> storeComplaint(
@@ -553,6 +522,59 @@ class ApiService {
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
       debugPrint("Create Notification Error: $e");
+      return false;
+    }
+  }
+
+  // ==================================================
+  // 🔐 المصادقة (Login/Logout)
+  // ==================================================
+
+  Future<Map<String, dynamic>?> login(String email, String password) async {
+    try {
+      debugPrint("📡 Login Request: email=$email");
+      final response = await http.post(
+        Uri.parse("$baseUrl/login"),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          "email": email,
+          "password": password,
+        }),
+      );
+
+      debugPrint("📡 Login Response Code: ${response.statusCode}");
+      debugPrint("📡 Login Response Body: ${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map && decoded.containsKey('data')) {
+          return decoded['data'] is Map ? decoded['data'] : null;
+        }
+      }
+      return null;
+    } catch (e) {
+      debugPrint("🔥 Login Error: $e");
+      return null;
+    }
+  }
+
+  Future<bool> logout(String token) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/logout"),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint("Logout Error: $e");
       return false;
     }
   }

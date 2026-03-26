@@ -5,12 +5,21 @@ import 'dart:math';
 import 'package:bytore/core/controllers/app_controller.dart';
 import 'package:bytore/core/services/notification_service.dart';
 import 'package:bytore/core/services/whatsapp_service.dart';
+import 'package:bytore/core/services/api_service.dart';
 
 class AuthController extends GetxController {
+  final ApiService _apiService = ApiService();
   final AppController appController = Get.find<AppController>();
 
   var isLoggedIn = false.obs;
+  var isLoading = false.obs;
   final Map<String, String> _users = {"777777777": "123456"}.obs;
+
+  // --- Login Logic ---
+  var emailController = TextEditingController();
+  var phoneController = TextEditingController();
+  var passwordController = TextEditingController();
+  var obscurePassword = true.obs;
 
   // --- OTP & Auth Logic ---
   var currentOtp = RxnString();
@@ -18,10 +27,6 @@ class AuthController extends GetxController {
   var resendCountdown = 0.obs;
   DateTime? _otpExpiry;
   Timer? _countdownTimer;
-
-  var phoneController = TextEditingController();
-  var passwordController = TextEditingController();
-  var obscurePassword = true.obs;
 
   Future<bool> sendOtp(String phoneNumber) async {
     isSendingOtp.value = true;
@@ -79,6 +84,48 @@ class AuthController extends GetxController {
     appController.isLoggedIn.value = status; // Sync with AppController for global state
   }
 
+  Future<void> login() async {
+    try {
+      isLoading.value = true;
+      final email = emailController.text.trim();
+      final password = passwordController.text.trim();
+
+      if (email.isEmpty || password.isEmpty) {
+        Get.snackbar("تنبيه", "يرجى إدخال البريد الإلكتروني وكلمة المرور");
+        return;
+      }
+
+      final data = await _apiService.login(email, password);
+      if (data != null && data.containsKey('token')) {
+        final token = data['token'];
+        appController.token.value = token;
+        updateLoginStatus(true);
+        Get.offAllNamed('/main'); 
+      } else {
+        Get.snackbar("خطأ", "فشل تسجيل الدخول، تأكد من البيانات");
+      }
+    } catch (e) {
+      debugPrint("Error in AuthController login: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> logout() async {
+    try {
+      final token = appController.token.value;
+      if (token.isNotEmpty) {
+        await _apiService.logout(token);
+      }
+    } catch (e) {
+      debugPrint("Error in AuthController logout: $e");
+    } finally {
+      appController.token.value = "";
+      updateLoginStatus(false);
+      Get.offAllNamed('/login');
+    }
+  }
+
   void registerUser(String phone, String password) {
     _users[phone] = password;
   }
@@ -96,6 +143,7 @@ class AuthController extends GetxController {
   @override
   void onClose() {
     _countdownTimer?.cancel();
+    emailController.dispose();
     phoneController.dispose();
     passwordController.dispose();
     super.onClose();
