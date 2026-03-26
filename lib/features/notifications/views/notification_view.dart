@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bytore/core/constants/constants.dart';
-import 'package:bytore/core/controllers/app_controller.dart';
+import '../controllers/notification_controller.dart';
+import '../models/notification_model.dart';
 
-class NotificationView extends GetView<AppController> {
+class NotificationView extends StatelessWidget {
   const NotificationView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.put(NotificationController());
+
     return DefaultTabController(
       length: 3,
       child: Scaffold(
@@ -28,7 +31,7 @@ class NotificationView extends GetView<AppController> {
             Obx(() => controller.notifications.isNotEmpty
                 ? Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    child: _buildDeleteAllButton(context),
+                    child: _buildDeleteAllButton(context, controller),
                   )
                 : const SizedBox.shrink()),
           ],
@@ -45,71 +48,62 @@ class NotificationView extends GetView<AppController> {
             ],
           ),
         ),
-        body: TabBarView(
-          children: [
-            _buildNotificationSection("الكل"),
-            _buildNotificationSection("الطلبات"),
-            _buildNotificationSection("العروض"),
-          ],
-        ),
+        body: Obx(() {
+          if (controller.isLoading.value) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          return TabBarView(
+            children: [
+              _buildNotificationSection(controller, "الكل"),
+              _buildNotificationSection(controller, "الطلبات"),
+              _buildNotificationSection(controller, "العروض"),
+            ],
+          );
+        }),
       ),
     );
   }
 
-  Widget _buildNotificationSection(String category) {
-    return Obx(() {
-      final filteredList = category == "الكل"
-          ? controller.notifications
-          : controller.notifications.where((n) {
-              final String cat = n['category'] ?? "الكل";
-              // Simple heuristic if not strictly set
-              if (category == "الطلبات" && (n['title'].contains('طلب') || cat == "الطلبات")) return true;
-              if (category == "العروض" && (n['title'].contains('عرض') || n['title'].contains('خصم') || cat == "العروض")) return true;
-              return cat == category;
-            }).toList();
+  Widget _buildNotificationSection(NotificationController controller, String category) {
+    final filteredList = category == "الكل"
+        ? controller.notifications
+        : controller.notifications.where((n) {
+            final String cat = n.category ?? "الكل";
+            if (category == "الطلبات" && (n.title.contains('طلب') || cat == "الطلبات")) return true;
+            if (category == "العروض" && (n.title.contains('عرض') || n.title.contains('خصم') || cat == "العروض")) return true;
+            return cat == category;
+          }).toList();
 
-      if (filteredList.isEmpty) return _buildEmptyState(Get.context!);
+    if (filteredList.isEmpty) return _buildEmptyState(Get.context!);
 
-      return ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: filteredList.length,
-        itemBuilder: (context, index) {
-          final item = filteredList[index];
-          // We need original index for deletion in AppController, but here we can just use item unique key or similar if we wanted real deletion from list.
-          // For now, let's keep it simple.
-          return Dismissible(
-            key: UniqueKey(),
-            direction: DismissDirection.endToStart,
-            onDismissed: (direction) {
-              // Note: deletion by index might be tricky with filtered list.
-              // Identifying by title/time for now.
-              int originalIndex = controller.notifications.indexOf(item);
-              if (originalIndex != -1) {
-                controller.deleteNotification(originalIndex);
-              }
-            },
-            background: Container(
-              alignment: Alignment.centerLeft,
-              padding: const EdgeInsets.only(left: 20),
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: Colors.redAccent,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Icon(Icons.delete_sweep, color: Colors.white, size: 30),
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: filteredList.length,
+      itemBuilder: (context, index) {
+        final item = filteredList[index];
+        return Dismissible(
+          key: Key(item.id.toString()),
+          direction: DismissDirection.endToStart,
+          onDismissed: (direction) {
+            controller.deleteNotification(item.id);
+          },
+          background: Container(
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.only(left: 20),
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.redAccent,
+              borderRadius: BorderRadius.circular(20),
             ),
-            child: _buildNotificationCard(item),
-          );
-        },
-      );
-    });
+            child: const Icon(Icons.delete_sweep, color: Colors.white, size: 30),
+          ),
+          child: _buildNotificationCard(item),
+        );
+      },
+    );
   }
 
-  Widget _buildNotificationCard(Map<String, dynamic> item) {
-    final dynamic colorData = item['color'];
-    final Color iconColor = colorData is int ? Color(colorData) : (colorData as Color? ?? kPrimaryColor);
-    final bool read = item['read'] ?? false;
-
+  Widget _buildNotificationCard(NotificationModel item) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -132,10 +126,10 @@ class NotificationView extends GetView<AppController> {
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.1),
+                color: item.iconColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(_getIconForTitle(item['title'] ?? ""), color: iconColor, size: 24),
+              child: Icon(item.icon, color: item.iconColor, size: 24),
             ),
             const SizedBox(width: 15),
             Expanded(
@@ -146,10 +140,10 @@ class NotificationView extends GetView<AppController> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        item['title'] ?? "",
+                        item.title,
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: kTextColor),
                       ),
-                      if (!read)
+                      if (!item.isRead)
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
@@ -165,12 +159,12 @@ class NotificationView extends GetView<AppController> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    item['body'] ?? "",
+                    item.body,
                     style: TextStyle(color: Colors.grey.shade600, fontSize: 13, height: 1.4),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    item['time'] ?? "",
+                    item.timeAgo,
                     style: TextStyle(color: Colors.grey.shade400, fontSize: 11),
                   ),
                 ],
@@ -182,7 +176,7 @@ class NotificationView extends GetView<AppController> {
     );
   }
 
-  Widget _buildDeleteAllButton(BuildContext context) {
+  Widget _buildDeleteAllButton(BuildContext context, NotificationController controller) {
     return GestureDetector(
       onTap: () {
         Get.dialog(
@@ -246,13 +240,5 @@ class NotificationView extends GetView<AppController> {
         ),
       ),
     );
-  }
-
-  IconData _getIconForTitle(String title) {
-    if (title.contains('تحديث')) return Icons.update_rounded;
-    if (title.contains('تأكيد')) return Icons.check_circle_outline_rounded;
-    if (title.contains('عرض')) return Icons.local_offer_outlined;
-    if (title.contains('سلة')) return Icons.shopping_cart_outlined;
-    return Icons.notifications_none_rounded;
   }
 }

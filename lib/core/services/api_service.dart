@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:bytore/features/product/models/product_model.dart';
 import 'package:bytore/features/stores/models/store_model.dart';
 import 'package:bytore/features/stores/models/advertisement_model.dart';
+import 'package:bytore/features/notifications/models/notification_model.dart';
 
 class ApiService {
 
@@ -498,6 +499,60 @@ class ApiService {
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
       debugPrint("🔥 Create Store Ad Error ($storeId): $e");
+      return false;
+    }
+  }
+
+  // ==================================================
+  // 🔔 الإشعارات
+  // ==================================================
+
+  Future<List<NotificationModel>> fetchNotifications(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/notifications"),
+        headers: {
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      if (response.statusCode != 200) return [];
+
+      final decoded = jsonDecode(response.body);
+      List<dynamic> list = [];
+
+      if (decoded is Map && decoded.containsKey('data')) {
+        list = decoded['data'] is List ? decoded['data'] : [];
+      } else if (decoded is List) {
+        list = decoded;
+      }
+
+      return list
+          .where((e) => e is Map)
+          .map((e) => NotificationModel.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    } catch (e) {
+      debugPrint("Fetch Notifications Error: $e");
+      return [];
+    }
+  }
+
+  Future<bool> createNotification(Map<String, dynamic> data, String token) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/notifications"),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode(data),
+      );
+
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint("Create Notification Error: $e");
       return false;
     }
   }

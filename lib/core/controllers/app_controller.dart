@@ -19,6 +19,7 @@ class AppController extends GetxController {
   var streetName = "".obs;
   var landmark = "".obs;
   var isLoggedIn = false.obs;
+  var token = "".obs;
   
   @override
   void onInit() {
