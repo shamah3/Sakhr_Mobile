@@ -48,7 +48,7 @@ class ContactUsPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'فريق دعم محسوب متواجد لخدمتك والإجابة على استفساراتك في أسرع وقت ممكن.',
+                      'فريق دعم صخر متواجد لخدمتك والإجابة على استفساراتك في أسرع وقت ممكن.',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.cairo(
                         fontSize: 14,
@@ -78,9 +78,9 @@ class ContactUsPage extends StatelessWidget {
                     _buildContactMethod(
                       icon: Icons.alternate_email_rounded,
                       title: 'البريد الإلكتروني',
-                      subtitle: 'support@mahsoob.com',
+                      subtitle: 'support@sakhr.com',
                       color: secondaryOrange,
-                      onTap: () => _launchURL('mailto:support@mahsoob.com'),
+                      onTap: () => _launchURL('mailto:support@sakhr.com'),
                     ),
 
                     const SizedBox(height: 20),

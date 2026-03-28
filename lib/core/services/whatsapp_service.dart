@@ -29,7 +29,7 @@ class WhatsAppService {
     final String url = "https://api.ultramsg.com/$_instanceId/messages/chat";
     
     // Message Body
-    final String message = "رمز التحقق الخاص بك لتطبيق بايتور هو: $otp\nصالح لمدة 5 دقائق.";
+    final String message = "رمز التحقق الخاص بك لتطبيق صخر هو: $otp\nصالح لمدة 5 دقائق.";
 
     try {
       final response = await http.post(

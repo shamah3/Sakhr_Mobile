@@ -56,42 +56,22 @@ class _SplashViewState extends State<SplashView> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     return Scaffold(
       // استخدام لون الخلفية الأساسي كما في الصورة الزرقاء
-      backgroundColor: kPrimaryColor,
+      backgroundColor: Colors.white,
       body: Center(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // الشعار المخصص (تأكد من تحديث ملف BytoreLogo بالشعار الجديد)
-                const BytoreLogo(size: 140, textColor: Colors.white, showText: false),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // الشعار المخصص (BytoreLogo يتولى الحركات داخلياً)
+            const BytoreLogo(size: 450),
 
-                const SizedBox(height: 20),
+            const SizedBox(height: 50),
 
-                // إضافة اسم التطبيق بالإنجليزية بخط عريض وأنيق
-                const Text(
-                  'BYTORE',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 4.0, // تباعد الحروف ليعطي مظهراً فخماً
-                    fontFamily: 'Arial', // يمكنك تغيير الخط حسب المتوفر لديك
-                  ),
-                ),
-
-                const SizedBox(height: 40),
-
-                // مؤشر التحميل باللون البرتقالي كما في هويتك الجديدة
-                const CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(kSecondaryColor),
-                  strokeWidth: 2,
-                ),
-              ],
-            ),
-          ),
+            // مؤشر التحميل باللون البرتقالي كما في هويتك الجديدة
+              const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(kPrimaryColor),
+                strokeWidth: 2,
+              ),
+          ],
         ),
       ),
     );

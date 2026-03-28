@@ -15,7 +15,7 @@ class FaqPage extends StatelessWidget {
   static const List<Map<String, String>> faqData = [
     {
       'q': 'كيف يمكنني التأكد من أن المنتج أصلي؟',
-      'a': 'جميع المنتجات في متجر محسوب تأتي من وكلاء معتمدين، ونوفر مع كل جهاز كرت الضمان الخاص بالشركة المصنعة.',
+      'a': 'جميع المنتجات في متجر صخر تأتي من وكلاء معتمدين، ونوفر مع كل جهاز كرت الضمان الخاص بالشركة المصنعة.',
     },
     {
       'q': 'كم تستغرق مدة التوصيل؟',
@@ -158,7 +158,7 @@ class FaqPage extends StatelessWidget {
             ),
           ),
           Text(
-            'فريق دعم محسوب جاهز لمساعدتك في أي وقت',
+            'فريق دعم صخر جاهز لمساعدتك في أي وقت',
             style: GoogleFonts.cairo(color: Colors.white70, fontSize: 12),
           ),
           const SizedBox(height: 15),

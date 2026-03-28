@@ -88,7 +88,7 @@ class PolicyPage extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'رضاكم هو غايتنا، نضمن لكم تجربة تسوق آمنة وسهلة في متجر محسوب.',
+              'رضاكم هو غايتنا، نضمن لكم تجربة تسوق آمنة وسهلة في متجر صخر.',
               style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.bold, color: primaryBlue),
             ),
           ),

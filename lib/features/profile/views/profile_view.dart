@@ -98,7 +98,7 @@ class ProfileView extends GetView<AppController> {
           ),
           const SizedBox(height: 4),
           Text(
-            controller.isLoggedIn.value ? "أهلاً بك في بايتور" : 'قم بتسجيل الدخول للحصول على ميزات أكثر',
+            controller.isLoggedIn.value ? "أهلاً بك في صخر" : 'قم بتسجيل الدخول للحصول على ميزات أكثر',
             style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
           ),
         ],

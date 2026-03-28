@@ -22,7 +22,7 @@ class WalletPage extends StatelessWidget {
       appBar: const CustomAppBar(title: 'المحفظة المالية'),
       body: Column(
           children: [
-            // AppBar الموحد لمتجر محسوب
+            // AppBar الموحد لمتجر صخر
             // _buildCurvedAppBar(), removed
 
             // بطاقة الرصيد التفاعلية

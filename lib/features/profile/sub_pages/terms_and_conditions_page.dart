@@ -54,7 +54,7 @@ class TermsAndConditionsPage extends StatelessWidget {
     return Column(
       children: [
         Text(
-          'مرحباً بك في متجر محسوب للأجهزة الإلكترونية',
+          'مرحباً بك في متجر صخر للأجهزة الإلكترونية',
           textAlign: TextAlign.center,
           style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.w800, color: primaryColor),
         ),
@@ -76,7 +76,7 @@ class TermsAndConditionsPage extends StatelessWidget {
         border: Border.all(color: secondaryColor.withOpacity(0.3)),
       ),
       child: Text(
-        'عند تزويدنا بمعلوماتك، فإنك تمنح محسوب الحق في تقديمها لأطراف ثالثة لغرض إيصال طلبك.',
+        'عند تزويدنا بمعلوماتك، فإنك تمنح صخر الحق في تقديمها لأطراف ثالثة لغرض إيصال طلبك.',
         textAlign: TextAlign.center,
         style: GoogleFonts.cairo(fontSize: 13, color: primaryColor, fontWeight: FontWeight.w600),
       ),

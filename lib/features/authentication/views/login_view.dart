@@ -4,6 +4,7 @@ import 'package:bytore/core/constants/constants.dart';
 import '../controllers/auth_controller.dart';
 import 'otp_verification_view.dart';
 import 'package:bytore/core/components/custom_image.dart';
+import 'package:bytore/core/components/bytore_logo.dart';
 
 class LoginView extends GetView<AuthController> {
   final bool redirectToAddress;
@@ -38,39 +39,7 @@ class LoginView extends GetView<AuthController> {
           child: Column(
             children: [
               const SizedBox(height: 40),
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: kPrimaryColor.withOpacity(0.05),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: kPrimaryColor.withOpacity(0.1), width: 1),
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    const Icon(Icons.login_rounded, size: 50, color: kPrimaryColor),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                            color: kSecondaryColor, shape: BoxShape.circle),
-                        child: const Icon(Icons.security, size: 14, color: Colors.white),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 25),
-              const Text(
-                "بايتور",
-                style: TextStyle(
-                    color: kPrimaryColor,
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1),
-              ),
+              const BytoreLogo(size: 180),
               const Text(
                 "تسجيل الدخول للمتابعة",
                 style: TextStyle(color: kTextLightColor, fontSize: 16),

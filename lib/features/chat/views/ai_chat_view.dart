@@ -14,7 +14,7 @@ class _AiChatViewState extends State<AiChatView> {
   final TextEditingController _messageController = TextEditingController();
   final List<Map<String, dynamic>> _messages = [
     {
-      'text': 'مرحباً بك! أنا مساعدك الذكي في بايتور. كيف يمكنني مساعدتك اليوم؟',
+      'text': 'مرحباً بك! أنا مساعدك الذكي في صخر. كيف يمكنني مساعدتك اليوم؟',
       'isMe': false,
       'time': '10:00 ص',
     },

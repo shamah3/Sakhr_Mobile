@@ -39,7 +39,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   _PolicyCard(
                     title: '2. كيف نستخدم معلوماتك؟',
                     icon: Icons.settings_suggest_outlined,
-                    content: '• تحسين جودة خدمات متجر محسوب وتطوير التجربة.\n'
+                    content: '• تحسين جودة خدمات متجر صخر وتطوير التجربة.\n'
                         '• الرد على استفساراتكم التقنية والمتعلقة بالطلبات.\n'
                         '• إرسال إشعارات تأكيد الطلب وتحديثات الشحن.\n'
                         '• تسهيل وصول الأجهزة الإلكترونية إلى عنوانك بدقة.',
@@ -60,7 +60,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   _PolicyCard(
                     title: '4. إدارة معلومات حسابك',
                     icon: Icons.manage_accounts_outlined,
-                    content: 'يمكنك تصحيح بياناتك عبر الإعدادات في التطبيق. لإلغاء الحساب تماماً، يرجى مراسلتنا على: support@mahsoob.com\n'
+                    content: 'يمكنك تصحيح بياناتك عبر الإعدادات في التطبيق. لإلغاء الحساب تماماً، يرجى مراسلتنا على: support@sakhr.com\n'
                         'ملاحظة: قد نحتفظ ببعض البيانات لأغراض قانونية أو إذا وجد دين مستحق على الحساب.',
                   ),
                 ],
@@ -78,7 +78,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'سياسة الخصوصية - متجر محسوب',
+          'سياسة الخصوصية - متجر صخر',
           style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: primaryColor),
         ),
         Text(
@@ -87,7 +87,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
         ),
         const SizedBox(height: 15),
         Text(
-          'إن استخدامك لمتجر محسوب يعني قبولك لسياسة الخصوصية. نهدف إلى حماية بياناتك وضمان سريتها التامة وفقاً لأعلى المعايير القانونية.',
+          'إن استخدامك لمتجر صخر يعني قبولك لسياسة الخصوصية. نهدف إلى حماية بياناتك وضمان سريتها التامة وفقاً لأعلى المعايير القانونية.',
           style: GoogleFonts.cairo(fontSize: 14, height: 1.6, color: Colors.black87),
         ),
       ],
@@ -118,9 +118,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'لحذف أنشطتك في محسوب المرتبطة بفيسبوك:\n'
+            ' لحذف أنشطتك في صخر المرتبطة بفيسبوك:\n'
             '1. من إعدادات Facebook اختر "التطبيقات ومواقع الويب".\n'
-            '2. ابحث عن "محسوب" وانقر إزالة.',
+            '2. ابحث عن "صخر" وانقر إزالة.',
             style: GoogleFonts.cairo(fontSize: 13, height: 1.6),
           ),
         ],

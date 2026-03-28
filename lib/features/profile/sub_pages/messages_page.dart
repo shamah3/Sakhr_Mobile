@@ -17,8 +17,8 @@ class MessagesPage extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         children: [
           _buildMessageTile(
-            "فريق دعم بايتور",
-            "أهلاً بك في بايتور! نحن هنا لمساعدتك في أي استفسار.",
+            "فريق دعم صخر",
+            "أهلاً بك في صخر! نحن هنا لمساعدتك في أي استفسار.",
             "10:30 ص",
             true,
           ),

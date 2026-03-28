@@ -17,7 +17,7 @@ class AboutUsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       // استخدام الـ AppBar القياسي
-      appBar: const CustomAppBar(title: 'عن محسوب'),
+      appBar: const CustomAppBar(title: 'عن صخر'),
       body: Column(
           children: [
             // --- AppBar المنحني الموحد ---
@@ -92,7 +92,7 @@ class AboutUsPage extends StatelessWidget {
 
           const SizedBox(height: 10),
           Text(
-            'في "محسوب"، لا نبيع مجرد أجهزة؛ نحن نقدم حلولاً رقمية تهدف لتطوير حياتكم اليومية. انطلقنا من اليمن لنكون الواجهة الأكثر موثوقية في عالم الإلكترونيات.',
+            'في "صخر"، لا نبيع مجرد أجهزة؛ نحن نقدم حلولاً رقمية تهدف لتطوير حياتكم اليومية. انطلقنا من اليمن لنكون الواجهة الأكثر موثوقية في عالم الإلكترونيات.',
             textAlign: TextAlign.center,
             style: GoogleFonts.cairo(
               fontSize: 14,
@@ -149,7 +149,7 @@ class AboutUsPage extends StatelessWidget {
             style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
           ),
         ),
-        _valueItem(Icons.security, 'الضمان الحقيقي', 'كل قطعة مشتراة من محسوب تأتي بضمانة كاملة تريح بالك.'),
+        _valueItem(Icons.security, 'الضمان الحقيقي', 'كل قطعة مشتراة من صخر تأتي بضمانة كاملة تريح بالك.'),
         _valueItem(Icons.speed, 'سرعة الاستجابة', 'فريقنا يعمل على مدار الساعة لخدمتكم وتوصيل طلباتكم.'),
         _valueItem(Icons.price_check, 'أفضل قيمة', 'نوازن بين السعر المنافس والجودة العالية دائماً.'),
       ],
@@ -204,7 +204,7 @@ class AboutUsPage extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'كن جزءاً من عائلة محسوب',
+            'كن جزءاً من عائلة صخر',
             style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17),
           ),
           const SizedBox(height: 10),
