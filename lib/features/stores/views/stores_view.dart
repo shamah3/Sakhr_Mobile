@@ -32,8 +32,53 @@ class StoresView extends GetView<StoresController> {
                 if (controller.isLoading.value) {
                   return const Center(child: CircularProgressIndicator(color: kPrimaryColor));
                 }
+                if (controller.hasError.value) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(30),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.cloud_off_rounded, size: 64, color: Colors.grey.shade300),
+                          const SizedBox(height: 16),
+                          const Text(
+                            "تعذّر تحميل المتاجر",
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kTextColor),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            "يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            onPressed: controller.loadStores,
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: const Text("إعادة المحاولة"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: kPrimaryColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
                 if (controller.filteredStores.isEmpty) {
-                  return const Center(child: Text("لا توجد نتائج"));
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.search_off_rounded, size: 56, color: Colors.grey.shade300),
+                        const SizedBox(height: 12),
+                        const Text("لا توجد نتائج", style: TextStyle(color: kTextLightColor, fontSize: 15)),
+                      ],
+                    ),
+                  );
                 }
                 return GridView.builder(
                     padding: const EdgeInsets.all(20),

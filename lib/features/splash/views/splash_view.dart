@@ -54,25 +54,31 @@ class _SplashViewState extends State<SplashView> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final logoSize = screenWidth * 0.85; // 85% من عرض الشاشة
+
     return Scaffold(
-      // استخدام لون الخلفية الأساسي كما في الصورة الزرقاء
       backgroundColor: Colors.white,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // الشعار المخصص (BytoreLogo يتولى الحركات داخلياً)
-            const BytoreLogo(size: 450),
-
-            const SizedBox(height: 50),
-
-            // مؤشر التحميل باللون البرتقالي كما في هويتك الجديدة
-              const CircularProgressIndicator(
+      body: Stack(
+        children: [
+          // الشعار في مركز الشاشة بدقة تامة من جميع الاتجاهات
+          Align(
+            alignment: Alignment.center,
+            child: BytoreLogo(size: logoSize, animate: true),
+          ),
+          // مؤشر التحميل في أسفل الشاشة
+          Positioned(
+            bottom: 60,
+            left: 0,
+            right: 0,
+            child: const Center(
+              child: CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(kPrimaryColor),
-                strokeWidth: 2,
+                strokeWidth: 2.5,
               ),
-          ],
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }

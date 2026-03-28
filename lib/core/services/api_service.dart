@@ -310,7 +310,10 @@ class ApiService {
 
       debugPrint("📡 Fetch Stores Status: ${response.statusCode}");
       
-      if (response.statusCode != 200) return [];
+      if (response.statusCode != 200) {
+        debugPrint("🔥 Fetch Stores Error Body: ${response.body}");
+        return [];
+      }
 
       final decoded = jsonDecode(response.body);
       List<dynamic> list = [];

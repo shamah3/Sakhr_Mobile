@@ -11,6 +11,7 @@ class StoresController extends GetxController {
   var filteredStores = <StoreModel>[].obs;
   var advertisements = <AdvertisementModel>[].obs;
   var isLoading = false.obs;
+  var hasError = false.obs;
   var searchText = "".obs;
 
   @override
@@ -22,16 +23,21 @@ class StoresController extends GetxController {
   Future<void> loadStores() async {
     try {
       isLoading.value = true;
+      hasError.value = false;
       final results = await Future.wait([
         _apiService.fetchStores(),
         _apiService.fetchAdvertisements(),
       ]);
-      
-      allStores.assignAll(results[0] as List<StoreModel>);
-      filteredStores.assignAll(results[0] as List<StoreModel>);
+
+      final stores = results[0] as List<StoreModel>;
+      debugPrint("✅ Stores loaded: ${stores.length}");
+
+      allStores.assignAll(stores);
+      filteredStores.assignAll(stores);
       advertisements.assignAll(results[1] as List<AdvertisementModel>);
     } catch (e) {
-      debugPrint("Error loading stores: $e");
+      debugPrint("🔥 Error loading stores: $e");
+      hasError.value = true;
     } finally {
       isLoading.value = false;
     }
@@ -42,7 +48,7 @@ class StoresController extends GetxController {
     if (query.isEmpty) {
       filteredStores.assignAll(allStores);
     } else {
-      filteredStores.assignAll(allStores.where((store) => 
+      filteredStores.assignAll(allStores.where((store) =>
         store.name.toLowerCase().contains(query.toLowerCase()) ||
         (store.category.toLowerCase().contains(query.toLowerCase()))
       ).toList());
