@@ -31,11 +31,36 @@ class StoreModel {
     String fixImageUrl(String? url) {
       if (url == null || url.isEmpty) return "https://via.placeholder.com/300";
       String rawUrl = url.trim();
-      if (!rawUrl.startsWith("http")) {
-        String cleanPath = rawUrl.startsWith('/') ? rawUrl.substring(1) : rawUrl;
-        return "${ApiService.storageUrl}/$cleanPath";
+      
+      // إذا كان الرابط كاملاً، نتحقق مما إذا كان يشير إلى localhost ونصححه
+      if (rawUrl.startsWith("http")) {
+        if (rawUrl.contains("localhost") || rawUrl.contains("127.0.0.1")) {
+          return rawUrl
+              .replaceAll("localhost", ApiService.baseIp.split(':')[0])
+              .replaceAll("127.0.0.1", ApiService.baseIp.split(':')[0]);
+        }
+        return rawUrl;
       }
-      return rawUrl;
+      
+      // تنظيف المسار
+      String path = rawUrl;
+      if (path.startsWith('/')) path = path.substring(1);
+      
+      // إزالة public/ إذا وجدت
+      if (path.startsWith('public/')) path = path.substring(7);
+      
+      // التحقق مما إذا كان المسار يحتوي بالفعل على storage أو uploads أو assets
+      bool hasPrefix = path.startsWith('storage/') || 
+                       path.startsWith('uploads/') || 
+                       path.startsWith('assets/') ||
+                       path.startsWith('images/');
+
+      if (hasPrefix) {
+        return "${ApiService.serverUrl}/$path";
+      }
+
+      // الحالة الافتراضية الأكثر شيوعاً في لارافل
+      return "${ApiService.serverUrl}/storage/$path";
     }
 
     return StoreModel(

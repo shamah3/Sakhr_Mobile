@@ -548,20 +548,50 @@ class ApiService {
   // ==================================================
   // 🏬 المتاجر
   // ==================================================
-  Future<List<StoreModel>> fetchStores() async {
+  Future<List<StoreModel>?> fetchStores() async {
     try {
       final response = await http.get(
         Uri.parse("$baseUrl/stores"),
         headers: {"Accept": "application/json"},
-      );
-      if (response.statusCode != 200) return [];
-      final decoded = jsonDecode(response.body);
-      List<dynamic> list = (decoded is Map ? decoded['data'] : decoded) ?? [];
-      return list
+      ).timeout(const Duration(seconds: 15));
+      
+      debugPrint("📡 [STORES DEBUG] URL: $baseUrl/stores");
+      debugPrint("📡 [STORES DEBUG] STATUS: ${response.statusCode}");
+      debugPrint("📡 [STORES DEBUG] BODY: ${response.body}");
+      
+      if (response.statusCode != 200) return null;
+      
+      final dynamic decoded = jsonDecode(response.body);
+      
+      // دالة ذكية للبحث عن أي قائمة داخل الرد مهما كان شكلها
+      List<dynamic> findData(dynamic data) {
+        if (data is List) return data;
+        if (data is Map) {
+          // جرب المفاتيح الشائعة أولاً
+          if (data.containsKey('data')) return findData(data['data']);
+          if (data.containsKey('stores')) return findData(data['stores']);
+          if (data.containsKey('items')) return findData(data['items']);
+          
+          // ابحث عن أول قائمة تحتوي على خرائط (Maps)
+          for (var value in data.values) {
+            if (value is List && value.isNotEmpty && value.first is Map) return value;
+            if (value is List) return value; // حتى لو كانت قائمة نصوص
+          }
+        }
+        return [];
+      }
+
+      List<dynamic> list = findData(decoded);
+      
+      final parsed = list
           .where((e) => e is Map)
           .map((e) => StoreModel.fromJson(Map<String, dynamic>.from(e)))
           .toList();
+          
+      debugPrint("✅ PARSED ${parsed.length} STORES");
+      return parsed;
     } catch (e) {
+      debugPrint("🔥 fetchStores error: $e");
       return [];
     }
   }
@@ -618,17 +648,42 @@ class ApiService {
   Future<List<AdvertisementModel>> fetchStoreAdvertisements(int storeId) async {
     try {
       final response = await http.get(
-        Uri.parse("$baseUrl/stores/$storeId/advertisements"),
+        Uri.parse("$baseUrl/stores/$storeId/ads"),
         headers: {"Accept": "application/json"},
       );
+      
+      debugPrint("📡 STORE ADS RESPONSE ($storeId) [${response.statusCode}]: ${response.body}");
+      
       if (response.statusCode != 200) return [];
-      final decoded = jsonDecode(response.body);
-      List<dynamic> list = (decoded is Map ? decoded['data'] : decoded) ?? [];
+      
+      final dynamic decoded = jsonDecode(response.body);
+      List<dynamic> list = [];
+      
+      if (decoded is List) {
+        list = decoded;
+      } else if (decoded is Map) {
+        if (decoded.containsKey('data')) {
+           final dynamic d = decoded['data'];
+           if (d is List) list = d;
+           else if (d is Map && d.containsKey('data')) list = d['data'] is List ? d['data'] : [];
+           else if (d is Map && d.containsKey('ads')) list = d['ads'] is List ? d['ads'] : [];
+        } else if (decoded.containsKey('ads')) {
+          list = decoded['ads'] is List ? decoded['ads'] : [];
+        }
+        
+        if (list.isEmpty) {
+          decoded.forEach((key, value) {
+            if (value is List && list.isEmpty) list = value;
+          });
+        }
+      }
+
       return list
           .where((e) => e is Map)
           .map((e) => AdvertisementModel.fromJson(Map<String, dynamic>.from(e)))
           .toList();
     } catch (e) {
+      debugPrint("🔥 fetchStoreAdvertisements error ($storeId): $e");
       return [];
     }
   }

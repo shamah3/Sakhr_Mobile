@@ -25,18 +25,39 @@ class StoresController extends GetxController {
       isLoading.value = true;
       hasError.value = false;
       
-      // إرجاع متجر افتراضي للاستخدام المحلي
-      final mockStores = [
-        StoreModel(id: 1, name: "متجر صخر المميز", category: "عام", rating: 5.0),
-        StoreModel(id: 2, name: "عالم التقنية", category: "إلكترونيات", rating: 4.8),
-      ];
-      final List<AdvertisementModel> mockAds = [];
+      // 1. جلب المتاجر الحقيقية
+      final List<StoreModel>? stores = await _apiService.fetchStores();
+      
+      List<AdvertisementModel> allAds = [];
 
-      allStores.assignAll(mockStores);
-      filteredStores.assignAll(mockStores);
-      advertisements.assignAll(mockAds);
+      // إذا نجح الاتصال بالمخدم (حتى لو القائمة فارغة)
+      if (stores != null) {
+        if (stores.isNotEmpty) {
+          allStores.assignAll(stores);
+          filteredStores.assignAll(stores);
+          
+          // جلب إعلانات من أول 3 متاجر
+          int fetchCount = stores.length > 3 ? 3 : stores.length;
+          for (int i = 0; i < fetchCount; i++) {
+            final ads = await _apiService.fetchStoreAdvertisements(stores[i].id);
+            if (ads != null) allAds.addAll(ads);
+          }
+        } else {
+          allStores.clear();
+          filteredStores.clear();
+          debugPrint("⚠️ STORES LIST IS EMPTY, TRYING DEFAULT STORE ID (1) FOR ADS");
+          // محاولة جلب إعلانات المتجر رقم 1 كاختبار في حال كانت المتاجر فارغة
+          final ads = await _apiService.fetchStoreAdvertisements(1);
+          if (ads != null) allAds.addAll(ads);
+        }
+        
+        advertisements.assignAll(allAds);
+        debugPrint("✅ LOAD COMPLETED: ${stores.length} stores, ${allAds.length} ads fetched");
+      } else {
+        hasError.value = true;
+      }
     } catch (e) {
-      debugPrint("🔥 Error loading mock stores: $e");
+      debugPrint("🔥 Error loading stores or ads: $e");
       hasError.value = true;
     } finally {
       isLoading.value = false;
