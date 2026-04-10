@@ -33,8 +33,10 @@ class CouponModel {
       isActive: json['status']?.toString().toLowerCase() == "active" || 
                 json['is_active'] == 1 || 
                 json['is_active'] == true ||
+                json['status']?.toString() == "1" ||
+                json['status'] == 1 ||
                 json['status']?.toString() == "نشط" ||
-                json['status'] == null, // Assume active if not specified in management list
+                json['status'] == null, 
     );
   }
 

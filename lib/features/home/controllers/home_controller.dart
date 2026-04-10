@@ -10,10 +10,12 @@ class HomeController extends GetxController {
   final ApiService _apiService = ApiService();
   
   var allProducts = <Product>[].obs;
+  var topSellingProducts = <Product>[].obs; // 🔥 منتجات الأكثر مبيعاً
   var filteredProducts = <Product>[].obs;
   var advertisements = <AdvertisementModel>[].obs;
   var coupons = <CouponModel>[].obs;
   var isLoading = true.obs;
+  var isCouponsLoading = true.obs; // 🔥 حالة تحميل مستقلة للخصومات
   var carouselIndex = 0.obs;
   
   final TextEditingController searchController = TextEditingController();
@@ -22,21 +24,27 @@ class HomeController extends GetxController {
   void onInit() {
     super.onInit();
     fetchProducts();
+    fetchTopSellingProducts(); // 🔥 جلب الأكثر مبيعاً
     fetchAds();
     fetchCoupons();
   }
 
   Future<void> fetchCoupons() async {
     try {
+      isCouponsLoading.value = true;
       final fetchedCoupons = await _apiService.fetchCoupons();
+      
       if (fetchedCoupons.isNotEmpty) {
-        // Show all fetched coupons for debugging
         coupons.assignAll(fetchedCoupons);
+        debugPrint("🏠 HOME: Loaded ${fetchedCoupons.length} Admin Coupons");
       } else {
-        debugPrint("🏠 HOME: No coupons found in API.");
+        debugPrint("🏠 HOME: No coupons found in admin/discounts API.");
+        coupons.clear(); // Ensure it's clear if API returns nothing
       }
     } catch (e) {
       debugPrint("🏠 HOME COUPONS ERROR: $e");
+    } finally {
+      isCouponsLoading.value = false;
     }
   }
 
@@ -59,6 +67,18 @@ class HomeController extends GetxController {
       }
     } catch (e) {
       debugPrint("🏠 HOME ADS ERROR: $e");
+    }
+  }
+
+  Future<void> fetchTopSellingProducts() async {
+    try {
+      final products = await _apiService.fetchTopSellingProducts();
+      if (products.isNotEmpty) {
+        topSellingProducts.assignAll(products);
+        debugPrint("🏠 HOME: Loaded ${products.length} Top Selling Products");
+      }
+    } catch (e) {
+      debugPrint("🏠 HOME TOP SELLING ERROR: $e");
     }
   }
 

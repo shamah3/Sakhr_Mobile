@@ -31,7 +31,7 @@ class ApiService {
     String? token,
   }) async {
     try {
-      String url = "$baseUrl/products/top-selling";
+      String url = "$baseUrl/products"; // Default products list 
       List<String> params = [];
 
       if (categorySlug != null && categorySlug != "all") {
@@ -99,6 +99,52 @@ class ApiService {
       return parsedProducts;
     } catch (e) {
       debugPrint("🔥 Fetch Products Error: $e");
+      return [];
+    }
+  }
+
+  // ==================================================
+  // 🔥 جلب المنتجات الأكثر مبيعاً
+  // ==================================================
+  Future<List<Product>> fetchTopSellingProducts({String? token}) async {
+    try {
+      String url = "$baseUrl/products/top-selling";
+      debugPrint("📡 TOP SELLING PRODUCTS REQUEST: $url");
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          "Accept": "application/json",
+          if (token != null && token.isNotEmpty) "Authorization": "Bearer $token",
+        },
+      );
+
+      if (response.statusCode != 200) {
+        debugPrint("❌ TOP SELLING API ERROR [${response.statusCode}]: ${response.body}");
+        return [];
+      }
+
+      final dynamic decoded = jsonDecode(response.body);
+      List<dynamic> list = [];
+
+      if (decoded is Map) {
+        if (decoded.containsKey('data')) {
+          final dynamic d = decoded['data'];
+          if (d is List) list = d;
+          else if (d is Map && d.containsKey('data')) list = d['data'] is List ? d['data'] : [];
+        } else if (decoded.containsKey('products')) {
+          list = decoded['products'] is List ? decoded['products'] : [];
+        }
+      } else if (decoded is List) {
+        list = decoded;
+      }
+
+      return list
+          .where((e) => e is Map)
+          .map((e) => Product.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    } catch (e) {
+      debugPrint("🔥 Fetch Top Selling Products Error: $e");
       return [];
     }
   }
@@ -244,8 +290,8 @@ class ApiService {
   // ==================================================
   Future<List<CouponModel>> fetchCoupons() async {
     try {
-      final String url = "$baseUrl/admin/discounts";
-      debugPrint("📡 COUPONS REQUEST: $url");
+      final String url = "$baseUrl/discounts";
+      debugPrint("📡 [COUPONS] REQUEST URL: $url");
 
       final appController = Get.find<AppController>();
       final String? token = appController.token.value.isNotEmpty ? appController.token.value : null;
@@ -256,50 +302,83 @@ class ApiService {
           "Accept": "application/json",
           if (token != null) "Authorization": "Bearer $token",
         },
-      );
+      ).timeout(const Duration(seconds: 10));
 
-      debugPrint("📡 [DEBUG] COUPONS RESPONSE BODY: ${response.body}");
-      debugPrint("📡 [DEBUG] COUPONS STATUS CODE: ${response.statusCode}");
-
+      debugPrint("📡 [COUPONS] RESPONSE STATUS: ${response.statusCode}");
+      
       if (response.statusCode != 200) {
-        debugPrint("❌ [DEBUG] COUPONS API FAILED");
+        debugPrint("❌ [COUPONS] ERROR: ${response.body}");
+        // Fallback to public access if authorized request failed
+        if (token != null) {
+          debugPrint("📡 [COUPONS] Retrying without token...");
+           final retryResponse = await http.get(Uri.parse(url), headers: {"Accept": "application/json"}).timeout(const Duration(seconds: 10));
+           if (retryResponse.statusCode == 200) {
+             debugPrint("✅ [COUPONS] Success after retry");
+             return _parseCoupons(retryResponse.body);
+           }
+        }
         return [];
       }
 
-      final dynamic decoded = jsonDecode(response.body);
-      List<dynamic> list = [];
+      final list = _parseCoupons(response.body);
+      debugPrint("✅ [COUPONS] Successfully parsed ${list.length} coupons");
+      return list;
+    } catch (e) {
+      debugPrint("🔥 [COUPONS] EXCEPTION: $e");
+      return [];
+    }
+  }
+
+  // دالة مساعدة لمعالجة بيانات الكوبونات بشكل ذكي ومرن
+  List<CouponModel> _parseCoupons(String body) {
+    try {
+      final dynamic decoded = jsonDecode(body);
+      List<dynamic> rawList = [];
 
       if (decoded is List) {
-        list = decoded;
+        rawList = decoded;
       } else if (decoded is Map) {
-        // 1. Check common wrap keys
-        if (decoded.containsKey('data')) {
-          final dynamic d = decoded['data'];
-          if (d is List) list = d;
-          else if (d is Map && d.containsKey('data')) list = d['data'] is List ? d['data'] : [];
-          else if (d is Map && d.containsKey('coupons')) list = d['coupons'] is List ? d['coupons'] : [];
-        }
-        
-        // 2. If still empty, search for ANY list in the top level (Smart Scan)
-        if (list.isEmpty) {
-          decoded.forEach((key, value) {
-            if (value is List && list.isEmpty) {
-              list = value;
-              debugPrint("📡 [SMART SCAN] Found list in key: $key");
+        // فحص ذكي للبيانات المتداخلة
+        void collectFromValue(dynamic value) {
+          if (value is List) {
+            rawList.addAll(value);
+          } else if (value is Map) {
+            if (value.containsKey('data')) {
+              collectFromValue(value['data']);
+            } else if (value.containsKey('discounts')) {
+              collectFromValue(value['discounts']);
+            } else if (value.containsKey('coupons')) {
+              collectFromValue(value['coupons']);
+            } else if (value.values.isNotEmpty && value.values.first is Map) {
+              rawList.addAll(value.values);
             }
+          }
+        }
+        collectFromValue(decoded);
+        if (rawList.isEmpty) {
+          decoded.forEach((key, value) {
+            if (value is List && rawList.isEmpty) rawList = value;
           });
         }
       }
 
-      final parsed = list
-          .where((e) => e is Map)
-          .map((e) => CouponModel.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
+      debugPrint("📡 [COUPONS] Raw items found: ${rawList.length}");
 
-      debugPrint("📡 [DEBUG] PARSED ${parsed.length} COUPONS");
-      return parsed;
+      List<CouponModel> parsedCoupons = [];
+      for (var item in rawList) {
+        if (item is Map) {
+          try {
+            parsedCoupons.add(CouponModel.fromJson(Map<String, dynamic>.from(item)));
+          } catch (e) {
+            debugPrint("⚠️ [COUPONS] Failed to parse item: $e | Data: $item");
+          }
+        }
+      }
+
+      debugPrint("✅ [COUPONS] Successfully parsed ${parsedCoupons.length} out of ${rawList.length} items");
+      return parsedCoupons;
     } catch (e) {
-      debugPrint("🔥 Fetch Coupons Error: $e");
+      debugPrint("⚠️ [COUPONS] Parsing Exception: $e");
       return [];
     }
   }
@@ -309,11 +388,10 @@ class ApiService {
   // ==================================================
   Future<List<CouponModel>> fetchVendorCoupons({int? storeId}) async {
     try {
-      // الرابط الأساسي لخصومات التجار
-      String url = "$baseUrl/vendor/coupons";
-      if (storeId != null) {
-        url += "?store_id=$storeId";
-      }
+      if (storeId == null) return [];
+      
+      // الرابط لخصومات متجر معين
+      String url = "$baseUrl/stores/$storeId/discount";
       
       debugPrint("📡 VENDOR COUPONS REQUEST: $url");
 

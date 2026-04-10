@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:bytore/core/constants/constants.dart';
 import 'package:bytore/features/home/models/coupon_model.dart';
+import 'package:bytore/core/utils/notification_helper.dart';
 
 class CouponCard extends StatelessWidget {
   final CouponModel coupon;
@@ -13,148 +14,158 @@ class CouponCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        Clipboard.setData(ClipboardData(text: coupon.code));
-        Get.snackbar(
-          "تم النسخ!",
-          "تم نسخ الكود ${coupon.code} إلى الحافظة",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: kPrimaryColor,
-          colorText: Colors.white,
-          borderRadius: 12,
-          margin: const EdgeInsets.all(15),
-          duration: const Duration(seconds: 2),
-        );
-      },
+      onTap: () => _copyCode(context),
       child: Container(
-        width: 280,
-        margin: const EdgeInsets.only(left: 15),
+        width: 300, // Unified width
+        height: 110, // Unified height
+        margin: const EdgeInsets.only(left: 15, right: 5, bottom: 12, top: 5),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(24), // More rounded as in image
           boxShadow: [
             BoxShadow(
-              color: kPrimaryColor.withOpacity(0.08),
+              color: Colors.black.withOpacity(0.04),
+              spreadRadius: 0,
               blurRadius: 15,
               offset: const Offset(0, 5),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Stack(
+          borderRadius: BorderRadius.circular(24),
+          child: Row(
             children: [
-              // Left Section (Discount)
-              Positioned(
-                left: 0, top: 0, bottom: 0, width: 90,
-                child: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [kPrimaryColor, Color(0xFF1E3A8A)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+              // Left Side (RTL Content) - Details
+              Expanded(
+                flex: 7,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Stack(
                     children: [
-                      Text(
-                        coupon.discountText.split(" ")[0],
-                        style: GoogleFonts.cairo(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 22,
-                        ),
+                      // Verified Icon - Top Corner (Left side in RTL)
+                      const Positioned(
+                        top: 0, left: 0,
+                        child: Icon(Icons.verified_rounded, size: 16, color: kPrimaryColor),
                       ),
-                      Text(
-                        coupon.discountText.split(" ").length > 1 ? coupon.discountText.split(" ")[1] : "",
-                        style: GoogleFonts.cairo(
-                          color: Colors.white.withOpacity(0.9),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
+                      
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 5),
+                          Text(
+                            coupon.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.cairo(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 14,
+                              color: kTextColor,
+                            ),
+                          ),
+                          Text(
+                            coupon.details,
+                            style: GoogleFonts.cairo(fontSize: 10, color: Colors.grey, height: 1.2),
+                          ),
+                          const Spacer(),
+                          
+                          // Code & Copy Row
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              // Copy Button - Bottom Corner (Left side in RTL)
+                              GestureDetector(
+                                onTap: () => _copyCode(context),
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: kPrimaryColor,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(Icons.copy_rounded, color: Colors.white, size: 16),
+                                ),
+                              ),
+                              
+                              // Code Display
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF9FAFB),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  coupon.code,
+                                  style: GoogleFonts.cairo(
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 12,
+                                    color: kPrimaryColor,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                            ],
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
               ),
 
-              // Dashed Line Simulation
-              Positioned(
-                left: 90, top: 10, bottom: 10,
-                child: CustomPaint(
-                  painter: DashedLinePainter(),
-                ),
+              // Simple Dashed Line
+              CustomPaint(
+                size: const Size(1, double.infinity),
+                painter: DashedLinePainter(color: Colors.grey.shade100),
               ),
 
-              // Right Section (Details)
-              Positioned(
-                left: 105, right: 10, top: 10, bottom: 10,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      coupon.title,
-                      style: GoogleFonts.cairo(
-                        color: kTextColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      coupon.details,
-                      style: GoogleFonts.cairo(
-                        color: Colors.grey,
-                        fontSize: 11,
-                      ),
-                      maxLines: 1,
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: kBgColor,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: kPrimaryColor.withOpacity(0.2)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.copy_rounded, size: 12, color: kPrimaryColor),
-                          const SizedBox(width: 5),
-                          Text(
-                            coupon.code,
-                            style: GoogleFonts.cairo(
-                              color: kPrimaryColor,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 12,
-                              letterSpacing: 0.5,
-                            ),
+              // Right Side (RTL Badge) - Discount
+              Expanded(
+                flex: 3,
+                child: Container(
+                  color: kPrimaryColor.withOpacity(0.04),
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: coupon.type == 'fixed' 
+                                    ? coupon.value.toInt().toString() 
+                                    : '${coupon.value.toInt()}',
+                                style: GoogleFonts.cairo(
+                                  color: kPrimaryColor,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 24,
+                                  height: 1,
+                                ),
+                              ),
+                              TextSpan(
+                                text: coupon.type == 'fixed' ? ' ر.ي' : '%',
+                                style: GoogleFonts.cairo(
+                                  color: kPrimaryColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                          textDirection: TextDirection.ltr,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Semi-circles for the ticket look
-              Positioned(
-                left: 85, top: -8,
-                child: Container(
-                  width: 16, height: 16,
-                  decoration: const BoxDecoration(color: Color(0xFFF8FAFC), shape: BoxShape.circle),
-                ),
-              ),
-              Positioned(
-                left: 85, bottom: -8,
-                child: Container(
-                  width: 16, height: 16,
-                  decoration: const BoxDecoration(color: Color(0xFFF8FAFC), shape: BoxShape.circle),
+                      Text(
+                        "خــصم",
+                        style: GoogleFonts.cairo(
+                          color: kPrimaryColor.withOpacity(0.5),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -163,16 +174,26 @@ class CouponCard extends StatelessWidget {
       ),
     );
   }
+
+  void _copyCode(BuildContext context) {
+    Clipboard.setData(ClipboardData(text: coupon.code));
+    NotificationHelper.showCustomSnackBar(
+      context, 
+      "تم نسخ الكود ${coupon.code}", 
+      isError: false
+    );
+  }
 }
 
 class DashedLinePainter extends CustomPainter {
+  final Color color;
+  DashedLinePainter({required this.color});
+
   @override
   void paint(Canvas canvas, Size size) {
-    double dashHeight = 5, dashSpace = 3, startY = 0;
-    final paint = Paint()
-      ..color = Colors.grey.withOpacity(0.3)
-      ..strokeWidth = 1;
-    while (startY < size.height) {
+    double dashHeight = 4, dashSpace = 3, startY = 10;
+    final paint = Paint()..color = color..strokeWidth = 1;
+    while (startY < size.height - 10) {
       canvas.drawLine(Offset(0, startY), Offset(0, startY + dashHeight), paint);
       startY += dashHeight + dashSpace;
     }

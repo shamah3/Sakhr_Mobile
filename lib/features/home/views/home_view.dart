@@ -18,6 +18,7 @@ import 'package:bytore/core/routes/app_routes.dart';
 import 'package:bytore/features/home/views/ads_view.dart';
 import 'package:bytore/features/home/views/components/coupon_card.dart';
 import 'package:bytore/features/home/models/coupon_model.dart';
+import 'package:bytore/features/home/views/all_coupons_view.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
@@ -89,7 +90,7 @@ class HomeView extends GetView<HomeController> {
             ],
           ),
         ),
-        _buildHorizontalProductList("الكل", appController),
+        _buildTopSellingHorizontalList(appController),
 
         const SizedBox(height: 35),
 
@@ -105,14 +106,15 @@ class HomeView extends GetView<HomeController> {
           ),
         ),
         _buildHorizontalProductList("In Stock", appController),
-
-        const SizedBox(height: 35),
-
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
             children: [
-              _buildSectionHeader("العروض والكوبونات", showViewAll: false, onTap: () {}),
+              _buildSectionHeader(
+                "الخصومات والكوبونات", 
+                showViewAll: true,
+                onTap: () => Get.to(() => const AllCouponsView()),
+              ),
               const SizedBox(height: 18),
             ],
           ),
@@ -124,25 +126,33 @@ class HomeView extends GetView<HomeController> {
 
   Widget _buildCouponsCarousel() {
     return Container(
-      height: 100,
+      height: 145, // الارتفاع المثالي للتنسيق الأفقي المريح والفخم مع الظلال
       margin: const EdgeInsets.only(bottom: 20),
       child: Obx(() {
-        if (controller.isLoading.value && controller.coupons.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
+        if (controller.isCouponsLoading.value && controller.coupons.isEmpty) {
+          return const Center(
+            child: SizedBox(
+              width: 24, height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          );
         }
 
         if (controller.coupons.isEmpty) {
           return const Center(
-            child: Text("لا يوجد كوبونات متوفرة حالياً", style: TextStyle(color: Colors.grey)),
+            child: Text("لا يوجد كوبونات متوفرة حالياً", style: TextStyle(color: Colors.grey, fontSize: 12)),
           );
         }
+
+        final displayCoupons = controller.coupons.take(5).toList();
 
         return ListView.builder(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          itemCount: controller.coupons.length,
+          itemCount: displayCoupons.length,
           itemBuilder: (context, index) {
-            return CouponCard(coupon: controller.coupons[index]);
+            final coupon = displayCoupons[index];
+            return CouponCard(coupon: coupon);
           },
         );
       }),
@@ -588,6 +598,40 @@ class HomeView extends GetView<HomeController> {
     });
   }
 
+  Widget _buildTopSellingHorizontalList(AppController appController) {
+    return Container(
+      height: 280,
+      margin: const EdgeInsets.only(bottom: 20),
+      child: Obx(() {
+        if (controller.isLoading.value && controller.topSellingProducts.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (controller.topSellingProducts.isEmpty) {
+          return _buildHorizontalProductList("الكل", appController); // Fallback to all if empty
+        }
+
+        return ListView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          itemCount: controller.topSellingProducts.length,
+          itemBuilder: (context, index) {
+            final product = controller.topSellingProducts[index];
+            return Container(
+              width: 180,
+              margin: const EdgeInsets.only(left: 15),
+              child: Obx(() => ItemCard(
+                product: product,
+                isWishlisted: appController.isWishlisted(product.id),
+                onWishlistToggle: () => appController.toggleWishlist(product.id),
+              )),
+            );
+          },
+        );
+      }),
+    );
+  }
+
   Widget _buildHorizontalProductList(String category, AppController appController) {
     return Container(
       height: 280,
@@ -599,9 +643,9 @@ class HomeView extends GetView<HomeController> {
 
         final products = controller.allProducts.where((p) =>
         p != null && (category == "الكل" || p.status == category || p.name.contains(category))
-        ).take(5).toList();
+        ).take(8).toList();
 
-        final displayProducts = products.isEmpty ? controller.allProducts.take(5).toList() : products;
+        final displayProducts = products.isEmpty ? controller.allProducts.take(8).toList() : products;
 
         return ListView.builder(
           scrollDirection: Axis.horizontal,

@@ -32,35 +32,44 @@ class StoreModel {
       if (url == null || url.isEmpty) return "https://via.placeholder.com/300";
       String rawUrl = url.trim();
       
-      // إذا كان الرابط كاملاً، نتحقق مما إذا كان يشير إلى localhost ونصححه
+      String finalUrl = "";
+      
+      // إذا كان الرابط كاملاً
       if (rawUrl.startsWith("http")) {
+        // تصحيح localhost/127.0.0.1
         if (rawUrl.contains("localhost") || rawUrl.contains("127.0.0.1")) {
-          return rawUrl
+          finalUrl = rawUrl
               .replaceAll("localhost", ApiService.baseIp.split(':')[0])
               .replaceAll("127.0.0.1", ApiService.baseIp.split(':')[0]);
+        } else {
+          finalUrl = rawUrl;
         }
-        return rawUrl;
-      }
-      
-      // تنظيف المسار
-      String path = rawUrl;
-      if (path.startsWith('/')) path = path.substring(1);
-      
-      // إزالة public/ إذا وجدت
-      if (path.startsWith('public/')) path = path.substring(7);
-      
-      // التحقق مما إذا كان المسار يحتوي بالفعل على storage أو uploads أو assets
-      bool hasPrefix = path.startsWith('storage/') || 
-                       path.startsWith('uploads/') || 
-                       path.startsWith('assets/') ||
-                       path.startsWith('images/');
+      } else {
+        // تنظيف المسار
+        String path = rawUrl;
+        if (path.startsWith('/')) path = path.substring(1);
+        if (path.startsWith('public/')) path = path.substring(7);
+        
+        bool hasPrefix = path.startsWith('storage/') || 
+                         path.startsWith('uploads/') || 
+                         path.startsWith('assets/') ||
+                         path.startsWith('images/');
 
-      if (hasPrefix) {
-        return "${ApiService.serverUrl}/$path";
+        if (hasPrefix) {
+          finalUrl = "${ApiService.serverUrl}/$path";
+        } else {
+          finalUrl = "${ApiService.serverUrl}/storage/$path";
+        }
       }
 
-      // الحالة الافتراضية الأكثر شيوعاً في لارافل
-      return "${ApiService.serverUrl}/storage/$path";
+      // التأكد من أن الرابط ليس به دبل سلاش // بعد البروتوكول
+      // وتشفير الرابط للتعامل مع أي حروف خاصة في أسماء الملفات
+      try {
+        // تنظيف الروابط من أي مسافات أو حروف غير مسموحة
+        return Uri.parse(finalUrl).toString();
+      } catch (e) {
+        return finalUrl;
+      }
     }
 
     return StoreModel(
