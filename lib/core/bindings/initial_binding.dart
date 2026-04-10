@@ -1,0 +1,39 @@
+import 'package:get/get.dart';
+import 'package:bytore/core/controllers/app_controller.dart';
+import 'package:bytore/core/controllers/cart_controller.dart';
+import 'package:bytore/features/home/controllers/home_controller.dart';
+import 'package:bytore/features/home/controllers/categories_controller.dart';
+import 'package:bytore/features/authentication/controllers/auth_controller.dart';
+import 'package:bytore/features/checkout/controllers/checkout_controller.dart';
+import 'package:bytore/features/home/controllers/main_controller.dart';
+
+import 'package:bytore/features/profile/controllers/purchase_reports_controller.dart';
+import 'package:bytore/features/profile/controllers/activities_controller.dart';
+import 'package:bytore/features/profile/controllers/returned_products_controller.dart';
+import 'package:bytore/features/profile/controllers/reviews_controller.dart';
+import 'package:bytore/features/chat/controllers/chat_controller.dart';
+import 'package:bytore/features/profile/controllers/edit_profile_controller.dart';
+
+class InitialBinding extends Bindings {
+  @override
+  void dependencies() {
+    // Core Controllers (Essential on start)
+    Get.put(AppController(), permanent: true);
+    Get.put(CartController(), permanent: true);
+    Get.put(MainController(), permanent: true);
+
+    // Business Logic (Lazy loading when needed)
+    Get.lazyPut(() => HomeController(), fenix: true);
+    Get.lazyPut(() => CategoriesController(), fenix: true);
+    Get.lazyPut(() => AuthController(), fenix: true);
+    Get.lazyPut(() => CheckoutController(), fenix: true);
+    
+    // Profile features
+    Get.lazyPut(() => PurchaseReportsController(), fenix: true);
+    Get.lazyPut(() => ActivitiesController(), fenix: true);
+    Get.lazyPut(() => ReturnedProductsController(), fenix: true);
+    Get.lazyPut(() => ReviewsController(), fenix: true);
+    Get.lazyPut(() => ChatController(), fenix: true);
+    Get.lazyPut(() => EditProfileController(), fenix: true);
+  }
+}
