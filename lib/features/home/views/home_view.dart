@@ -671,65 +671,62 @@ class HomeView extends GetView<HomeController> {
     final catController = Get.put(CategoriesController());
 
     return SliverToBoxAdapter(
-      child: SizedBox(
-        height: 50,
+      child: Container(
+        height: 55, // ارتفاع مثالي للبطاقات المستطيلة
+        margin: const EdgeInsets.only(bottom: 15),
         child: Obx(() {
+          if (catController.isLoading.value) {
+            return const Center(child: CircularProgressIndicator(strokeWidth: 2, color: kPrimaryColor));
+          }
           final categories = catController.apiCategories;
-          if (categories.isEmpty) return const SizedBox.shrink();
           
           return ListView.builder(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 15),
-            itemCount: categories.length + 1, // Add 1 for "الكل"
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: categories.length,
             itemBuilder: (context, index) {
-              if (index == 0) {
-                // "الكل" Category
-                return GestureDetector(
-                  onTap: () {
-                    // Logic to show all products
-                    catController.selectedCategoryIndex.value = -1;
-                    Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': "الكل", 'apiCategorySlug': 'all'}, id: 1);
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.only(left: 10),
-                    alignment: Alignment.center,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    decoration: BoxDecoration(
-                      color: kPrimaryColor, // Solid blue like in image1
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text("الكل", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                  ),
-                );
-              }
-
-              final cat = categories[index - 1];
-              bool isSelected = catController.selectedCategoryIndex.value == (index - 1);
-
+              final cat = categories[index];
+              final isAll = cat['id'] == 'all';
+              // منطق تفاعلي: تحديد القسم المختار لونياً عند الضغط أو البقاء عليه
+              final isSelected = catController.selectedCategoryIndex.value == index;
+              
               return GestureDetector(
-                onTap: () => Get.toNamed(
-                    AppRoutes.PRODUCT_LIST,
-                    arguments: {'categoryTitle': cat['name'], 'apiCategorySlug': cat['slug']},
-                    id: 1 // الحفاظ على الشريط السفلي
-                ),
-                child: Container(
+                onTap: () {
+                  catController.selectedCategoryIndex.value = index; // تفعيل الحالة التفاعلية
+                  if (isAll) {
+                    Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': "الكل", 'apiCategorySlug': 'all'}, id: 1);
+                  } else {
+                    Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': cat['name'], 'apiCategorySlug': cat['slug']}, id: 1);
+                  }
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
                   margin: const EdgeInsets.only(left: 10),
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
-                    color: isSelected ? kPrimaryColor : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: isSelected ? null : Border.all(color: Colors.grey.shade300),
+                    color: isSelected ? kPrimaryColor : const Color(0xFFF9FAFB),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isSelected ? kPrimaryColor : Colors.grey.withOpacity(0.08),
+                    ),
+                    boxShadow: isSelected 
+                      ? [BoxShadow(color: kPrimaryColor.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 4))]
+                      : null,
                   ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      _buildCategoryIconShort(cat, isSelected, size: 20),
-                      const SizedBox(width: 8),
-                      Text((cat['name'] ?? "").toString(), 
-                          style: TextStyle(
-                              color: isSelected ? Colors.white : Colors.grey.shade700, 
-                              fontWeight: FontWeight.bold, 
-                              fontSize: 13
-                          )),
+                      // الصورة بجانب النص
+                      _buildCategoryIconShort(cat, isSelected, size: 24),
+                      const SizedBox(width: 10),
+                      Text(
+                        (cat['name'] ?? "").toString(),
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : kTextColor.withOpacity(0.8),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -743,8 +740,14 @@ class HomeView extends GetView<HomeController> {
 
   // أيقونة القسم في الصفحة الرئيسية
   Widget _buildCategoryIconShort(Map cat, bool isSelected, {double size = 20}) {
+    // إصلاح: عرض أيقونة الشبكة لقسم "الكل" لضمان الوضوح كما طلب المستخدم
+    if (cat['id'] == 'all') {
+      return Icon(Icons.grid_view_rounded, 
+          color: isSelected ? Colors.white : kPrimaryColor, size: size);
+    }
+
     String? imageUrl = cat['image_url'] ?? cat['image'];
-    if (imageUrl != null && imageUrl.isNotEmpty) {
+    if (imageUrl != null && imageUrl.isNotEmpty && !imageUrl.contains("icons8.com")) { // تجنب الروابط الضعيفة
       return ClipRRect(
         borderRadius: BorderRadius.circular(4),
         child: CustomImage(

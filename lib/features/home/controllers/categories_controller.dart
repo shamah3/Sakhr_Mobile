@@ -36,7 +36,7 @@ class CategoriesController extends GetxController {
           'id': 'all',
           'name': 'الكل',
           'slug': 'all',
-          'image_url': '',
+          'image_url': 'https://plus.unsplash.com/premium_photo-1679079456083-9f288e224e96?q=80&w=2070&auto=format&fit=crop', // صورة احترافية للأجهزة الإلكترونية
           'children': [],
           'brands': []
         }
@@ -58,7 +58,7 @@ class CategoriesController extends GetxController {
           'id': 'all',
           'name': 'الكل',
           'slug': 'all',
-          'image_url': '',
+          'image_url': 'https://plus.unsplash.com/premium_photo-1679079456083-9f288e224e96?q=80&w=2070&auto=format&fit=crop',
           'children': [],
           'brands': []
         }
@@ -154,14 +154,80 @@ class CategoriesController extends GetxController {
   // فلترة الأقسام الفرعية بناءً على نص البحث (وتجاهل الماركات)
   List getFilteredSubCategories() {
     final cat = currentCategory;
-    final List allSubs = cat['children'] as List? ?? [];
+    List allSubs = [];
     
-    // فلترة الأقسام التي ليست ماركات
+    if (cat['id'] == 'all') {
+      // تجميع كافة الأقسام الفرعية من جميع الأقسام الرئيسية (بدون الماركات)
+      Set<String> seenNames = {};
+      for (var mainCat in apiCategories) {
+        if (mainCat['id'] == 'all') continue;
+        final List children = mainCat['children'] as List? ?? [];
+        for (var sub in children) {
+          if (sub['is_brand'] != true) {
+            String name = sub['name']?.toString() ?? "";
+            if (!seenNames.contains(name)) {
+              allSubs.add(sub);
+              seenNames.add(name);
+            }
+          }
+        }
+      }
+    } else {
+      allSubs = cat['children'] as List? ?? [];
+    }
+    
+    // فلترة الأقسام التي ليست ماركات (للحالات الفردية)
     final List subs = allSubs.where((s) => s['is_brand'] != true).toList();
 
     if (searchText.isEmpty) return subs;
     return subs.where((sub) =>
         (sub['name'] ?? "").toString().toLowerCase().contains(searchText.value.toLowerCase())
+    ).toList();
+  }
+
+  // تجميع كافة الماركات من الأقسام المفلترة أو من الكل
+  List getAggregatedBrands() {
+    final cat = currentCategory;
+    List brands = [];
+    Set<String> seenBrands = {};
+
+    if (cat['id'] == 'all') {
+      // تجميع الماركات من كل مكان
+      for (var mainCat in apiCategories) {
+        if (mainCat['id'] == 'all') continue;
+        
+        // ماركات القسم الرئيسي مباشرة
+        final List mainBrands = mainCat['brands'] as List? ?? [];
+        for (var b in mainBrands) {
+          String name = b['name']?.toString() ?? "";
+          if (!seenBrands.contains(name)) {
+            brands.add(b);
+            seenBrands.add(name);
+          }
+        }
+
+        // ماركات الأقسام الفرعية
+        final List children = mainCat['children'] as List? ?? [];
+        for (var sub in children) {
+          final List subBrands = sub['brands'] as List? ?? [];
+          for (var b in subBrands) {
+            String name = b['name']?.toString() ?? "";
+            if (!seenBrands.contains(name)) {
+              brands.add(b);
+              seenBrands.add(name);
+            }
+          }
+        }
+      }
+    } else {
+      const filteredSubs = []; // logic already in view, but let's centralize
+      // سيتم استخدام المنطق الحالي في الواجهة مؤقتاً أو نقله كلياً هنا
+      // لاستمرارية الكود سنترك التجميع للواجهة إذا لم يكن 'all'
+    }
+    
+    if (searchText.isEmpty) return brands;
+    return brands.where((b) =>
+        (b['name'] ?? "").toString().toLowerCase().contains(searchText.value.toLowerCase())
     ).toList();
   }
 

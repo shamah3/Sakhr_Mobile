@@ -433,29 +433,50 @@ class ApiService {
     }
   }
 
-  // ==================================================
-  // 📂 جلب الأقسام
-  // ==================================================
   Future<List<dynamic>> getCategories() async {
     try {
+      final String url = "$baseUrl/categories";
+      debugPrint("📡 CATEGORIES REQUEST: $url");
+
       final response = await http.get(
-        Uri.parse("$baseUrl/categories"),
+        Uri.parse(url),
         headers: {"Accept": "application/json"},
       );
 
-      if (response.statusCode != 200) return [];
-      final decoded = jsonDecode(response.body);
-
-      if (decoded is Map && decoded.containsKey('data')) {
-        final data = decoded['data'];
-        if (data is List) return data;
-        if (data is Map && data.containsKey('categories')) {
-          return data['categories'] is List ? data['categories'] : [];
-        }
+      if (response.statusCode != 200) {
+        debugPrint("❌ CATEGORIES API FAILED [${response.statusCode}]: ${response.body}");
         return [];
       }
-      if (decoded is List) return decoded;
-      return [];
+
+      final dynamic decoded = jsonDecode(response.body);
+      List<dynamic> list = [];
+
+      if (decoded is List) {
+        list = decoded;
+      } else if (decoded is Map) {
+        // 1. التحقق من المفاتيح الشائعة
+        if (decoded.containsKey('data')) {
+           final dynamic d = decoded['data'];
+           if (d is List) list = d;
+           else if (d is Map && d.containsKey('data')) list = d['data'] is List ? d['data'] : [];
+           else if (d is Map && d.containsKey('categories')) list = d['categories'] is List ? d['categories'] : [];
+        } else if (decoded.containsKey('categories')) {
+          list = decoded['categories'] is List ? decoded['categories'] : [];
+        }
+        
+        // 2. مسح شامل لأي قائمة في المستوى الأول (Smart Detection)
+        if (list.isEmpty) {
+          decoded.forEach((key, value) {
+            if (value is List && list.isEmpty) {
+              list = value;
+              debugPrint("📡 [SMART DETECT] Found categories in key: $key");
+            }
+          });
+        }
+      }
+
+      debugPrint("✅ CATEGORIES FETCHED: ${list.length} items");
+      return list;
     } catch (e) {
       debugPrint("🔥 Categories Error: $e");
       return [];
