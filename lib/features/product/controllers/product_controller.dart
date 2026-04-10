@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:bytore/features/product/models/product_model.dart';
 import 'package:bytore/core/services/api_service.dart';
 import 'package:bytore/features/profile/models/review_model.dart';
+import 'package:bytore/core/controllers/app_controller.dart';
 
 class ProductController extends GetxController {
   final Rx<Product> product;
@@ -35,20 +36,28 @@ class ProductController extends GetxController {
     
     if (product.value.colors.isNotEmpty) {
       selectedColor.value = product.value.colors[0];
-      displayImageUrl.value = selectedColor.value!['image'];
+      displayImageUrl.value = selectedColor.value!['image'] ?? product.value.imageUrl;
       overriddenPrice.value = double.tryParse(selectedColor.value!['price']?.toString() ?? "");
     }
     
     if (product.value.sizes.isNotEmpty) {
       selectedSize.value = product.value.sizes[0];
-      overriddenPrice.value = double.tryParse(selectedSize.value!['price']?.toString() ?? "");
+      if (overriddenPrice.value == null) {
+        overriddenPrice.value = double.tryParse(selectedSize.value!['price']?.toString() ?? "");
+      }
     }
   }
 
   Future<void> refreshProduct() async {
     isRefreshing.value = true;
     try {
-      final updatedProduct = await _apiService.fetchProductDetail(product.value.id);
+      final appController = Get.find<AppController>();
+      final token = appController.token.value;
+      
+      final updatedProduct = await _apiService.fetchProductDetail(
+        product.value.id,
+        token: token.isEmpty ? null : token,
+      );
       if (updatedProduct != null) {
         product.value = updatedProduct;
         _initializeStates();
@@ -80,8 +89,7 @@ class ProductController extends GetxController {
   List<String> get productImages {
     final p = product.value;
     List<String> imgs = p.images.isNotEmpty ? List<String>.from(p.images) : [p.imageUrl];
-    if (displayImageUrl.value.isNotEmpty) {
-      imgs.remove(displayImageUrl.value);
+    if (displayImageUrl.value.isNotEmpty && !imgs.contains(displayImageUrl.value)) {
       imgs.insert(0, displayImageUrl.value);
     }
     return imgs;
@@ -89,7 +97,7 @@ class ProductController extends GetxController {
 
   void updateColor(Map<String, dynamic> color) {
     selectedColor.value = color;
-    displayImageUrl.value = color['image'];
+    displayImageUrl.value = color['image'] ?? product.value.imageUrl;
     overriddenPrice.value = double.tryParse(color['price']?.toString() ?? "");
     currentImageIndex.value = 0;
     if (pageController.hasClients) {

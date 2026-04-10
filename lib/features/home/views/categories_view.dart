@@ -56,15 +56,12 @@ class CategoriesView extends GetView<CategoriesController> {
     return Container(
       width: 85,
       decoration: BoxDecoration(
-        color: const Color(0xFFFBFBFB),
-        border: Border(left: BorderSide(color: Colors.grey.shade100)),
+        color: const Color(0xFFF8F9FA),
+        border: Border(left: BorderSide(color: Colors.grey.withOpacity(0.1))),
       ),
       child: Obx(() {
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator(color: kPrimaryColor));
-        }
-        if (controller.apiCategories.isEmpty) {
-          return const SizedBox.shrink();
         }
         return ListView.builder(
           itemCount: controller.apiCategories.length,
@@ -74,24 +71,40 @@ class CategoriesView extends GetView<CategoriesController> {
             return GestureDetector(
               onTap: () => controller.selectCategory(index),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(vertical: 20),
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 8),
                 decoration: BoxDecoration(
                   color: isSelected ? Colors.white : Colors.transparent,
-                  border: isSelected ? const Border(right: BorderSide(color: kPrimaryColor, width: 3)) : null,
+                  // إزالة الخط الأيمن وإضافة الحواف الدائرية من الجهة اليسرى (كما في الصورة)
+                  borderRadius: isSelected 
+                      ? const BorderRadius.only(topLeft: Radius.circular(20), bottomLeft: Radius.circular(20))
+                      : BorderRadius.zero,
                 ),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(cat['icon'] ?? Icons.category_rounded,
-                        color: isSelected ? kPrimaryColor : Colors.grey.shade400, size: 22),
-                    const SizedBox(height: 8),
-                    Text(cat['name']?.toString() ?? "",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                            color: isSelected ? kPrimaryColor : kTextColor
-                        )),
+                    Container(
+                       padding: EdgeInsets.all(isSelected ? 6 : 0),
+                       decoration: BoxDecoration(
+                           shape: BoxShape.circle,
+                           color: isSelected ? kPrimaryColor.withOpacity(0.1) : Colors.transparent,
+                       ),
+                       child: _buildCategoryIcon(cat, isSelected, size: 26)
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      cat['name']?.toString() ?? "",
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11,
+                        height: 1.2,
+                        fontWeight: isSelected ? FontWeight.w900 : FontWeight.w500,
+                        color: isSelected ? kPrimaryColor : kTextColor.withOpacity(0.6),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -113,72 +126,80 @@ class CategoriesView extends GetView<CategoriesController> {
       final cat = controller.currentCategory;
       final filteredSubs = controller.getFilteredSubCategories();
 
-      // قائمة الماركات مع الفلترة اللحظية
-      // قائمة الماركات مع الفلترة اللحظية حسب القسم
-      List<String> rawBrands = [];
-      switch(cat['slug']) {
-        case 'laptops':
-          rawBrands = ["Apple", "HP", "Dell", "Asus", "Lenovo", "MSI", "Microsoft"];
-          break;
-        case 'monitors':
-          rawBrands = ["LG", "Samsung", "Dell", "BenQ", "Asus", "Acer"];
-          break;
-        case 'audio':
-          rawBrands = ["Sony", "Bose", "JBL", "Apple", "Sennheiser", "Beats"];
-          break;
-        case 'printers':
-          rawBrands = ["HP", "Canon", "Epson", "Brother", "Xerox"];
-          break;
-        case 'cameras':
-          rawBrands = ["Canon", "Nikon", "Sony", "Fujifilm", "GoPro", "Panasonic"];
-          break;
-        case 'accessories':
-          rawBrands = ["Logitech", "Razer", "Corsair", "HyperX", "SteelSeries", "Anker"];
-          break;
-        default:
-          rawBrands = ["Apple", "Samsung", "Sony", "LG", "Huawei", "Xiaomi"];
+      final List allBrands = [];
+      for (var sub in filteredSubs) {
+        if (sub['brands'] != null && sub['brands'] is List) {
+          allBrands.addAll(sub['brands']);
+        }
+      }
+      if (cat['brands'] != null && cat['brands'] is List) {
+        allBrands.addAll(cat['brands']);
       }
 
-      final brands = rawBrands
-          .where((b) => b.toLowerCase().contains(controller.searchText.value.toLowerCase()))
+      final brands = allBrands
+          .where((b) => (b['name'] ?? "").toString().toLowerCase().contains(controller.searchText.value.toLowerCase()))
           .toList();
 
       return SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // البانر المتغير حسب القسم
             _buildMainBanner(cat),
 
-            const SizedBox(height: 25),
-            _buildSectionTitle("الأقسام الفرعية"),
-            const SizedBox(height: 15),
+            if (filteredSubs.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              _buildSectionHeader("الأقسام الفرعية"),
+              const SizedBox(height: 16),
+              _buildSubCategoriesGrid(filteredSubs),
+            ],
 
-            // أقسام فرعية بتمرير أفقي ودوائر ملونة
-            _buildHorizontalSubCategories(filteredSubs),
-
-            const SizedBox(height: 30),
-            _buildSectionTitle("الماركات الشائعة"),
-            const SizedBox(height: 15),
-
-            // ماركات بتنسيق مربعات ملونة بـ kBgColor
-            _buildBrandsGrid(brands),
-            const SizedBox(height: 80),
+            if (brands.isNotEmpty) ...[
+              const SizedBox(height: 32),
+              _buildSectionHeader("الماركات الشائعة"),
+              const SizedBox(height: 16),
+              _buildBrandsGrid(brands),
+              const SizedBox(height: 80),
+            ] else if (filteredSubs.isEmpty) ...[
+              const SizedBox(height: 80),
+              const Center(child: Text("لا توجد نتائج مطابقة", style: TextStyle(color: Colors.grey))),
+            ],
           ],
         ),
       );
     });
   }
 
+  Widget _buildSectionHeader(String title) {
+    return Row(
+      children: [
+        Container(
+          width: 5, height: 18,
+          decoration: BoxDecoration(
+            color: Colors.orange,
+            borderRadius: BorderRadius.circular(2),
+            boxShadow: [
+              BoxShadow(color: Colors.orange.withOpacity(0.2), blurRadius: 4, offset: const Offset(0, 2)),
+            ],
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text(title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: kTextColor)),
+      ],
+    );
+  }
+
   Widget _buildMainBanner(Map cat) {
     String imgUrl = cat['image_url'] ?? cat['image'] ?? "";
     return Container(
-      height: 130,
+      height: 145,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: kPrimaryColor.withOpacity(0.05),
+        color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
         image: imgUrl.isNotEmpty
             ? DecorationImage(
                 image: CachedNetworkImageProvider(imgUrl),
@@ -190,89 +211,141 @@ class CategoriesView extends GetView<CategoriesController> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           gradient: LinearGradient(
-            colors: [Colors.black.withOpacity(0.5), Colors.transparent],
+            colors: [Colors.black.withOpacity(0.6), Colors.transparent],
             begin: Alignment.bottomRight,
+            end: Alignment.center,
           ),
         ),
-        padding: const EdgeInsets.all(15),
+        padding: const EdgeInsets.all(20),
         alignment: Alignment.bottomRight,
         child: Text(cat['name']?.toString() ?? "",
-            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
       ),
     );
   }
 
-  // الأقسام الفرعية: تمرير أفقي ودوائر
-  Widget _buildHorizontalSubCategories(List subs) {
-    if (subs.isEmpty) return const Text("لا توجد نتائج", style: TextStyle(color: Colors.grey, fontSize: 11));
-
-    return SizedBox(
-      height: 100,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: subs.length,
-        itemBuilder: (context, index) {
-          final sub = subs[index];
-          return GestureDetector(
-            onTap: () => controller.navigateToProducts(sub['name'], sub['slug']),
-            child: Container(
-              width: 80,
-              margin: const EdgeInsets.only(left: 15),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: kBgColor, // نفس لون الماركات لتوحيد الهوية
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(sub['icon'] ?? Icons.category_rounded, color: kPrimaryColor, size: 24),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(sub['name']?.toString() ?? "",
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kTextColor)),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  // الماركات: مربعات ملونة بـ kBgColor
-  Widget _buildBrandsGrid(List brands) {
-    if (brands.isEmpty) return const Text("لا توجد نتائج", style: TextStyle(color: Colors.grey, fontSize: 11));
-
+  Widget _buildSubCategoriesGrid(List subs) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 1.8,
+        mainAxisSpacing: 15,
+        crossAxisSpacing: 12,
+        childAspectRatio: 0.82,
+      ),
+      itemCount: subs.length,
+      itemBuilder: (context, index) {
+        final sub = subs[index];
+        return GestureDetector(
+          onTap: () => controller.navigateToProducts(sub['name'], sub['slug']),
+          child: Column(
+            children: [
+              Container(
+                width: 68, height: 68,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2)),
+                  ],
+                  border: Border.all(color: Colors.grey.shade100),
+                ),
+                child: Center(
+                  child: _buildCategoryIcon(sub, false, size: 34),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                sub['name']?.toString() ?? "",
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: kTextColor, height: 1.1),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBrandsGrid(List brands) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 2.1,
       ),
       itemCount: brands.length,
       itemBuilder: (context, index) {
+        final brand = brands[index];
         return GestureDetector(
-          onTap: () => controller.navigateToProducts("ماركة ${brands[index]}", brands[index].toLowerCase()),
+          onTap: () => controller.navigateToProducts("ماركة ${brand['name']}", brand['slug']),
           child: Container(
             decoration: BoxDecoration(
-              color: kBgColor, // اللون الموحد للأقسام والماركات
+              color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade100),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.01), blurRadius: 4, offset: const Offset(0, 1)),
+              ],
+              border: Border.all(color: Colors.grey.withOpacity(0.1)),
             ),
-            child: Center(
-              child: Text(brands[index],
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: kTextColor)),
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              brand['name']?.toString() ?? "",
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: kTextColor),
             ),
           ),
         );
       },
     );
+  }
+
+  // أيقونة ذكية تختار الشكل بناءً على الاسم إذا لم تتوفر صورة
+  Widget _buildCategoryIcon(Map cat, bool isSelected, {double size = 22}) {
+    String? imageUrl = cat['image_url'] ?? cat['image'];
+    String name = (cat['name'] ?? "").toString();
+
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      return CachedNetworkImage(
+        imageUrl: imageUrl,
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        placeholder: (context, url) => Icon(_getSemanticIcon(name), color: isSelected ? kPrimaryColor : Colors.grey.shade400, size: size),
+        errorWidget: (context, url, error) => Icon(_getSemanticIcon(name), color: isSelected ? kPrimaryColor : Colors.grey.shade400, size: size),
+      );
+    }
+    
+    return Icon(_getSemanticIcon(name),
+        color: isSelected ? kPrimaryColor : Colors.grey.shade400, size: size);
+  }
+
+  // وظيفة ذكية لاختيار أيقونة تعمد على اسم القسم
+  IconData _getSemanticIcon(String name) {
+    String n = name.toLowerCase();
+    if (n.contains('لابتوب') || n.contains('laptop') || n.contains('حاسوب')) return Icons.laptop_mac;
+    if (n.contains('شاش') || n.contains('screen') || n.contains('عرض')) return Icons.monitor;
+    if (n.contains('هاتف') || n.contains('phone') || n.contains('جوال')) return Icons.phone_android;
+    if (n.contains('طابع') || n.contains('print')) return Icons.print_rounded;
+    if (n.contains('كاميرا') || n.contains('camera')) return Icons.camera_alt_rounded;
+    if (n.contains('سماعات') || n.contains('headphone') || n.contains('صوت')) return Icons.headphones_rounded;
+    if (n.contains('ساعة') || n.contains('watch')) return Icons.watch_rounded;
+    if (n.contains('ألعاب') || n.contains('game') || n.contains('جيمنج')) return Icons.sports_esports_rounded;
+    if (n.contains('إكسسوار') || n.contains('accessory')) return Icons.mouse_rounded;
+    if (n.contains('قرص') || n.contains('disk') || n.contains('تخزين')) return Icons.save_rounded;
+    if (n.contains('شبك') || n.contains('network') || n.contains('راوتر')) return Icons.router_rounded;
+    if (n.contains('برمج') || n.contains('software')) return Icons.code_rounded;
+    
+    return Icons.category_rounded;
   }
 
   Widget _buildSectionTitle(String title) {

@@ -14,18 +14,27 @@ class AddressPage extends GetView<CheckoutController> {
       Get.put(CheckoutController());
     }
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          // زر الرجوع من نظام التلفون → السلة
+          Get.offAllNamed('/cart');
+        }
+      },
+      child: Scaffold(
         backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text("عنوان التوصيل", style: TextStyle(color: kTextColor, fontWeight: FontWeight.bold, fontSize: 18)),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: kTextColor, size: 20),
-          onPressed: () => Get.back(),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          title: const Text("عنوان التوصيل", style: TextStyle(color: kTextColor, fontWeight: FontWeight.bold, fontSize: 18)),
+          centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios, color: kTextColor, size: 20),
+            // سهم AppBar → تسجيل الدخول
+            onPressed: () => Get.offAllNamed('/login'),
+          ),
         ),
-      ),
       body: Column(
         children: [
           const SizedBox(height: 20),
@@ -67,6 +76,7 @@ class AddressPage extends GetView<CheckoutController> {
           _buildBottomAction(),
         ],
       ),
+    ),
     );
   }
 

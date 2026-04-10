@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bytore/core/services/api_service.dart';
+import 'package:bytore/features/home/models/coupon_model.dart';
 import 'package:bytore/features/product/models/product_model.dart';
 import 'package:bytore/core/controllers/app_controller.dart';
+import 'package:bytore/features/stores/models/advertisement_model.dart';
 
 class HomeController extends GetxController {
   final ApiService _apiService = ApiService();
   
   var allProducts = <Product>[].obs;
   var filteredProducts = <Product>[].obs;
-  var advertisements = <dynamic>[].obs;
+  var advertisements = <AdvertisementModel>[].obs;
+  var coupons = <CouponModel>[].obs;
   var isLoading = true.obs;
   var carouselIndex = 0.obs;
   
@@ -20,24 +23,57 @@ class HomeController extends GetxController {
     super.onInit();
     fetchProducts();
     fetchAds();
+    fetchCoupons();
+  }
+
+  Future<void> fetchCoupons() async {
+    try {
+      final fetchedCoupons = await _apiService.fetchCoupons();
+      if (fetchedCoupons.isNotEmpty) {
+        // Show all fetched coupons for debugging
+        coupons.assignAll(fetchedCoupons);
+      } else {
+        debugPrint("🏠 HOME: No coupons found in API.");
+      }
+    } catch (e) {
+      debugPrint("🏠 HOME COUPONS ERROR: $e");
+    }
   }
 
   Future<void> fetchAds() async {
     try {
       final ads = await _apiService.fetchAdvertisements();
-      advertisements.assignAll(ads);
+      if (ads.isNotEmpty) {
+        advertisements.assignAll(ads);
+      } else {
+        debugPrint("🏠 HOME: No ads found in API. Using 1 default banner.");
+        advertisements.assignAll([
+          AdvertisementModel(
+            id: 0,
+            storeId: 0,
+            title: "مرحباً بكم في سيليكون",
+            description: "اكتشف أفضل العروض الإلكترونية",
+            image: "https://img.freepik.com/free-vector/gradient-sale-background_23-2148934477.jpg",
+          )
+        ]);
+      }
     } catch (e) {
-      debugPrint("Error fetching ads: $e");
+      debugPrint("🏠 HOME ADS ERROR: $e");
     }
   }
 
   Future<void> fetchProducts() async {
     try {
       isLoading.value = true;
-      final products = await _apiService.fetchProducts();
+      final appController = Get.find<AppController>();
+      final token = appController.token.value;
+      
+      final products = await _apiService.fetchProducts(token: token.isEmpty ? null : token);
       allProducts.assignAll(products);
+      
       applyFilters();
     } catch (e) {
+      debugPrint("🏠 HOME ERROR: $e");
       Get.snackbar("خطأ", "فشل تحميل المنتجات");
     } finally {
       isLoading.value = false;

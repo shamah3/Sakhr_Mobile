@@ -43,7 +43,7 @@ class WishlistView extends StatelessWidget {
 
         // Filter products from homeController
         final wishlistItems = homeController.allProducts
-            .where((p) => appController.wishlistIds.contains(p.id))
+            .where((p) => p != null && appController.wishlistIds.contains(p.id))
             .toList();
 
         if (wishlistItems.isEmpty) {

@@ -55,10 +55,16 @@ class CheckoutController extends GetxController {
   Future<void> loadPaymentMethods() async {
     try {
       isLoadingMethods.value = true;
-      final methods = await _apiService.fetchPaymentMethods();
-      paymentMethods.assignAll(methods);
+      
+      // محاكاة طرق الدفع محلياً بدلاً من الـ API
+      final mockMethods = [
+        PaymentMethodModel(id: 1, name: "المحفظة الإلكترونية", description: "جوال، كاش، كريمي موني", iconUrl: null),
+        PaymentMethodModel(id: 2, name: "تحويل بنكي", description: "إلى حسابنا في بنك الأمل", iconUrl: null),
+        PaymentMethodModel(id: 3, name: "الدفع عند الاستلام", description: "الدفع نقداً للمندوب", iconUrl: null),
+      ];
+      paymentMethods.assignAll(mockMethods);
     } catch (e) {
-      debugPrint("Error loading payment methods: $e");
+      debugPrint("Error loading mock payment methods: $e");
     } finally {
       isLoadingMethods.value = false;
     }
@@ -93,53 +99,39 @@ class CheckoutController extends GetxController {
 
     try {
       isCompletingOrder.value = true;
-      final token = _appController.token.value;
-      if (token.isEmpty) {
-        Get.snackbar("تنبيه", "يجب تسجيل الدخول أولاً", backgroundColor: Colors.orange, colorText: Colors.white);
-        return null;
-      }
-
-      final orderData = {
-        "address": addresses[selectedAddressIndex.value]['address'],
-        "payment_method_id": paymentMethods.isNotEmpty ? paymentMethods[selectedMethodIndex.value].id : 1,
-        "items": cartController.items.values.map((item) => {
-          "product_id": item.product.id,
-          "quantity": item.quantity.value,
-          "price": item.product.price,
-        }).toList(),
-        "total_price": cartController.totalAmount + (cartController.shippingCost ?? 0.0),
-      };
-
-      final order = await _apiService.createOrder(orderData, token);
       
-      if (order != null) {
-        // Log Activity
-        try {
-          if (Get.isRegistered<ActivitiesController>()) {
-            Get.find<ActivitiesController>().logActivity(
-              title: 'إتمام طلب جديد بنجاح',
-              type: 'buy'
-            );
-          }
-        } catch (e) {}
+      // لا يشترط توكن للطلب الوهمي محلياً
+      await Future.delayed(const Duration(seconds: 2)); // محاكاة وقت الإرسال
 
-        // Clear Cart
-        cartController.clearCart();
-        
-        // Refresh Purchase Reports
-        try {
-          if (Get.isRegistered<PurchaseReportsController>()) {
-            Get.find<PurchaseReportsController>().loadOrders();
-          }
-        } catch (e) {}
-        
-        return order;
-      } else {
-        Get.snackbar("خطأ", "فشل في إتمام الطلب، يرجى المحاولة لاحقاً", backgroundColor: Colors.redAccent, colorText: Colors.white);
-        return null;
-      }
+      // محاكاة استجابة الخادم وإنشاء طلب وهمي بنجاح
+      final order = OrderModel(
+        id: DateTime.now().millisecondsSinceEpoch % 100000, 
+        dateTime: DateTime.now(),
+        status: OrderStatus.pending,
+        totalPrice: cartController.totalAmount + (cartController.shippingCost ?? 0.0),
+        itemCount: cartController.items.length,
+        shippingAddress: addresses[selectedAddressIndex.value]['address'] ?? "بدون عنوان",
+        itemsNames: cartController.items.values.map((e) => e.product.name).toList(),
+        productIds: cartController.items.values.map((e) => e.product.id).toList(),
+      );
+
+      // Log Activity
+      try {
+        if (Get.isRegistered<ActivitiesController>()) {
+          Get.find<ActivitiesController>().logActivity(
+            title: 'إتمام طلب جديد بنجاح (وهمي)',
+            type: 'buy'
+          );
+        }
+      } catch (e) {}
+
+      // Clear Cart
+      cartController.clearCart();
+      
+      return order;
     } catch (e) {
-      debugPrint("Error completing order: $e");
+      debugPrint("Error completing mock order: $e");
+      Get.snackbar("خطأ", "حدث خطأ أثناء إتمام الطلب محلياً", backgroundColor: Colors.redAccent, colorText: Colors.white);
       return null;
     } finally {
       isCompletingOrder.value = false;

@@ -12,12 +12,11 @@ class LoginView extends GetView<AuthController> {
 
   final _formKey = GlobalKey<FormState>();
 
-  String? _validateEmail(String? v) => (v == null || !v.contains('@')) ? 'البريد الإلكتروني غير صحيح' : null;
+  String? _validatePhone(String? v) => (v == null || v.length < 8) ? 'رقم الهاتف غير صحيح' : null;
   String? _validatePass(String? v) => (v == null || v.length < 6) ? 'كلمة المرور قصيرة' : null;
 
   @override
   Widget build(BuildContext context) {
-    // التأكد من تسجيل المتحكم في الذاكرة لتجنب الشاشة الحمراء
     final authController = Get.isRegistered<AuthController>()
         ? Get.find<AuthController>()
         : Get.put(AuthController());
@@ -29,22 +28,50 @@ class LoginView extends GetView<AuthController> {
         elevation: 0,
         leading: Navigator.canPop(context)
             ? IconButton(
-            icon: const Icon(Icons.arrow_back_ios, color: kTextColor),
+            icon: const Icon(Icons.arrow_back_ios, color: kTextColor, size: 20),
             onPressed: () => Get.back())
-            : null,
+            : const SizedBox.shrink(),
       ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 25),
           child: Column(
             children: [
-              const SizedBox(height: 40),
-              const BytoreLogo(size: 180),
+              const SizedBox(height: 20),
+              // Top Icon from screenshot
+              Container(
+                width: 70, height: 70,
+                decoration: BoxDecoration(
+                  color: kBgColor,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.blue.withOpacity(0.1), width: 1),
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const Icon(Icons.login_rounded, size: 35, color: kPrimaryColor),
+                    Positioned(
+                      bottom: 12, right: 12,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: const BoxDecoration(color: kSecondaryColor, shape: BoxShape.circle),
+                        child: const Icon(Icons.shield_rounded, size: 12, color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 15),
+              const Text(
+                "بايتور",
+                style: TextStyle(color: kPrimaryColor, fontSize: 26, fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 5),
               const Text(
                 "تسجيل الدخول للمتابعة",
-                style: TextStyle(color: kTextLightColor, fontSize: 16),
+                style: TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500),
               ),
-              const SizedBox(height: 50),
+              const SizedBox(height: 40),
               Container(
                 padding: const EdgeInsets.all(28),
                 decoration: BoxDecoration(
@@ -52,8 +79,8 @@ class LoginView extends GetView<AuthController> {
                   borderRadius: BorderRadius.circular(25),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 25,
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
                   ],
@@ -64,51 +91,45 @@ class LoginView extends GetView<AuthController> {
                   child: Column(
                     children: [
                       const Text("مرحباً بك مجدداً",
-                          style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: kTextColor)),
-                      const SizedBox(height: 35),
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: kTextColor)),
+                      const SizedBox(height: 30),
 
-                      // حقل البريد الإلكتروني
-                      _buildEmailField(authController),
+                      _buildPhoneField(authController),
 
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 15),
 
-                      // حقل كلمة المرور (مع Obx لمراقبة إظهار/إخفاء النص)
                       _buildPasswordField(authController),
 
                       Align(
-                        alignment: Alignment.centerLeft,
+                        alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: () {},
+                          style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(0, 30)),
                           child: const Text("نسيت كلمة المرور؟",
-                              style: TextStyle(color: kTextLightColor, fontSize: 13)),
+                              style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold)),
                         ),
                       ),
-                      const SizedBox(height: 15),
+                      const SizedBox(height: 20),
 
                       _buildMainButton(context, authController),
-
-                      const SizedBox(height: 30),
-                      Row(
-                        children: [
-                          const Expanded(child: Divider()),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: Text("أو المتابعة عبر",
-                                style: TextStyle(
-                                    color: Colors.grey.shade400, fontSize: 13)),
-                          ),
-                          const Expanded(child: Divider()),
-                        ],
-                      ),
-                      const SizedBox(height: 25),
-                      _buildSocialLoginSection(),
                     ],
                   ),
                 ),
               ),
+              const SizedBox(height: 35),
+              
+              Row(
+                children: [
+                  Expanded(child: Divider(color: Colors.grey.shade200)),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10),
+                    child: Text("أو المتابعة عبر", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  ),
+                  Expanded(child: Divider(color: Colors.grey.shade200)),
+                ],
+              ),
+              const SizedBox(height: 25),
+              _buildSocialLoginSection(),
               const SizedBox(height: 40),
             ],
           ),
@@ -117,62 +138,46 @@ class LoginView extends GetView<AuthController> {
     );
   }
 
-  // دالة حقل البريد الإلكتروني
-  Widget _buildEmailField(AuthController authController) {
+  Widget _buildPhoneField(AuthController authController) {
     return Container(
-      decoration: BoxDecoration(
-        color: kBgColor,
-        borderRadius: BorderRadius.circular(15),
-      ),
+      decoration: BoxDecoration(color: const Color(0xFFF8F9FA), borderRadius: BorderRadius.circular(15)),
       child: TextFormField(
-        controller: authController.emailController,
+        controller: authController.emailController, // Using same controller to store data temporarily
         textAlign: TextAlign.right,
-        keyboardType: TextInputType.emailAddress,
-        validator: _validateEmail,
+        keyboardType: TextInputType.phone,
+        validator: _validatePhone,
         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
         decoration: InputDecoration(
-          hintText: "البريد الإلكتروني",
-          hintStyle: const TextStyle(
-              color: kTextLightColor, fontSize: 14, fontWeight: FontWeight.normal),
-          prefixIcon: const Icon(Icons.email_outlined, color: kPrimaryColor, size: 20),
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          hintText: "رقم الهاتف",
+          hintStyle: const TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.normal),
+          prefixIcon: const Icon(Icons.phone_android_rounded, color: kPrimaryColor, size: 20),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 16),
         ),
       ),
     );
   }
 
-  // دالة حقل كلمة المرور (تحتوي على Obx لأنها تراقب حالة الرؤية)
   Widget _buildPasswordField(AuthController authController) {
     return Obx(() => Container(
-      decoration: BoxDecoration(
-        color: kBgColor,
-        borderRadius: BorderRadius.circular(15),
-      ),
+      decoration: BoxDecoration(color: const Color(0xFFF8F9FA), borderRadius: BorderRadius.circular(15)),
       child: TextFormField(
         controller: authController.passwordController,
         textAlign: TextAlign.right,
         obscureText: authController.obscurePassword.value,
-        validator: _validatePass,
         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
         decoration: InputDecoration(
           hintText: "كلمة المرور",
-          hintStyle: const TextStyle(
-              color: kTextLightColor, fontSize: 14, fontWeight: FontWeight.normal),
-          prefixIcon: const Icon(Icons.lock_open_rounded, color: kPrimaryColor, size: 20),
+          hintStyle: const TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.normal),
+          prefixIcon: const Icon(Icons.lock_outline_rounded, color: kPrimaryColor, size: 20),
           suffixIcon: IconButton(
             icon: Icon(
-                authController.obscurePassword.value
-                    ? Icons.visibility_off
-                    : Icons.visibility,
-                color: Colors.grey,
-                size: 20),
+                authController.obscurePassword.value ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                color: Colors.grey, size: 20),
             onPressed: authController.togglePasswordVisibility,
           ),
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 16),
         ),
       ),
     ));
@@ -181,15 +186,11 @@ class LoginView extends GetView<AuthController> {
   Widget _buildMainButton(BuildContext context, AuthController authController) {
     return Container(
       width: double.infinity,
-      height: 55,
+      height: 52,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
-          BoxShadow(
-            color: kPrimaryColor.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
+          BoxShadow(color: kPrimaryColor.withOpacity(0.2), blurRadius: 15, offset: const Offset(0, 8)),
         ],
       ),
       child: Obx(() => ElevatedButton(
@@ -197,22 +198,25 @@ class LoginView extends GetView<AuthController> {
             ? null
             : () async {
           if (_formKey.currentState!.validate()) {
-            await authController.login();
+            final phone = authController.emailController.text.trim();
+            // In API V1, we send OTP for login
+            final success = await authController.sendOtp(phone);
+            if (success) {
+              Get.to(() => OtpVerificationView(phoneNumber: phone, redirectToAddress: redirectToAddress));
+            } else {
+              Get.snackbar("خطأ", "هناك مشكلة في ارسال الكود", snackPosition: SnackPosition.BOTTOM);
+            }
           }
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: kPrimaryColor,
+          backgroundColor: const Color(0xFF00568C), // Match exact solid blue from image
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           elevation: 0,
         ),
         child: authController.isLoading.value
-            ? const SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-            : const Text("تسجيل الدخول",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+            : const Text("إرسال رمز التحقق", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
       )),
     );
   }
@@ -222,22 +226,19 @@ class LoginView extends GetView<AuthController> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         _socialCircleParam(Icons.apple, Colors.black, () {}),
-        const SizedBox(width: 25),
-        _socialCircleParam(Icons.g_mobiledata, Colors.red, () {},
-            isImage: true,
-            imgUrl: 'https://cdn-icons-png.flaticon.com/512/300/300221.png'),
+        const SizedBox(width: 20),
+        _socialCircleParam(Icons.g_mobiledata, Colors.black, () {},
+            isImage: true, imgUrl: 'https://cdn-icons-png.flaticon.com/512/300/300221.png'), // Replace with actual G logo if available
       ],
     );
   }
 
-  Widget _socialCircleParam(IconData icon, Color color, VoidCallback onTap,
-      {bool isImage = false, String? imgUrl}) {
+  Widget _socialCircleParam(IconData icon, Color color, VoidCallback onTap, {bool isImage = false, String? imgUrl}) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(15),
       child: Container(
-        width: 60,
-        height: 60,
+        width: 55, height: 55,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(15),
@@ -245,8 +246,8 @@ class LoginView extends GetView<AuthController> {
         ),
         child: Center(
           child: isImage && imgUrl != null
-              ? CustomImage(imageUrl: imgUrl, width: 28, height: 28)
-              : Icon(icon, color: color, size: 30),
+              ? const Icon(Icons.circle_outlined, color: Colors.blue) // Placeholder for G
+              : Icon(icon, color: color, size: 26),
         ),
       ),
     );

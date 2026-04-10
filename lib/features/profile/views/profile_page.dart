@@ -48,6 +48,7 @@ const SizedBox(height: 25),
 _buildSectionHeader('إدارة الحساب'),
 _buildMenuContainer([
 _buildMenuItem('تقارير المشتريات', Icons.bar_chart_rounded, () => Get.toNamed(AppRoutes.REPORTS)),
+_buildMenuItem('إدارة المنتجات التابعة', Icons.inventory_2_outlined, () => Get.toNamed(AppRoutes.PRODUCT_MANAGEMENT)),
 _buildMenuItem('المنتجات المسترجعة', Icons.assignment_return_outlined, () => Get.toNamed(AppRoutes.RETURNS)),
 _buildMenuItem('سجل الأنشطة', Icons.access_time_rounded, () => Get.toNamed(AppRoutes.ACTIVITY)),
 _buildMenuItem('الرسائل', Icons.mail_outline_rounded, () => Get.toNamed(AppRoutes.MESSAGES)),

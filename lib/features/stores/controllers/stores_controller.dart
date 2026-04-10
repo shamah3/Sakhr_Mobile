@@ -24,19 +24,19 @@ class StoresController extends GetxController {
     try {
       isLoading.value = true;
       hasError.value = false;
-      final results = await Future.wait([
-        _apiService.fetchStores(),
-        _apiService.fetchAdvertisements(),
-      ]);
+      
+      // إرجاع متجر افتراضي للاستخدام المحلي
+      final mockStores = [
+        StoreModel(id: 1, name: "متجر صخر المميز", category: "عام", rating: 5.0),
+        StoreModel(id: 2, name: "عالم التقنية", category: "إلكترونيات", rating: 4.8),
+      ];
+      final List<AdvertisementModel> mockAds = [];
 
-      final stores = results[0] as List<StoreModel>;
-      debugPrint("✅ Stores loaded: ${stores.length}");
-
-      allStores.assignAll(stores);
-      filteredStores.assignAll(stores);
-      advertisements.assignAll(results[1] as List<AdvertisementModel>);
+      allStores.assignAll(mockStores);
+      filteredStores.assignAll(mockStores);
+      advertisements.assignAll(mockAds);
     } catch (e) {
-      debugPrint("🔥 Error loading stores: $e");
+      debugPrint("🔥 Error loading mock stores: $e");
       hasError.value = true;
     } finally {
       isLoading.value = false;

@@ -4,6 +4,7 @@ import 'package:bytore/core/constants/constants.dart';
 import 'package:bytore/features/home/views/components/item_card.dart';
 import 'package:bytore/core/controllers/app_controller.dart';
 import 'package:bytore/features/home/controllers/categories_controller.dart';
+import 'package:bytore/features/home/views/components/coupon_card.dart';
 import 'package:carousel_slider/carousel_slider.dart'; // Import carousel
 import 'package:cached_network_image/cached_network_image.dart'; // Import network image
 import '../controllers/product_list_controller.dart';
@@ -59,6 +60,7 @@ class ProductListView extends StatelessWidget {
       body: Column(
         children: [
           _buildStoreBanners(controller),
+          _buildVendorCoupons(controller),
           _buildCategoriesBar(controller),
           _buildSubCategoriesBar(controller),
 
@@ -116,7 +118,7 @@ class ProductListView extends StatelessWidget {
       )),
       actions: [
         Obx(
-              () => IconButton(
+          () => IconButton(
             icon: Icon(
               controller.isSearching.value
                   ? Icons.close
@@ -150,45 +152,45 @@ class ProductListView extends StatelessWidget {
           itemBuilder: (context, index) {
             final cat = categories[index];
 
-          return Obx(() {
-            final bool isSelected =
-                controller.categorySlug.value == cat['slug'];
+            return Obx(() {
+              final bool isSelected =
+                  controller.categorySlug.value == cat['slug'];
 
-            return GestureDetector(
-              onTap: () =>
-                  controller.updateCategory(cat['slug']!, cat['name']!),
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 5),
-                padding:
-                const EdgeInsets.symmetric(horizontal: 20),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? kPrimaryColor
-                      : Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: isSelected
-                      ? null
-                      : Border.all(color: Colors.grey.shade200),
-                ),
-                child: Text(
-                  cat['name']!,
-                  style: TextStyle(
+              return GestureDetector(
+                onTap: () =>
+                    controller.updateCategory(cat['slug']!, cat['name']!),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 5),
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 20),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
                     color: isSelected
-                        ? Colors.white
-                        : kTextColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
+                        ? kPrimaryColor
+                        : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: isSelected
+                        ? null
+                        : Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Text(
+                    cat['name']!,
+                    style: TextStyle(
+                      color: isSelected
+                          ? Colors.white
+                          : kTextColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
-              ),
-            );
-          });
-        },
-      ),
-    );
-  });
-}
+              );
+            });
+          },
+        ),
+      );
+    });
+  }
 
   // =====================================================
   // SUB CATEGORIES
@@ -207,13 +209,13 @@ class ProductListView extends StatelessWidget {
       );
 
       if (currentCategory.isEmpty ||
-          currentCategory['subcategories'] == null ||
-          (currentCategory['subcategories'] as List).isEmpty) {
+          (currentCategory['children'] == null && currentCategory['subcategories'] == null) ||
+          ((currentCategory['children'] ?? currentCategory['subcategories'] ?? []) as List).isEmpty) {
         return const SizedBox.shrink();
       }
 
       final subCategories =
-      currentCategory['subcategories'] as List;
+      (currentCategory['children'] ?? currentCategory['subcategories']) as List;
 
       return SizedBox(
         height: 40,
@@ -359,6 +361,45 @@ class ProductListView extends StatelessWidget {
             );
           }).toList(),
         ),
+      );
+    });
+  }
+
+  // =====================================================
+  // VENDOR COUPONS
+  // =====================================================
+
+  Widget _buildVendorCoupons(ProductListController controller) {
+    return Obx(() {
+      if (controller.vendorCoupons.isEmpty) return const SizedBox.shrink();
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            child: Text(
+              "كوبونات المتجر",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: kTextColor,
+              ),
+            ),
+          ),
+          SizedBox(
+            height: 100,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              itemCount: controller.vendorCoupons.length,
+              itemBuilder: (context, index) {
+                return CouponCard(coupon: controller.vendorCoupons[index]);
+              },
+            ),
+          ),
+          const SizedBox(height: 15),
+        ],
       );
     });
   }

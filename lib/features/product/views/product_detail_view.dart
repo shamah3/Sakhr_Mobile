@@ -591,9 +591,7 @@ class ProductDetailView extends StatelessWidget {
            status: "New",
            warranty: "1 Year",
            deliveryTime: "3-5 days",
-           imageUrl: index % 2 == 0 
-              ? "https://images.unsplash.com/photo-1546435770-a3e426bf472b?q=80&w=2065&auto=format&fit=crop" 
-              : "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?q=80&w=1974&auto=format&fit=crop"
+           imageUrl: "",
         );
         
         return Container(

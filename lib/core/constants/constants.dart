@@ -8,9 +8,10 @@ const kTextLightColor = Color(0xFF636E72);
 
 const kDefaultPadding = 20.0;
 const kDefaultRadius = 16.0;
+const kCurrency = "ر.ي"; 
 
 final kDefaultShadow = BoxShadow(
   offset: const Offset(0, 10),
   blurRadius: 20,
-  color: Colors.black.withValues(alpha: 0.05),
+  color: Colors.black.withOpacity(0.05),
 );

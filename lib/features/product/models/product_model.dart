@@ -61,13 +61,12 @@ class Product {
         double.tryParse(json['price']?.toString() ?? "0") ?? 0;
 
     /// ==========================================================
-    /// ✅ معالجة الصورة الأساسية
-    /// ==========================================================
-    /// ==========================================================
-    /// ✅ معالجة الصورة الأساسية
+    /// ✅ معالجة الصورة الأساسية وتحسين الروابط
     /// ==========================================================
     String fixImageUrl(String? url) {
-      if (url == null || url.isEmpty) return "https://via.placeholder.com/300";
+      if (url == null || url.isEmpty) {
+        return ""; // صورة فارغة للشفافية
+      }
       
       String rawUrl = url.trim();
       
@@ -83,7 +82,7 @@ class Product {
         }
       }
 
-      if (rawUrl.isEmpty) return "https://via.placeholder.com/300";
+      if (rawUrl.isEmpty) return "";
       
       // Replace legacy localhost/127.0.0.1 with correct URL
       String fixedUrl = rawUrl.replaceAll("http://localhost:8000", ApiService.serverUrl)
@@ -95,12 +94,21 @@ class Product {
       
       // If it's still not absolute, prepend server path
       if (!fixedUrl.startsWith("http")) {
+        // Remove leading slash if exists
         String cleanPath = fixedUrl.startsWith('/') ? fixedUrl.substring(1) : fixedUrl;
         
+        // Handle Laravel common storage paths
         if (cleanPath.startsWith("upload/") || cleanPath.startsWith("storage/")) {
           fixedUrl = "${ApiService.serverUrl}/$cleanPath";
-        } else if (cleanPath.startsWith("product") || cleanPath.startsWith("products")) {
-          fixedUrl = "${ApiService.serverUrl}/upload/$cleanPath";
+        } else if (cleanPath.startsWith("public/")) {
+           fixedUrl = "${ApiService.serverUrl}/${cleanPath.replaceFirst('public/', '')}";
+        } else if (cleanPath.contains("products") || cleanPath.contains("images")) {
+           // Many Laravel setups put products in storage/products or upload/products
+           if (cleanPath.contains("storage/")) {
+             fixedUrl = "${ApiService.serverUrl}/$cleanPath";
+           } else {
+             fixedUrl = "${ApiService.storageUrl}/$cleanPath";
+           }
         } else {
           fixedUrl = "${ApiService.storageUrl}/$cleanPath";
         }
@@ -173,7 +181,7 @@ class Product {
       storeName: json['store_name'] ?? json['vendor'] ?? (json['user'] is Map ? json['user']['name'] : null) ?? "سيليكون",
       region: regionValue,
       stock: stockValue,
-      status: stockValue > 0 ? "In Stock" : "Out of Stock",
+      status: json['status']?.toString() ?? (stockValue > 0 ? "In Stock" : "Out of Stock"),
       warranty: json['warranty'] ?? "سنة واحدة",
       deliveryTime: "3 أيام",
       category: json['category']?['name'] ?? "General",

@@ -15,6 +15,9 @@ import 'package:bytore/features/product/views/product_list_view.dart';
 import 'package:bytore/features/notifications/views/notification_view.dart';
 import 'package:bytore/features/search/views/search_view.dart';
 import 'package:bytore/core/routes/app_routes.dart';
+import 'package:bytore/features/home/views/ads_view.dart';
+import 'package:bytore/features/home/views/components/coupon_card.dart';
+import 'package:bytore/features/home/models/coupon_model.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
@@ -109,15 +112,40 @@ class HomeView extends GetView<HomeController> {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
             children: [
-              _buildSectionHeader("الخصومات", showViewAll: true, onTap: () {
-                Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': "الخصومات", 'apiCategorySlug': 'discounts'}, id: 1);
-              }),
+              _buildSectionHeader("العروض والكوبونات", showViewAll: false, onTap: () {}),
               const SizedBox(height: 18),
             ],
           ),
         ),
-        _buildHorizontalProductList("الخصومات", appController),
+        _buildCouponsCarousel(),
       ],
+    );
+  }
+
+  Widget _buildCouponsCarousel() {
+    return Container(
+      height: 100,
+      margin: const EdgeInsets.only(bottom: 20),
+      child: Obx(() {
+        if (controller.isLoading.value && controller.coupons.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (controller.coupons.isEmpty) {
+          return const Center(
+            child: Text("لا يوجد كوبونات متوفرة حالياً", style: TextStyle(color: Colors.grey)),
+          );
+        }
+
+        return ListView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          itemCount: controller.coupons.length,
+          itemBuilder: (context, index) {
+            return CouponCard(coupon: controller.coupons[index]);
+          },
+        );
+      }),
     );
   }
 
@@ -310,63 +338,102 @@ class HomeView extends GetView<HomeController> {
               onPageChanged: (index, reason) => controller.updateCarouselIndex(index),
             ),
             items: controller.advertisements.map((ad) {
-              String imageUrl = ad['image_url'] ?? ad['image'] ?? "";
-              String title = ad['title'] ?? "";
-              String subtitle = ad['subtitle'] ?? ad['description'] ?? "";
-
               return GestureDetector(
                 onTap: () {
                   Get.dialog(
                     Dialog(
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      child: Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(title.isNotEmpty ? title : "عروض حصرية", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                                IconButton(onPressed: () => Get.back(), icon: const Icon(Icons.close)),
-                              ],
-                            ),
-                            if (imageUrl.isNotEmpty) ...[
+                      child: SingleChildScrollView(
+                        child: Container(
+                          padding: const EdgeInsets.all(22),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text("تفاصيل الإعلان", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: kPrimaryColor)),
+                                  IconButton(onPressed: () => Get.back(), icon: const Icon(Icons.close, size: 20)),
+                                ],
+                              ),
                               const SizedBox(height: 10),
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(15),
                                 child: CustomImage(
-                                  imageUrl: imageUrl,
-                                  height: 150,
+                                  imageUrl: ad.image,
+                                  height: 180,
                                   width: double.infinity,
                                   fit: BoxFit.cover,
                                 ),
                               ),
-                            ],
-                            const SizedBox(height: 15),
-                            Text(
-                              subtitle.isNotEmpty ? subtitle : "تصفح أحدث العروض لدينا",
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                            ),
-                            const SizedBox(height: 20),
-                            ElevatedButton(
-                              onPressed: () {
-                                Get.back();
-                                Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': 'الاعلانات', 'apiCategorySlug': 'all'}, id: 1);
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: kPrimaryColor,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                              const SizedBox(height: 15),
+                              Text(ad.title ?? "إعلان ترويجي", 
+                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: kTextColor)),
+                              const SizedBox(height: 8),
+                              Text(ad.description ?? "", 
+                                  style: const TextStyle(fontSize: 14, color: Colors.grey, height: 1.4)),
+                              
+                              const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 15),
+                                child: Divider(),
                               ),
-                              child: const Text("تصفح العروض", style: TextStyle(color: Colors.white)),
-                            ),
-                          ],
+                              
+                              _buildAdDetailRow(Icons.account_balance_wallet_rounded, "الميزانية", "${ad.budget?.toStringAsFixed(2) ?? '0.00'} $kCurrency"),
+                              const SizedBox(height: 12),
+                              _buildAdDetailRow(Icons.calendar_today_rounded, "فترة الإعلان", 
+                                  "${(ad.startDate ?? '-').split('T')[0]} إلى ${(ad.endDate ?? '-').split('T')[0]}"),
+                              const SizedBox(height: 12),
+                              _buildAdDetailRow(Icons.store_rounded, "المتجر المعلن", ad.storeName ?? "متجر شريك"),
+                              
+                              const SizedBox(height: 30),
+                              
+                              // Buttons Row
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        Get.back();
+                                        if (ad.targetUrl != null && ad.targetUrl!.isNotEmpty) {
+                                          // Logic to open URL
+                                        } else {
+                                          Get.toNamed('/product-list', arguments: {'storeId': ad.storeId, 'categoryTitle': ad.storeName ?? "المتجر"});
+                                        }
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: kPrimaryColor,
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(vertical: 16),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                                        elevation: 0,
+                                      ),
+                                      child: const Text("زيارة المتجر", style: TextStyle(fontWeight: FontWeight.bold)),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: OutlinedButton(
+                                      onPressed: () {
+                                        Get.back();
+                                        Get.toNamed('/ads');
+                                      },
+                                      style: OutlinedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(vertical: 16),
+                                        side: const BorderSide(color: kPrimaryColor, width: 1.5),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                                      ),
+                                      child: const Text("جميع العروض", style: TextStyle(color: kPrimaryColor, fontWeight: FontWeight.bold)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -379,47 +446,117 @@ class HomeView extends GetView<HomeController> {
                       margin: const EdgeInsets.symmetric(horizontal: 5.0),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [kPrimaryColor, kPrimaryColor.withAlpha((0.8 * 255).round())],
+                          colors: [kPrimaryColor, kPrimaryColor.withOpacity(0.85)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(25),
+                        boxShadow: [
+                           BoxShadow(
+                             color: kPrimaryColor.withOpacity(0.2),
+                             blurRadius: 15,
+                             offset: const Offset(0, 8),
+                           ),
+                        ],
                       ),
                       child: Stack(
                         children: [
-                          if (title.isNotEmpty || subtitle.isNotEmpty)
-                            Positioned(
-                              right: 25, top: 0, bottom: 0,
-                              child: SizedBox(
-                                width: MediaQuery.of(context).size.width * 0.4,
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      title,
-                                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 24, height: 1.1),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
+                          Positioned(
+                            right: 18, top: 0, bottom: 0,
+                            child: SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.5,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // 1. Store Badge (Top)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: Colors.white.withOpacity(0.1)),
                                     ),
-                                    const SizedBox(height: 15),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                                      decoration: BoxDecoration(color: kSecondaryColor, borderRadius: BorderRadius.circular(20)),
-                                      child: const Text("تسوق الآن", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.storefront_rounded, color: kSecondaryColor, size: 12),
+                                        const SizedBox(width: 6),
+                                        Flexible(
+                                          child: Text(
+                                            ad.storeName ?? "متجر مميز",
+                                            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  
+                                  // 2. Ad Title (Middle)
+                                  Text(
+                                    ad.title ?? "",
+                                    style: const TextStyle(
+                                      color: Colors.white, 
+                                      fontWeight: FontWeight.w900, 
+                                      fontSize: 18, 
+                                      height: 1.4,
+                                      letterSpacing: 0.2,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  
+                                  // 3. Expiry Info (Below Title)
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.access_time_filled_rounded, color: Colors.white54, size: 12),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        "ينتهي في: ${(ad.endDate ?? '-').split('T')[0]}",
+                                        style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w500),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 20),
+                                  
+                                  // 4. Primary Action (Button)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: kSecondaryColor,
+                                      borderRadius: BorderRadius.circular(15),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: kSecondaryColor.withOpacity(0.2), 
+                                          blurRadius: 10, 
+                                          offset: const Offset(0, 4)
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Text(
+                                      "اكتشف العرض",
+                                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          if (imageUrl.isNotEmpty)
+                          ),
+                          if (ad.image.isNotEmpty)
                             Positioned(
-                              left: 0, bottom: 0, top: 0, width: (title.isNotEmpty) ? 180 : MediaQuery.of(context).size.width,
-                              child: ClipRRect(
-                                borderRadius: (title.isNotEmpty) ? const BorderRadius.only(topLeft: Radius.circular(25), bottomLeft: Radius.circular(25)) : BorderRadius.circular(25),
-                                child: CustomImage(
-                                  imageUrl: imageUrl,
-                                  fit: BoxFit.cover,
+                              left: 10, bottom: 10, top: 10, width: 150,
+                              child: Hero(
+                                tag: 'ad_image_${ad.id}',
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: CustomImage(
+                                    imageUrl: ad.image,
+                                    fit: BoxFit.cover,
+                                  ),
                                 ),
                               ),
                             ),
@@ -461,7 +598,7 @@ class HomeView extends GetView<HomeController> {
         }
 
         final products = controller.allProducts.where((p) =>
-        category == "الكل" || p.status == category || p.name.contains(category)
+        p != null && (category == "الكل" || p.status == category || p.name.contains(category))
         ).take(5).toList();
 
         final displayProducts = products.isEmpty ? controller.allProducts.take(5).toList() : products;
@@ -539,14 +676,35 @@ class HomeView extends GetView<HomeController> {
         child: Obx(() {
           final categories = catController.apiCategories;
           if (categories.isEmpty) return const SizedBox.shrink();
-
+          
           return ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 15),
-            itemCount: categories.length,
+            itemCount: categories.length + 1, // Add 1 for "الكل"
             itemBuilder: (context, index) {
-              final cat = categories[index];
-              final isSelected = index == 0;
+              if (index == 0) {
+                // "الكل" Category
+                return GestureDetector(
+                  onTap: () {
+                    // Logic to show all products
+                    catController.selectedCategoryIndex.value = -1;
+                    Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': "الكل", 'apiCategorySlug': 'all'}, id: 1);
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(left: 10),
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: kPrimaryColor, // Solid blue like in image1
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text("الكل", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                  ),
+                );
+              }
+
+              final cat = categories[index - 1];
+              bool isSelected = catController.selectedCategoryIndex.value == (index - 1);
 
               return GestureDetector(
                 onTap: () => Get.toNamed(
@@ -564,11 +722,14 @@ class HomeView extends GetView<HomeController> {
                   ),
                   child: Row(
                     children: [
-                      if (cat['icon'] != null) ...[
-                        Icon(cat['icon'], color: isSelected ? Colors.white : kTextColor, size: 20),
-                        const SizedBox(width: 8),
-                      ],
-                      Text((cat['name'] ?? "").toString(), style: TextStyle(color: isSelected ? Colors.white : kTextColor, fontWeight: FontWeight.bold, fontSize: 13)),
+                      _buildCategoryIconShort(cat, isSelected, size: 20),
+                      const SizedBox(width: 8),
+                      Text((cat['name'] ?? "").toString(), 
+                          style: TextStyle(
+                              color: isSelected ? Colors.white : Colors.grey.shade700, 
+                              fontWeight: FontWeight.bold, 
+                              fontSize: 13
+                          )),
                     ],
                   ),
                 ),
@@ -578,6 +739,29 @@ class HomeView extends GetView<HomeController> {
         }),
       ),
     );
+  }
+
+  // أيقونة القسم في الصفحة الرئيسية
+  Widget _buildCategoryIconShort(Map cat, bool isSelected, {double size = 20}) {
+    String? imageUrl = cat['image_url'] ?? cat['image'];
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(4),
+        child: CustomImage(
+          imageUrl: imageUrl,
+          width: size,
+          height: size,
+          fit: BoxFit.contain,
+        ),
+      );
+    }
+    dynamic iconData = cat['icon'];
+    if (iconData is! IconData) {
+      iconData = Icons.category_rounded;
+    }
+
+    return Icon(iconData,
+        color: isSelected ? Colors.white : kPrimaryColor, size: size);
   }
 
   Widget _buildSectionHeader(String title, {VoidCallback? onTap, bool showViewAll = false}) {
@@ -602,6 +786,29 @@ class HomeView extends GetView<HomeController> {
               ],
             ),
           ),
+      ],
+    );
+  }
+
+  Widget _buildAdDetailRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: kBgColor,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 18, color: kPrimaryColor),
+        ),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kTextColor)),
+          ],
+        ),
       ],
     );
   }

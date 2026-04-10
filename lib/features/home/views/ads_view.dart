@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bytore/core/constants/constants.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:bytore/features/home/views/components/item_card.dart';
 import 'package:bytore/features/home/controllers/home_controller.dart';
-import 'package:bytore/core/controllers/app_controller.dart';
+import 'package:bytore/features/home/views/components/ad_banner_card.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AdsView extends StatelessWidget {
   const AdsView({super.key});
@@ -12,80 +11,110 @@ class AdsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final homeController = Get.find<HomeController>();
-    final appController = Get.find<AppController>();
-
-    // For demo purposes, we'll show all "discounted" or special products.
-    // In a real app, you might filter by a specific "ad" criteria.
-    final adProducts = homeController.allProducts.take(10).toList();
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text("العروض والخصومات", style: TextStyle(color: kTextColor, fontWeight: FontWeight.bold)),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: kTextColor),
-          onPressed: () => Get.back(),
-        ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          // Banner Image for the page
-          Container(
-            height: 180,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: kPrimaryColor,
-              borderRadius: BorderRadius.circular(20),
-              image: const DecorationImage(
-                image: CachedNetworkImageProvider("https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=2070&auto=format&fit=crop"),
-                fit: BoxFit.cover,
-              ),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          // 1. Clean, Minimal SliverAppBar (Compact)
+          SliverAppBar(
+            expandedHeight: 100,
+            floating: false,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: Colors.white,
+            centerTitle: true,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: kTextColor, size: 18),
+              onPressed: () => Get.back(),
             ),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                gradient: LinearGradient(
-                  colors: [Colors.black.withOpacity(0.6), Colors.transparent],
-                  begin: Alignment.bottomRight,
+            flexibleSpace: FlexibleSpaceBar(
+              titlePadding: const EdgeInsets.only(bottom: 12),
+              centerTitle: true,
+              title: Text(
+                "العروض والخصومات",
+                style: GoogleFonts.cairo(
+                  color: kTextColor,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 16,
                 ),
               ),
-              padding: const EdgeInsets.all(20),
-              alignment: Alignment.bottomRight,
-              child: const Text(
-                "خصومات تصل إلى 70%\nعلى الإلكترونيات",
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22),
-                textAlign: TextAlign.right,
+              background: Container(color: Colors.white),
+            ),
+          ),
+
+          // 2. Organized Info Bar (Smoother)
+          SliverToBoxAdapter(
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF9FAFB),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.withOpacity(0.05)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.local_fire_department_rounded, color: Colors.orange, size: 18),
+                  const SizedBox(width: 8),
+                  const Text(
+                    "أحدث العروض المضافة",
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kTextColor),
+                  ),
+                  const Spacer(),
+                  Obx(() => Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6)),
+                    child: Text(
+                      "${homeController.advertisements.length} عرض",
+                      style: TextStyle(color: Colors.grey.shade500, fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
+                  )),
+                ],
               ),
             ),
           ),
-          const SizedBox(height: 30),
-          
-          const Text("عروض مميزة لك", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: kTextColor)),
-          const SizedBox(height: 20),
 
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.65,
-              crossAxisSpacing: 15,
-              mainAxisSpacing: 15,
-            ),
-            itemCount: adProducts.length,
-            itemBuilder: (context, index) {
-               return Obx(() => ItemCard(
-                product: adProducts[index],
-                isWishlisted: appController.isWishlisted(adProducts[index].id),
-                onWishlistToggle: () => appController.toggleWishlist(adProducts[index].id),
-                isCompact: true,
-              ));
-            },
+          // 3. Main Content
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            sliver: Obx(() {
+              if (homeController.advertisements.isEmpty) {
+                return SliverFillRemaining(
+                   hasScrollBody: false,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(30),
+                          decoration: BoxDecoration(color: kBgColor, shape: BoxShape.circle),
+                          child: Icon(Icons.no_photography_outlined, size: 60, color: Colors.grey.shade300),
+                        ),
+                        const SizedBox(height: 20),
+                        const Text("لا توجد عروض ترويجية حالياً", style: TextStyle(color: kTextColor, fontWeight: FontWeight.bold, fontSize: 16)),
+                        const SizedBox(height: 8),
+                        Text("تابعنا لتكون أول من يعلم عند إضافة عروض جديدة", style: TextStyle(color: Colors.grey.shade400, fontSize: 13)),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              return SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final ad = homeController.advertisements[index];
+                    return AdBannerCard(ad: ad);
+                  },
+                  childCount: homeController.advertisements.length,
+                ),
+              );
+            }),
           ),
+          
+          const SliverToBoxAdapter(child: SizedBox(height: 50)),
         ],
       ),
     );

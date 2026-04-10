@@ -38,6 +38,9 @@ import 'package:bytore/features/profile/sub_pages/messages_page.dart';
 import 'package:bytore/features/orders/views/my_orders_page.dart';
 import 'package:bytore/features/chat/views/ai_chat_view.dart';
 import 'package:bytore/features/chat/views/chat_detail_view.dart';
+import 'package:bytore/features/product/management/product_management_view.dart';
+import 'package:bytore/features/product/management/product_management_detail_view.dart';
+import 'package:bytore/features/product/management/product_management_binding.dart';
 
 // Bindings
 import 'package:bytore/features/home/bindings/home_binding.dart';
@@ -120,7 +123,7 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.ADS,
-      page: () => const AdsView(),
+      page: () => AdsView(),
     ),
     GetPage(
       name: AppRoutes.PROFILE,
@@ -197,6 +200,16 @@ class AppPages {
     GetPage(
       name: AppRoutes.CHAT_DETAIL,
       page: () => const ChatDetailView(),
+    ),
+    GetPage(
+      name: AppRoutes.PRODUCT_MANAGEMENT,
+      page: () => const ProductManagementView(),
+      binding: ProductManagementBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.PRODUCT_MANAGEMENT_DETAIL,
+      page: () => const ProductManagementDetailView(),
+      binding: ProductManagementBinding(),
     ),
   ];
 }
