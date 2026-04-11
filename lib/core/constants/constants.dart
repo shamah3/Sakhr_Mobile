@@ -8,6 +8,7 @@ const kTextLightColor = Color(0xFF636E72);
 
 const kDefaultPadding = 20.0;
 const kDefaultRadius = 16.0;
+
 const kCurrency = "ر.ي"; 
 
 final kDefaultShadow = BoxShadow(

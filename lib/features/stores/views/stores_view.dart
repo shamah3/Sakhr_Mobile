@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bytore/core/constants/constants.dart';
 import 'package:bytore/features/product/views/product_list_view.dart';
-import 'package:carousel_slider/carousel_slider.dart'; // Import Carousel
+import 'package:carousel_slider/carousel_slider.dart'; 
 import 'package:bytore/core/components/custom_image.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:bytore/features/stores/models/store_model.dart';
@@ -25,7 +25,7 @@ class StoresView extends GetView<StoresController> {
           children: [
             _buildWhiteHeader(),
             const SizedBox(height: 15),
-            _buildBanners(), // Added banners as requested
+            _buildBanners(), 
             _buildSearchField(),
             Expanded(
               child: Obx(() {
@@ -106,37 +106,33 @@ class StoresView extends GetView<StoresController> {
         color: Colors.white,
         border: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.05))),
       ),
-      child: SafeArea(
-        bottom: false,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Left spacer to keep title centered
-            const SizedBox(width: 48),
-            
-            const Expanded(
-              child: Center(
-                child: Text(
-                  'المتاجر الشريكة',
-                  style: TextStyle(
-                    color: kTextColor, 
-                    fontWeight: FontWeight.w900, 
-                    fontSize: 18,
-                    letterSpacing: -0.5,
-                  ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const SizedBox(width: 48),
+          
+          const Expanded(
+            child: Center(
+              child: Text(
+                'المتاجر الشريكة',
+                style: TextStyle(
+                  color: kTextColor, 
+                  fontWeight: FontWeight.w900, 
+                  fontSize: 18,
+                  letterSpacing: -0.5,
                 ),
               ),
             ),
-            
-            if (onReturnHome != null)
-              IconButton(
-                icon: const Icon(Icons.arrow_forward_ios_rounded, color: kTextColor, size: 20),
-                onPressed: onReturnHome,
-              )
-            else
-              const SizedBox(width: 48),
-          ],
-        ),
+          ),
+          
+          if (onReturnHome != null)
+            IconButton(
+              icon: const Icon(Icons.arrow_forward_ios_rounded, color: kTextColor, size: 20),
+              onPressed: onReturnHome,
+            )
+          else
+            const SizedBox(width: 48),
+        ],
       ),
     );
   }
@@ -148,7 +144,7 @@ class StoresView extends GetView<StoresController> {
         padding: const EdgeInsets.symmetric(horizontal: 5),
         decoration: BoxDecoration(
           color: const Color(0xFFF8F9FA),
-          borderRadius: BorderRadius.circular(30), // Pill shaped
+          borderRadius: BorderRadius.circular(30), 
           border: Border.all(color: Colors.grey.withOpacity(0.05)),
         ),
         child: TextField(
@@ -232,7 +228,7 @@ class StoresView extends GetView<StoresController> {
                     ),
                 ],
               ),
-              const SizedBox(height: 18), // Increased space after logo
+              const SizedBox(height: 18), 
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10.0),
                 child: Text(
@@ -243,7 +239,7 @@ class StoresView extends GetView<StoresController> {
                   style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5, color: kTextColor, letterSpacing: -0.3),
                 ),
               ),
-              const SizedBox(height: 6), // Increased space after name
+              const SizedBox(height: 6), 
               Text(
                 store.category,
                 textAlign: TextAlign.center,
@@ -251,7 +247,7 @@ class StoresView extends GetView<StoresController> {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(color: Colors.grey.shade500, fontSize: 11, fontWeight: FontWeight.w600),
               ),
-              const SizedBox(height: 18), // Increased space before rating
+              const SizedBox(height: 18), 
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
@@ -276,6 +272,7 @@ class StoresView extends GetView<StoresController> {
       ),
     );
   }
+
   Widget _buildBanners() {
     return Obx(() {
       if (controller.advertisements.isEmpty) return const SizedBox.shrink();
@@ -284,7 +281,7 @@ class StoresView extends GetView<StoresController> {
         children: [
           CarouselSlider(
             options: CarouselOptions(
-              height: 170, // Slightly taller for better impact
+              height: 170, 
               viewportFraction: 0.92,
               autoPlay: true,
               enlargeCenterPage: true,
@@ -307,7 +304,6 @@ class StoresView extends GetView<StoresController> {
                       borderRadius: BorderRadius.circular(20),
                       child: Stack(
                         children: [
-                          // Background Image
                           Positioned.fill(
                             child: CachedNetworkImage(
                               imageUrl: ad.image,
@@ -319,7 +315,6 @@ class StoresView extends GetView<StoresController> {
                               ),
                             ),
                           ),
-                          // Dark Gradient Overlay for readability
                           Positioned.fill(
                             child: Container(
                               decoration: BoxDecoration(
@@ -336,7 +331,6 @@ class StoresView extends GetView<StoresController> {
                               ),
                             ),
                           ),
-                          // Text Content
                           Positioned(
                             bottom: 20,
                             left: 20,

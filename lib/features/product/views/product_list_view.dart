@@ -5,8 +5,8 @@ import 'package:bytore/features/home/views/components/item_card.dart';
 import 'package:bytore/core/controllers/app_controller.dart';
 import 'package:bytore/features/home/controllers/categories_controller.dart';
 import 'package:bytore/features/home/views/components/coupon_card.dart';
-import 'package:carousel_slider/carousel_slider.dart'; // Import carousel
-import 'package:cached_network_image/cached_network_image.dart'; // Import network image
+import 'package:carousel_slider/carousel_slider.dart'; 
+import 'package:cached_network_image/cached_network_image.dart'; 
 import '../controllers/product_list_controller.dart';
 
 class ProductListView extends StatelessWidget {
@@ -55,16 +55,12 @@ class ProductListView extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: _buildAppBar(context, controller),
-
-      // ✅ الحل هنا — لا تستخدم LayoutBuilder مع Expanded
       body: Column(
         children: [
           _buildStoreBanners(controller),
           _buildVendorCoupons(controller),
           _buildCategoriesBar(controller),
           _buildSubCategoriesBar(controller),
-
-          // ✅ هذا هو التصحيح المهم
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
@@ -84,10 +80,6 @@ class ProductListView extends StatelessWidget {
       ),
     );
   }
-
-  // =====================================================
-  // APP BAR
-  // =====================================================
 
   PreferredSizeWidget _buildAppBar(
       BuildContext context, ProductListController controller) {
@@ -131,10 +123,6 @@ class ProductListView extends StatelessWidget {
       ],
     );
   }
-
-  // =====================================================
-  // CATEGORIES BAR
-  // =====================================================
 
   Widget _buildCategoriesBar(ProductListController controller) {
     final catController = Get.put(CategoriesController());
@@ -192,10 +180,6 @@ class ProductListView extends StatelessWidget {
     });
   }
 
-  // =====================================================
-  // SUB CATEGORIES
-  // =====================================================
-
   Widget _buildSubCategoriesBar(ProductListController controller) {
     final catController = Get.find<CategoriesController>();
 
@@ -209,7 +193,6 @@ class ProductListView extends StatelessWidget {
       );
 
       if (currentCategory.isEmpty ||
-          (currentCategory['children'] == null && currentCategory['subcategories'] == null) ||
           ((currentCategory['children'] ?? currentCategory['subcategories'] ?? []) as List).isEmpty) {
         return const SizedBox.shrink();
       }
@@ -266,10 +249,6 @@ class ProductListView extends StatelessWidget {
     });
   }
 
-  // =====================================================
-  // PRODUCTS GRID
-  // =====================================================
-
   Widget _buildProductsGrid(
       ProductListController controller,
       AppController appController) {
@@ -300,10 +279,6 @@ class ProductListView extends StatelessWidget {
       },
     );
   }
-
-  // =====================================================
-  // STORE BANNERS
-  // =====================================================
 
   Widget _buildStoreBanners(ProductListController controller) {
     return Obx(() {
@@ -364,10 +339,6 @@ class ProductListView extends StatelessWidget {
       );
     });
   }
-
-  // =====================================================
-  // VENDOR COUPONS
-  // =====================================================
 
   Widget _buildVendorCoupons(ProductListController controller) {
     return Obx(() {

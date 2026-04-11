@@ -7,11 +7,14 @@ import 'package:bytore/features/profile/controllers/purchase_reports_controller.
 import 'package:bytore/features/profile/controllers/activities_controller.dart';
 import 'package:bytore/features/orders/models/order_model.dart';
 import '../models/payment_method_model.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:bytore/core/constants/constants.dart';
 
 class CheckoutController extends GetxController {
   final ApiService _apiService = ApiService();
   final AppController _appController = Get.find<AppController>();
   final CartController cartController = Get.find<CartController>();
+  final LocalAuthentication auth = LocalAuthentication();
 
   // Addressing
   var selectedAddressIndex = 0.obs;
@@ -55,16 +58,20 @@ class CheckoutController extends GetxController {
   Future<void> loadPaymentMethods() async {
     try {
       isLoadingMethods.value = true;
-      
-      // محاكاة طرق الدفع محلياً بدلاً من الـ API
-      final mockMethods = [
-        PaymentMethodModel(id: 1, name: "المحفظة الإلكترونية", description: "جوال، كاش، كريمي موني", iconUrl: null),
-        PaymentMethodModel(id: 2, name: "تحويل بنكي", description: "إلى حسابنا في بنك الأمل", iconUrl: null),
-        PaymentMethodModel(id: 3, name: "الدفع عند الاستلام", description: "الدفع نقداً للمندوب", iconUrl: null),
-      ];
-      paymentMethods.assignAll(mockMethods);
+      final methods = await _apiService.fetchPaymentMethods();
+      if (methods.isNotEmpty) {
+        paymentMethods.assignAll(methods);
+      } else {
+        // Fallback to mock if API returns empty for now
+        final mockMethods = [
+          PaymentMethodModel(id: 1, name: "المحفظة الإلكترونية", description: "جوال، كاش، كريمي موني", iconUrl: null),
+          PaymentMethodModel(id: 2, name: "تحويل بنكي", description: "إلى حسابنا في بنك الأمل", iconUrl: null),
+          PaymentMethodModel(id: 3, name: "الدفع عند الاستلام", description: "الدفع نقداً للمندوب", iconUrl: null),
+        ];
+        paymentMethods.assignAll(mockMethods);
+      }
     } catch (e) {
-      debugPrint("Error loading mock payment methods: $e");
+      debugPrint("Error loading payment methods: $e");
     } finally {
       isLoadingMethods.value = false;
     }
@@ -97,41 +104,91 @@ class CheckoutController extends GetxController {
   Future<OrderModel?> completeOrder() async {
     if (cartController.items.isEmpty) return null;
 
+    // ✅ الخطوة الأولى: التأكيد بالبصمة قبل إتمام الطلب (في حال تفعيلها)
+    if (_appController.isBiometricEnabled.value) {
+      try {
+        final bool canAuthenticateWithBiometrics = await auth.canCheckBiometrics;
+        final bool canAuthenticate = canAuthenticateWithBiometrics || await auth.isDeviceSupported();
+
+        if (canAuthenticate) {
+          final bool didAuthenticate = await auth.authenticate(
+            localizedReason: 'يرجى تأكيد هويتك بالبصمة لإتمام عملية الشراء وتأكيد الطلب',
+            options: const AuthenticationOptions(
+              stickyAuth: true,
+              biometricOnly: true,
+            ),
+          );
+
+          if (!didAuthenticate) {
+            Get.snackbar("تنبيه", "فشل التحقق من الهوية، يرجى المحاولة مرة أخرى", 
+                backgroundColor: Colors.orange, colorText: Colors.white);
+            return null;
+          }
+        }
+      } catch (e) {
+        debugPrint("Biometric Error: $e");
+      }
+    }
+
     try {
       isCompletingOrder.value = true;
+      final token = _appController.token.value;
       
-      // لا يشترط توكن للطلب الوهمي محلياً
-      await Future.delayed(const Duration(seconds: 2)); // محاكاة وقت الإرسال
+      // If no token, we might show a message, but if user wants mock/guest, we handle
+      if (token.isEmpty) {
+        Get.snackbar("تنبيه", "يجب تسجيل الدخول أولاً لإتمام الطلب", backgroundColor: Colors.orange, colorText: Colors.white);
+        return null;
+      }
 
-      // محاكاة استجابة الخادم وإنشاء طلب وهمي بنجاح
-      final order = OrderModel(
-        id: DateTime.now().millisecondsSinceEpoch % 100000, 
-        dateTime: DateTime.now(),
-        status: OrderStatus.pending,
-        totalPrice: cartController.totalAmount + (cartController.shippingCost ?? 0.0),
-        itemCount: cartController.items.length,
-        shippingAddress: addresses[selectedAddressIndex.value]['address'] ?? "بدون عنوان",
-        itemsNames: cartController.items.values.map((e) => e.product.name).toList(),
-        productIds: cartController.items.values.map((e) => e.product.id).toList(),
-      );
+      final orderData = {
+        "address": addresses[selectedAddressIndex.value]['address'],
+        "payment_method_id": paymentMethods.isNotEmpty ? paymentMethods[selectedMethodIndex.value].id : 1,
+        "items": cartController.items.values.map((item) => {
+          "product_id": item.product.id,
+          "quantity": item.quantity.value,
+          "price": item.product.price,
+        }).toList(),
+        "total_price": cartController.totalAmount + (cartController.shippingCost ?? 0.0),
+      };
 
-      // Log Activity
-      try {
-        if (Get.isRegistered<ActivitiesController>()) {
-          Get.find<ActivitiesController>().logActivity(
-            title: 'إتمام طلب جديد بنجاح (وهمي)',
-            type: 'buy'
-          );
-        }
-      } catch (e) {}
-
-      // Clear Cart
-      cartController.clearCart();
+      final order = await _apiService.createOrder(orderData, token);
       
-      return order;
+      if (order != null) {
+        // Trigger Notification
+        _appController.addNotification(
+          title: "تم إتمام الطلب بنجاح",
+          body: "طلبك رقم #${order.id} قيد المعالجة الآن وسوف يتم توصيله قريباً.",
+          category: "الطلبات",
+          color: Colors.green,
+        );
+
+        // Log Activity
+        try {
+          if (Get.isRegistered<ActivitiesController>()) {
+            Get.find<ActivitiesController>().logActivity(
+              title: 'إتمام طلب جديد بنجاح',
+              type: 'buy'
+            );
+          }
+        } catch (e) {}
+
+        // Clear Cart
+        cartController.clearCart();
+        
+        // Refresh Purchase Reports
+        try {
+          if (Get.isRegistered<PurchaseReportsController>()) {
+            Get.find<PurchaseReportsController>().loadOrders();
+          }
+        } catch (e) {}
+        
+        return order;
+      } else {
+        Get.snackbar("خطأ", "فشل في إتمام الطلب، يرجى المحاولة لاحقاً", backgroundColor: Colors.redAccent, colorText: Colors.white);
+        return null;
+      }
     } catch (e) {
-      debugPrint("Error completing mock order: $e");
-      Get.snackbar("خطأ", "حدث خطأ أثناء إتمام الطلب محلياً", backgroundColor: Colors.redAccent, colorText: Colors.white);
+      debugPrint("Error completing order: $e");
       return null;
     } finally {
       isCompletingOrder.value = false;

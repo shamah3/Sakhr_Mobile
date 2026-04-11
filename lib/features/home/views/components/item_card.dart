@@ -48,7 +48,7 @@ class ItemCard extends StatelessWidget {
               children: [
                 // Product Image Container
                 Container(
-                  height: isCompact ? 90 : 100, // Reduced to fit more content below
+                  height: isCompact ? 90 : 100, 
                   width: double.infinity,
                   margin: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
@@ -103,8 +103,7 @@ class ItemCard extends StatelessWidget {
                 ),
               ],
             ),
-            // Main Content with Opacity if unavailable
-            // Use Expanded to fill remaining vertical space and avoid overflow
+            // Main Content
             Expanded(
               child: Opacity(
                 opacity: product.stock == 0 ? 0.6 : 1.0,
@@ -112,7 +111,7 @@ class ItemCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween, // Distribute space
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       // Product Name
                       Text(
@@ -125,11 +124,10 @@ class ItemCard extends StatelessWidget {
                           color: kTextColor,
                         ),
                       ),
-                      const SizedBox(height: 2),
                       
-                      // Short Description (2 lines)
+                      // Short Description
                       SizedBox(
-                        height: 28, // Fix height for 2 lines
+                        height: 28,
                         child: Text(
                           product.shortDescription.isNotEmpty ? product.shortDescription : product.name,
                           style: TextStyle(fontSize: 10, color: Colors.black.withOpacity(0.5), height: 1.2),
@@ -137,12 +135,19 @@ class ItemCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(height: 4),
                       
-                      // Stock indicator
+                      // Stock and Status Row
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
+                          Text(
+                            product.stock == 0 ? "غير متوفر" : (product.status == 'On Shipment' ? "قيد الشحن" : "متوفر"),
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: product.stock == 0 ? Colors.red : (product.status == 'On Shipment' ? Colors.blue : Colors.green),
+                            ),
+                          ),
                           Text(
                             "المخزون: ${product.stock}",
                             style: TextStyle(fontSize: 9, color: product.stock < 5 ? Colors.red.shade700 : Colors.green.shade700, fontWeight: FontWeight.w500),
@@ -170,47 +175,19 @@ class ItemCard extends StatelessWidget {
                         ],
                       ),
                       
-                      const Spacer(), // Push bottom elements down
-
-                      // Status
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            product.stock == 0 ? "غير متوفر" : (product.status == 'On Shipment' ? "قيد الشحن" : "متوفر"),
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                              color: product.stock == 0 ? Colors.red : (product.status == 'On Shipment' ? Colors.blue : Colors.green),
-                            ),
-                          ),
-                          if (product.attributes.isNotEmpty)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Colors.blueGrey.withOpacity(0.05),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                product.attributes.entries.take(1).map((e) => "${e.key}: ${e.value}").join(", "),
-                                style: const TextStyle(fontSize: 8, color: Colors.blueGrey, fontWeight: FontWeight.bold),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                        ],
-                      ),
-                      
-                      if (product.attributes.length > 1)
+                      // Attributes
+                      if (product.attributes.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: 2),
                           child: Text(
-                            product.attributes.entries.skip(1).take(2).map((e) => "${e.key}: ${e.value}").join(" | "),
+                            product.attributes.entries.take(2).map((e) => "${e.key}: ${e.value}").join(" | "),
                             style: TextStyle(fontSize: 7.5, color: Colors.grey.shade600),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                      const SizedBox(height: 4),
+                      
+                      const Spacer(),
 
                       // Price and Cart
                       Row(
@@ -280,14 +257,14 @@ class ItemCard extends StatelessWidget {
                               mainAxisSize: MainAxisSize.min,
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.verified_user_outlined, size: 8, color: Colors.orange), // Reduced size
+                                const Icon(Icons.verified_user_outlined, size: 8, color: Colors.orange),
                                 const SizedBox(width: 2),
                                 Flexible(
                                   child: Text(
                                     product.warranty,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontSize: 7.5, color: Colors.black87, fontWeight: FontWeight.bold), // Reduced font
+                                    style: const TextStyle(fontSize: 7.5, color: Colors.black87, fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ],
@@ -299,14 +276,14 @@ class ItemCard extends StatelessWidget {
                               mainAxisSize: MainAxisSize.min,
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.local_shipping_outlined, size: 8, color: Colors.orange), // Reduced size
+                                const Icon(Icons.local_shipping_outlined, size: 8, color: Colors.orange),
                                 const SizedBox(width: 2),
                                 Flexible(
                                   child: Text(
                                     product.deliveryTime,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontSize: 7.5, color: Colors.black87, fontWeight: FontWeight.bold), // Reduced font
+                                    style: const TextStyle(fontSize: 7.5, color: Colors.black87, fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ],
@@ -325,4 +302,3 @@ class ItemCard extends StatelessWidget {
     );
   }
 }
-

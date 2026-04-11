@@ -19,6 +19,7 @@ import 'package:bytore/features/home/views/ads_view.dart';
 import 'package:bytore/features/home/views/components/coupon_card.dart';
 import 'package:bytore/features/home/models/coupon_model.dart';
 import 'package:bytore/features/home/views/all_coupons_view.dart';
+import 'package:bytore/features/product/models/product_model.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
@@ -26,7 +27,6 @@ class HomeView extends GetView<HomeController> {
   @override
   Widget build(BuildContext context) {
     final appController = Get.find<AppController>();
-    // لا نحتاج لتعريف الكنترولر مرة أخرى لأننا نستخدم GetView<HomeController>
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
     return Scaffold(
@@ -57,7 +57,6 @@ class HomeView extends GetView<HomeController> {
             _buildCategoriesSection(appController),
             const SliverToBoxAdapter(child: SizedBox(height: 35)),
 
-            // إصلاح: Obx هنا تراقب دالة isFilterActive التي يجب أن تعتمد على متغير .obs
             Obx(() => controller.isFilterActive()
                 ? _buildProductsGrid(appController)
                 : SliverList(
@@ -106,6 +105,9 @@ class HomeView extends GetView<HomeController> {
           ),
         ),
         _buildHorizontalProductList("In Stock", appController),
+
+        const SizedBox(height: 35),
+
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
@@ -126,7 +128,7 @@ class HomeView extends GetView<HomeController> {
 
   Widget _buildCouponsCarousel() {
     return Container(
-      height: 145, // الارتفاع المثالي للتنسيق الأفقي المريح والفخم مع الظلال
+      height: 145, 
       margin: const EdgeInsets.only(bottom: 20),
       child: Obx(() {
         if (controller.isCouponsLoading.value && controller.coupons.isEmpty) {
@@ -402,7 +404,6 @@ class HomeView extends GetView<HomeController> {
                               
                               const SizedBox(height: 30),
                               
-                              // Buttons Row
                               Row(
                                 children: [
                                   Expanded(
@@ -479,7 +480,6 @@ class HomeView extends GetView<HomeController> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // 1. Store Badge (Top)
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                     decoration: BoxDecoration(
@@ -505,7 +505,6 @@ class HomeView extends GetView<HomeController> {
                                   ),
                                   const SizedBox(height: 12),
                                   
-                                  // 2. Ad Title (Middle)
                                   Text(
                                     ad.title ?? "",
                                     style: const TextStyle(
@@ -520,7 +519,6 @@ class HomeView extends GetView<HomeController> {
                                   ),
                                   const SizedBox(height: 10),
                                   
-                                  // 3. Expiry Info (Below Title)
                                   Row(
                                     children: [
                                       const Icon(Icons.access_time_filled_rounded, color: Colors.white54, size: 12),
@@ -533,7 +531,6 @@ class HomeView extends GetView<HomeController> {
                                   ),
                                   const SizedBox(height: 20),
                                   
-                                  // 4. Primary Action (Button)
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                                     decoration: BoxDecoration(
@@ -608,7 +605,7 @@ class HomeView extends GetView<HomeController> {
         }
 
         if (controller.topSellingProducts.isEmpty) {
-          return _buildHorizontalProductList("الكل", appController); // Fallback to all if empty
+          return _buildHorizontalProductList("الكل", appController); 
         }
 
         return ListView.builder(
@@ -642,7 +639,7 @@ class HomeView extends GetView<HomeController> {
         }
 
         final products = controller.allProducts.where((p) =>
-        p != null && (category == "الكل" || p.status == category || p.name.contains(category))
+          p != null && (category == "الكل" || p.status == category || p.name.contains(category))
         ).take(8).toList();
 
         final displayProducts = products.isEmpty ? controller.allProducts.take(8).toList() : products;
@@ -716,7 +713,7 @@ class HomeView extends GetView<HomeController> {
 
     return SliverToBoxAdapter(
       child: Container(
-        height: 55, // ارتفاع مثالي للبطاقات المستطيلة
+        height: 55, 
         margin: const EdgeInsets.only(bottom: 15),
         child: Obx(() {
           if (catController.isLoading.value) {
@@ -731,12 +728,11 @@ class HomeView extends GetView<HomeController> {
             itemBuilder: (context, index) {
               final cat = categories[index];
               final isAll = cat['id'] == 'all';
-              // منطق تفاعلي: تحديد القسم المختار لونياً عند الضغط أو البقاء عليه
               final isSelected = catController.selectedCategoryIndex.value == index;
               
               return GestureDetector(
                 onTap: () {
-                  catController.selectedCategoryIndex.value = index; // تفعيل الحالة التفاعلية
+                  catController.selectedCategoryIndex.value = index; 
                   if (isAll) {
                     Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': "الكل", 'apiCategorySlug': 'all'}, id: 1);
                   } else {
@@ -760,7 +756,6 @@ class HomeView extends GetView<HomeController> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // الصورة بجانب النص
                       _buildCategoryIconShort(cat, isSelected, size: 24),
                       const SizedBox(width: 10),
                       Text(
@@ -782,16 +777,14 @@ class HomeView extends GetView<HomeController> {
     );
   }
 
-  // أيقونة القسم في الصفحة الرئيسية
   Widget _buildCategoryIconShort(Map cat, bool isSelected, {double size = 20}) {
-    // إصلاح: عرض أيقونة الشبكة لقسم "الكل" لضمان الوضوح كما طلب المستخدم
     if (cat['id'] == 'all') {
       return Icon(Icons.grid_view_rounded, 
           color: isSelected ? Colors.white : kPrimaryColor, size: size);
     }
 
     String? imageUrl = cat['image_url'] ?? cat['image'];
-    if (imageUrl != null && imageUrl.isNotEmpty && !imageUrl.contains("icons8.com")) { // تجنب الروابط الضعيفة
+    if (imageUrl != null && imageUrl.isNotEmpty && !imageUrl.contains("icons8.com")) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(4),
         child: CustomImage(

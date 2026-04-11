@@ -1,5 +1,7 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:bytore/features/profile/controllers/settings_controller.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -15,7 +17,7 @@ class NotificationService {
 
   Future<void> init() async {
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@mipmap/launcher_icon');
 
     const DarwinInitializationSettings initializationSettingsIOS =
         DarwinInitializationSettings(
@@ -43,6 +45,19 @@ class NotificationService {
     required String body,
     String? payload,
   }) async {
+    // Check if notifications are enabled in settings
+    try {
+      if (Get.isRegistered<SettingsController>()) {
+        final settings = Get.find<SettingsController>();
+        if (!settings.notificationsEnabled.value) {
+          debugPrint("Notifications are disabled in settings.");
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint("SettingsController not found, proceeding with notification.");
+    }
+
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
       'your_channel_id',

@@ -62,10 +62,7 @@ class StoreModel {
         }
       }
 
-      // التأكد من أن الرابط ليس به دبل سلاش // بعد البروتوكول
-      // وتشفير الرابط للتعامل مع أي حروف خاصة في أسماء الملفات
       try {
-        // تنظيف الروابط من أي مسافات أو حروف غير مسموحة
         return Uri.parse(finalUrl).toString();
       } catch (e) {
         return finalUrl;
@@ -73,17 +70,17 @@ class StoreModel {
     }
 
     return StoreModel(
-      id: json['id'] ?? 0,
-      name: json['name'] ?? "بدون اسم",
-      logo: fixImageUrl(json['logo'] ?? json['image_url']),
-      description: json['description'],
-      phone: json['phone'],
-      email: json['email'],
-      address: json['address'],
-      status: json['status'],
-      category: json['category'] ?? "إلكترونيات",
+      id: int.tryParse(json['id']?.toString() ?? "0") ?? 0,
+      name: json['name']?.toString() ?? "بدون اسم",
+      logo: fixImageUrl(json['logo']?.toString() ?? json['image_url']?.toString()),
+      description: json['description']?.toString(),
+      phone: json['phone']?.toString(),
+      email: json['email']?.toString(),
+      address: json['address']?.toString(),
+      status: json['status']?.toString(),
+      category: json['category']?.toString() ?? "إلكترونيات",
       rating: double.tryParse(json['rating']?.toString() ?? "4.5") ?? 4.5,
-      isVerified: json['is_verified'] == 1 || json['is_verified'] == true,
+      isVerified: json['is_verified'] == 1 || json['is_verified'] == true || json['is_verified']?.toString() == "1",
     );
   }
 

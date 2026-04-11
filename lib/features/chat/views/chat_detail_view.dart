@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bytore/core/constants/constants.dart';
+import 'package:bytore/features/chat/controllers/chat_controller.dart';
 
 class ChatDetailView extends StatefulWidget {
   const ChatDetailView({super.key});
@@ -12,12 +13,18 @@ class ChatDetailView extends StatefulWidget {
 class _ChatDetailViewState extends State<ChatDetailView> {
   final TextEditingController _messageController = TextEditingController();
   final String senderName = Get.arguments?['senderName'] ?? "المتجر";
+  final int storeId = Get.arguments?['storeId'] ?? 1;
+  late final ChatController chatController;
 
-  final List<Map<String, dynamic>> messages = [
-    {"text": "مرحباً بك! كيف يمكننا مساعدتك اليوم؟", "isMe": false, "time": "10:30 ص"},
-    {"text": "أهلاً، كنت أستفسر عن حالة طلبي الأخير.", "isMe": true, "time": "10:32 ص"},
-    {"text": "طلبك قيد التجهيز وسيتم شحنه قريباً جداً.", "isMe": false, "time": "10:35 ص"},
-  ];
+  @override
+  void initState() {
+    super.initState();
+    chatController = Get.find<ChatController>();
+    // When opening the chat, mark all messages as read
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      chatController.markAsRead(storeId);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +33,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0.5,
-        toolbarHeight: 70, // Slightly taller for a modern look
+        toolbarHeight: 70, 
         title: Row(
           children: [
             Stack(
@@ -78,14 +85,20 @@ class _ChatDetailViewState extends State<ChatDetailView> {
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
-              itemCount: messages.length,
-              itemBuilder: (context, index) {
-                final msg = messages[index];
-                return _buildChatBubble(msg['text'], msg['isMe'], msg['time']);
-              },
-            ),
+            child: Obx(() {
+              final messages = chatController.getMessagesForStore(storeId);
+              return ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
+                itemCount: messages.length,
+                itemBuilder: (context, index) {
+                  final msg = messages[index];
+                  return Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: _buildChatBubble(msg['text'], msg['isMe'], msg['time']),
+                  );
+                },
+              );
+            }),
           ),
           _buildMessageInput(),
         ],
@@ -121,6 +134,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
           children: [
             Text(
               text,
+              textAlign: TextAlign.right,
               style: TextStyle(
                 color: isMe ? Colors.white : kTextColor.withOpacity(0.9), 
                 fontSize: 15,
@@ -188,8 +202,10 @@ class _ChatDetailViewState extends State<ChatDetailView> {
               child: TextField(
                 controller: _messageController,
                 style: const TextStyle(fontSize: 14),
+                textDirection: TextDirection.rtl,
                 decoration: InputDecoration(
                   hintText: "اكتب رسالتك هنا...",
+                  hintTextDirection: TextDirection.rtl,
                   border: InputBorder.none,
                   hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 13),
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
@@ -200,14 +216,8 @@ class _ChatDetailViewState extends State<ChatDetailView> {
           const SizedBox(width: 12),
           InkWell(
             onTap: () {
-              if (_messageController.text.isNotEmpty) {
-                setState(() {
-                  messages.add({
-                    "text": _messageController.text,
-                    "isMe": true,
-                    "time": "10:40 م",
-                  });
-                });
+              if (_messageController.text.trim().isNotEmpty) {
+                chatController.sendMessage(storeId, senderName, _messageController.text.trim());
                 _messageController.clear();
               }
             },

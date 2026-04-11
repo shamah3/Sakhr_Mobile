@@ -104,7 +104,7 @@ class WishlistView extends StatelessWidget {
                       child: CustomImage(
                         imageUrl: item.imageUrl, 
                         fit: BoxFit.contain,
-                        width: 80, // Approximate width based on context if needed, or let it fill
+                        width: 80, 
                         height: 80,
                       ),
                     ),

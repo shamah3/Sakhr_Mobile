@@ -2,6 +2,8 @@ import 'package:get/get.dart';
 import 'package:bytore/features/product/models/product_model.dart';
 import 'package:bytore/core/services/notification_service.dart';
 import 'package:bytore/features/profile/controllers/activities_controller.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class CartItem {
   final Product product;
@@ -13,6 +15,20 @@ class CartItem {
   }) {
     quantity.value = initialQuantity;
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'product': product.toJson(),
+      'quantity': quantity.value,
+    };
+  }
+
+  factory CartItem.fromJson(Map<String, dynamic> json) {
+    return CartItem(
+      product: Product.fromJson(json['product']),
+      initialQuantity: json['quantity'] ?? 1,
+    );
+  }
 }
 
 class CartController extends GetxController {
@@ -22,6 +38,45 @@ class CartController extends GetxController {
   // Coupon & Discount State
   final RxnString _appliedCoupon = RxnString();
   final RxDouble _discountPercentage = 0.0.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _loadCart();
+    
+    // Auto-save whenever items change
+    ever(_items, (_) => _saveCart());
+  }
+
+  Future<void> _loadCart() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? cartJson = prefs.getString('cart_items');
+      if (cartJson != null) {
+        final Map<String, dynamic> decoded = jsonDecode(cartJson);
+        final Map<int, CartItem> loadedItems = {};
+        decoded.forEach((key, value) {
+          loadedItems[int.parse(key)] = CartItem.fromJson(value);
+        });
+        _items.assignAll(loadedItems);
+      }
+    } catch (e) {
+      print("Error loading cart: $e");
+    }
+  }
+
+  Future<void> _saveCart() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final Map<String, dynamic> toSave = {};
+      _items.forEach((key, value) {
+        toSave[key.toString()] = value.toJson();
+      });
+      await prefs.setString('cart_items', jsonEncode(toSave));
+    } catch (e) {
+      print("Error saving cart: $e");
+    }
+  }
 
   String? get appliedCoupon => _appliedCoupon.value;
   double get discountAmount => totalAmountBeforeDiscount * _discountPercentage.value;
@@ -66,12 +121,14 @@ class CartController extends GetxController {
     
     // Log Activity
     try {
-      Get.find<ActivitiesController>().logActivity(
-        title: 'إضافة "${product.name}" للسلة',
-        type: 'fav' // Using fav icon for cart add as closest match or add new type
-      );
+      if (Get.isRegistered<ActivitiesController>()) {
+        Get.find<ActivitiesController>().logActivity(
+          title: 'إضافة "${product.name}" للسلة',
+          type: 'fav' 
+        );
+      }
     } catch (e) {
-      print("ActivitiesController not found: $e");
+      print("ActivitiesController log error: $e");
     }
 
   }

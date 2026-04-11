@@ -14,6 +14,7 @@ class HomeController extends GetxController {
   var filteredProducts = <Product>[].obs;
   var advertisements = <AdvertisementModel>[].obs;
   var coupons = <CouponModel>[].obs;
+  var discountedProducts = <Product>[].obs; // 🔥 المنتجات التي عليها خصم
   var isLoading = true.obs;
   var isCouponsLoading = true.obs; // 🔥 حالة تحميل مستقلة للخصومات
   var carouselIndex = 0.obs;
@@ -39,7 +40,7 @@ class HomeController extends GetxController {
         debugPrint("🏠 HOME: Loaded ${fetchedCoupons.length} Admin Coupons");
       } else {
         debugPrint("🏠 HOME: No coupons found in admin/discounts API.");
-        coupons.clear(); // Ensure it's clear if API returns nothing
+        coupons.clear();
       }
     } catch (e) {
       debugPrint("🏠 HOME COUPONS ERROR: $e");
@@ -91,10 +92,22 @@ class HomeController extends GetxController {
       final products = await _apiService.fetchProducts(token: token.isEmpty ? null : token);
       allProducts.assignAll(products);
       
+      _updateDiscountedProducts();
       applyFilters();
     } catch (e) {
       debugPrint("🏠 HOME ERROR: $e");
-      Get.snackbar("خطأ", "فشل تحميل المنتجات");
+      String errorMsg = "فشل تحميل المنتجات. ";
+      if (e.toString().contains("SocketException")) {
+        errorMsg += "تأكد من اتصالك بالسيرفر (192.168.8.196)";
+      } else if (e.toString().contains("FormatException")) {
+        errorMsg += "خطأ في معالجة البيانات من السيرفر";
+      } else {
+        errorMsg += "يرجى المحاولة لاحقاً";
+      }
+      Get.snackbar("خطأ في البيانات", errorMsg, 
+          snackPosition: SnackPosition.BOTTOM, 
+          backgroundColor: Colors.red.withOpacity(0.8), 
+          colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }
@@ -109,7 +122,7 @@ class HomeController extends GetxController {
     try {
       isLoading.value = true;
       final products = await _apiService.fetchProducts(search: query);
-      allProducts.assignAll(products); // Temporarily replace allProducts with search results
+      allProducts.assignAll(products); 
       applyFilters();
     } catch (e) {
       debugPrint("Search error: $e");
@@ -123,7 +136,7 @@ class HomeController extends GetxController {
     final query = searchController.text.toLowerCase();
     
     var results = allProducts.where((p) {
-      // Search match (Name, Description, Brand, Category)
+      // Search match
       final matchesSearch = query.isEmpty || 
           p.name.toLowerCase().contains(query) || 
           p.description.toLowerCase().contains(query) ||
@@ -134,11 +147,11 @@ class HomeController extends GetxController {
       final matchesPrice = p.price >= appController.priceRange.value.start && 
                            p.price <= appController.priceRange.value.end;
                            
-      // Category match (Strict)
+      // Category match
       final matchesCategory = appController.activeCategory.value == "الكل" || 
                               p.category == appController.activeCategory.value;
                               
-      // Brand match (Strict)
+      // Brand match
       final matchesBrand = appController.selectedBrand.value == "الكل" || 
                            p.brandName == appController.selectedBrand.value;
                            
@@ -154,7 +167,7 @@ class HomeController extends GetxController {
         }
       }
       
-      // Warranty match (Contains)
+      // Warranty match
       final matchesWarranty = appController.warrantyText.value.isEmpty ||
                               p.warranty.contains(appController.warrantyText.value);
       
@@ -162,6 +175,12 @@ class HomeController extends GetxController {
     }).toList();
     
     filteredProducts.assignAll(results);
+  }
+
+  void _updateDiscountedProducts() {
+    discountedProducts.assignAll(
+      allProducts.where((p) => p.oldPrice > p.price).toList()
+    );
   }
 
   void updateCarouselIndex(int index) {
@@ -174,7 +193,6 @@ class HomeController extends GetxController {
            appController.activeCategory.value != "الكل" ||
            appController.selectedBrand.value != "الكل" ||
            appController.selectedAvailability.value != "الكل";
-
   }
 
   @override

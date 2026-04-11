@@ -11,6 +11,9 @@ import 'package:bytore/features/profile/controllers/purchase_reports_controller.
 import 'package:bytore/features/profile/controllers/activities_controller.dart';
 import 'package:bytore/features/profile/controllers/returned_products_controller.dart';
 import 'package:bytore/features/profile/controllers/reviews_controller.dart';
+import 'package:bytore/features/chat/controllers/chat_controller.dart';
+import 'package:bytore/features/profile/controllers/edit_profile_controller.dart';
+import 'package:bytore/features/chat/controllers/chatbot_controller.dart';
 
 class InitialBinding extends Bindings {
   @override
@@ -31,5 +34,8 @@ class InitialBinding extends Bindings {
     Get.lazyPut(() => ActivitiesController(), fenix: true);
     Get.lazyPut(() => ReturnedProductsController(), fenix: true);
     Get.lazyPut(() => ReviewsController(), fenix: true);
+    Get.lazyPut(() => ChatController(), fenix: true);
+    Get.lazyPut(() => EditProfileController(), fenix: true);
+    Get.lazyPut(() => ChatbotController(), fenix: true);
   }
 }

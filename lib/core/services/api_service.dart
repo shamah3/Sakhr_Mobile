@@ -61,6 +61,9 @@ class ApiService {
         },
       );
 
+      debugPrint("📡 [DEBUG] PRODUCTS RESPONSE STATUS: ${response.statusCode}");
+      debugPrint("📡 [DEBUG] PRODUCTS RESPONSE BODY: ${response.body}");
+
       if (response.statusCode != 200) {
         debugPrint("❌ API ERROR [${response.statusCode}]: ${response.body}");
         return [];
@@ -141,6 +144,35 @@ class ApiService {
       Map<String, dynamic>? data = decoded is Map ? (decoded['data'] is Map ? decoded['data'] : decoded) : null;
       return data != null ? OrderModel.fromJson(data) : null;
     } catch (e) {
+      return null;
+    }
+  }
+  
+  Future<OrderModel?> createOrder(Map<String, dynamic> data, String token) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/orders"),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final decoded = jsonDecode(response.body);
+        Map<String, dynamic>? orderData;
+        if (decoded is Map) {
+          orderData = decoded.containsKey('data') ? (decoded['data'] is Map ? decoded['data'] : null) : decoded;
+        }
+        if (orderData != null) {
+          return OrderModel.fromJson(orderData);
+        }
+      }
+      return null;
+    } catch (e) {
+      debugPrint("Create Order Error: $e");
       return null;
     }
   }
@@ -371,6 +403,9 @@ class ApiService {
         headers: {"Accept": "application/json"},
       );
 
+      debugPrint("📡 [DEBUG] CATEGORIES RESPONSE STATUS: ${response.statusCode}");
+      debugPrint("📡 [DEBUG] CATEGORIES RESPONSE BODY: ${response.body}");
+
       if (response.statusCode != 200) return [];
       final decoded = jsonDecode(response.body);
 
@@ -407,6 +442,7 @@ class ApiService {
       Map<String, dynamic>? data = decoded is Map ? (decoded['data'] is Map ? decoded['data'] : decoded) : null;
       return data != null ? WalletModel.fromJson(data) : null;
     } catch (e) {
+      debugPrint("Fetch Wallet Error: $e");
       return null;
     }
   }
@@ -525,7 +561,7 @@ class ApiService {
   Future<List<AdvertisementModel>> fetchStoreAdvertisements(int storeId) async {
     try {
       final response = await http.get(
-        Uri.parse("$baseUrl/stores/$storeId/ads"),
+        Uri.parse("$baseUrl/stores/$storeId/advertisements"),
         headers: {"Accept": "application/json"},
       );
       if (response.statusCode != 200) return [];
@@ -582,7 +618,21 @@ class ApiService {
   }
 
   Future<bool> createComplaint(Map<String, dynamic> data, String token) async {
-    return storeComplaint(data, token);
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/complaints"),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode(data),
+      );
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint("Create Complaint Error: $e");
+      return false;
+    }
   }
 
   Future<List<ComplaintModel>> fetchComplaints(String token) async {
@@ -602,46 +652,165 @@ class ApiService {
           .map((e) => ComplaintModel.fromJson(Map<String, dynamic>.from(e)))
           .toList();
     } catch (e) {
+      debugPrint("Fetch Complaints Error: $e");
       return [];
     }
   }
 
-  Future<bool> storeComplaint(Map<String, dynamic> data, String token) async {
+  // ==================================================
+  // 🔐 المصادقة والـ OTP (Mock/Remote)
+  // ==================================================
+  Future<Map<String, dynamic>?> login(String email, String password) async {
+    try {
+      debugPrint("📡 Login Request: email=$email");
+      final response = await http.post(
+        Uri.parse("$baseUrl/login"),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          "email": email,
+          "password": password,
+        }),
+      );
+
+      debugPrint("📡 Login Response Code: ${response.statusCode}");
+      debugPrint("📡 Login Response Body: ${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map && decoded.containsKey('data')) {
+          return decoded['data'] is Map ? decoded['data'] : null;
+        }
+      }
+      return null;
+    } catch (e) {
+      debugPrint("🔥 Login Error: $e");
+      return null;
+    }
+  }
+
+  Future<bool> logout(String token) async {
     try {
       final response = await http.post(
-        Uri.parse("$baseUrl/complaints"),
+        Uri.parse("$baseUrl/logout"),
         headers: {
-          "Content-Type": "application/json",
           "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint("Logout Error: $e");
+      return false;
+    }
+  }
+
+  // ==================================================
+  // 🔐 المصادقة والـ OTP
+  // ==================================================
+  Future<bool> sendOtp(String phone) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/send-otp"),
+        headers: {"Accept": "application/json", "Content-Type": "application/json"},
+        body: jsonEncode({"phone": phone}),
+      );
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint("🔥 Send OTP Error: $e");
+      return false;
+    }
+  }
+
+  Future<String?> verifyOtp(String phone, String code) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/verify-otp"),
+        headers: {"Accept": "application/json", "Content-Type": "application/json"},
+        body: jsonEncode({"phone": phone, "code": code}),
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final decoded = jsonDecode(response.body);
+        return decoded['token'] ?? decoded['data']?['token'];
+      }
+      return null;
+    } catch (e) {
+      debugPrint("🔥 Verify OTP Error: $e");
+      return null;
+    }
+  }
+
+  // ==================================================
+  // 👤 الملف الشخصي (Profile)
+  // ==================================================
+  Future<bool> updateUserProfile(Map<String, dynamic> data, String token) async {
+    try {
+      final response = await http.put(
+        Uri.parse("$baseUrl/user/profile"),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
           "Authorization": "Bearer $token",
         },
         body: jsonEncode(data),
       );
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
+      debugPrint("🔥 Update Profile Error: $e");
       return false;
     }
   }
 
-  // ==================================================
-  // 🔐 المصادقة والـ OTP (Mock)
-  // ==================================================
-  Future<bool> sendOtp(String phoneNumber) async {
-    // محاكاة إرسال OTP
-    await Future.delayed(const Duration(seconds: 1));
-    return true;
+  // Alias for compatibility
+  Future<bool> saveAdminCustomer({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String phone,
+    String? fingerprint,
+    String? profileImagePath,
+    required String token,
+  }) async {
+    return updateUserProfile({
+      "first_name": firstName,
+      "last_name": lastName,
+      "email": email,
+      "phone": phone,
+      if (fingerprint != null) "fingerprint": fingerprint,
+    }, token);
   }
 
-  Future<String?> verifyOtp(String phoneNumber, String code) async {
-    // محاكاة التحقق من OTP
-    await Future.delayed(const Duration(seconds: 1));
-    if (code == "123456") return "mock_token_123456";
-    return null;
-  }
-
-  Future<void> logout(String token) async {
-    // محاكاة تسجيل الخروج
-    await Future.delayed(const Duration(seconds: 1));
+  Future<String?> uploadProfilePicture(String filePath, String token) async {
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse("$baseUrl/user/profile/image"),
+      );
+      request.headers.addAll({
+        "Authorization": "Bearer $token",
+        "Accept": "application/json",
+      });
+      request.files.add(await http.MultipartFile.fromPath('image', filePath));
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map && decoded.containsKey('data')) {
+           final data = decoded['data'];
+           if (data is Map && data.containsKey('profile_photo_url')) {
+             return data['profile_photo_url'];
+           }
+        }
+        return "SUCCESS";
+      }
+      return null;
+    } catch (e) {
+      debugPrint("🔥 Upload Profile Picture Error: $e");
+      return null;
+    }
   }
 
   // ==================================================
@@ -678,24 +847,107 @@ class ApiService {
         Uri.parse(url),
         headers: {"Accept": "application/json"},
       );
-
       if (response.statusCode != 200) return [];
-
       final dynamic decoded = jsonDecode(response.body);
       List<dynamic> list = [];
-
       if (decoded is Map && decoded.containsKey('data')) {
         list = decoded['data'] is List ? decoded['data'] : [];
       } else if (decoded is List) {
         list = decoded;
       }
-
       return list
           .where((e) => e is Map)
           .map((e) => CouponModel.fromJson(Map<String, dynamic>.from(e)))
           .toList();
     } catch (e) {
       debugPrint("🔥 Fetch Vendor Coupons Error: $e");
+      return [];
+    }
+  }
+
+  // ==================================================
+  // 🤖 الشات بوت
+  // ==================================================
+  Future<List<dynamic>> fetchChatbotRules() async {
+    try {
+      final String url = "$baseUrl/chatbot/rules";
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {"Accept": "application/json"},
+      );
+      if (response.statusCode != 200) return [];
+      final dynamic decoded = jsonDecode(response.body);
+      List<dynamic> list = [];
+      if (decoded is Map && decoded.containsKey('data')) {
+        list = decoded['data'] is List ? decoded['data'] : [];
+      } else if (decoded is List) {
+        list = decoded;
+      }
+      return list;
+    } catch (e) {
+      debugPrint("🔥 Fetch Chatbot Rules Error: $e");
+      return [];
+    }
+  }
+
+  Future<bool> sendChatbotResponse(Map<String, dynamic> data, {String? token}) async {
+    try {
+      final String url = "$baseUrl/chatbot/responses";
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          if (token != null && token.isNotEmpty) "Authorization": "Bearer $token",
+        },
+        body: jsonEncode(data),
+      );
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint("🔥 Send Chatbot Response Error: $e");
+      return false;
+    }
+  }
+
+  // 💬 الدردشة مع المتاجر
+  Future<bool> sendChatMessage(int storeId, String message, String token) async {
+    try {
+      final String url = "$baseUrl/chat/send";
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({
+          "store_id": storeId,
+          "message": message,
+        }),
+      );
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint("🔥 Send Chat Message Error: $e");
+      return false;
+    }
+  }
+
+  // 💳 طرق الدفع
+  Future<List<PaymentMethodModel>> fetchPaymentMethods() async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/payment-methods"),
+        headers: {"Accept": "application/json"},
+      );
+      if (response.statusCode != 200) return [];
+      final decoded = jsonDecode(response.body);
+      List<dynamic> list = (decoded is Map ? decoded['data'] : decoded) ?? [];
+      return list
+          .where((e) => e is Map)
+          .map((e) => PaymentMethodModel.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    } catch (e) {
+      debugPrint("Fetch Payment Methods Error: $e");
       return [];
     }
   }

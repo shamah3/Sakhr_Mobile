@@ -14,10 +14,11 @@ class Product {
   final String warranty;
   final String deliveryTime;
   final String storeName;
+  final int storeId;
   final String category;
   final String shortDescription;
   final String region;
-
+  final String? threeDModel;
   final double rating;
   final int buyerCount;
 
@@ -40,6 +41,7 @@ class Product {
     required this.warranty,
     required this.deliveryTime,
     this.storeName = "Bytore Official",
+    this.storeId = 1,
     this.category = "General",
     this.shortDescription = "",
     this.region = "اليمن",
@@ -50,6 +52,7 @@ class Product {
     this.colors = const [],
     this.sizes = const [],
     this.attributes = const {},
+    this.threeDModel,
   });
 
   /// ==========================================================
@@ -103,7 +106,6 @@ class Product {
         } else if (cleanPath.startsWith("public/")) {
            fixedUrl = "${ApiService.serverUrl}/${cleanPath.replaceFirst('public/', '')}";
         } else if (cleanPath.contains("products") || cleanPath.contains("images")) {
-           // Many Laravel setups put products in storage/products or upload/products
            if (cleanPath.contains("storage/")) {
              fixedUrl = "${ApiService.serverUrl}/$cleanPath";
            } else {
@@ -163,26 +165,28 @@ class Product {
     }
 
     String regionValue = json['region'] ?? json['location'] ?? json['city'] ?? "";
+    int parsedId = int.tryParse(json['id']?.toString() ?? "0") ?? 0;
+
     if (regionValue.isEmpty || regionValue == "اليمن" || regionValue == "Yemen") {
-      // قائمة عشوائية للمدن لزيادة الواقعية كما طلب المستخدم
       final cities = ["صنعاء", "عدن", "تعز", "إب", "الحديدة", "المكلا"];
-      regionValue = cities[json['id'] != null ? (json['id'] as int) % cities.length : 0];
+      regionValue = cities[parsedId % cities.length];
     }
 
     return Product(
-      id: json['id'] ?? 0,
-      name: json['name'] ?? "بدون اسم",
-      description: json['description'] ?? "",
+      id: parsedId,
+      name: json['name']?.toString() ?? "بدون اسم",
+      description: json['description']?.toString() ?? "",
       shortDescription: json['short_description'] ?? json['excerpt'] ?? json['description']?.toString().split('.').first ?? "",
       price: currentPrice,
       oldPrice: currentPrice * 1.2,
       imageUrl: image,
-      brandName: json['brand'] ?? "General",
+      brandName: json['brand']?.toString() ?? "General",
       storeName: json['store_name'] ?? json['vendor'] ?? (json['user'] is Map ? json['user']['name'] : null) ?? "سيليكون",
+      storeId: int.tryParse(json['store_id']?.toString() ?? json['vendor_id']?.toString() ?? (json['user'] is Map ? json['user']['id']?.toString() : "1") ?? "1") ?? 1,
       region: regionValue,
       stock: stockValue,
       status: json['status']?.toString() ?? (stockValue > 0 ? "In Stock" : "Out of Stock"),
-      warranty: json['warranty'] ?? "سنة واحدة",
+      warranty: json['warranty']?.toString() ?? "سنة واحدة",
       deliveryTime: "3 أيام",
       category: json['category']?['name'] ?? "General",
       images: galleryImages,
@@ -199,6 +203,33 @@ class Product {
           ? List<Map<String, dynamic>>.from(json['sizes'])
           : [],
       attributes: extractedAttributes,
+      threeDModel: json['three_d_model'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'short_description': shortDescription,
+      'price': price,
+      'oldPrice': oldPrice,
+      'image_url': imageUrl,
+      'brand': brandName,
+      'store_name': storeName,
+      'store_id': storeId,
+      'region': region,
+      'stock': stock,
+      'status': status,
+      'warranty': warranty,
+      'category': {'name': category},
+      'images_url': images,
+      'three_d_images': threeDImages,
+      'colors': colors,
+      'sizes': sizes,
+      'attributes': attributes,
+      'three_d_model': threeDModel,
+    };
   }
 }

@@ -63,7 +63,6 @@ class AppPages {
     GetPage(
       name: AppRoutes.MAIN,
       page: () => const MainView(),
-      // No extra binding here as core controllers are in InitialBinding
     ),
     GetPage(
       name: AppRoutes.HOME,
@@ -88,7 +87,7 @@ class AppPages {
     GetPage(
       name: AppRoutes.LOGIN,
       page: () => LoginView(redirectToAddress: Get.arguments?['redirectToAddress'] ?? false),
-      binding: AuthBinding(),// الربط هنا صحيح تماماً
+      binding: AuthBinding(),
     ),
     GetPage(
       name: AppRoutes.OTP,
@@ -96,7 +95,7 @@ class AppPages {
         phoneNumber: Get.arguments?['phoneNumber'] ?? '',
         redirectToAddress: Get.arguments?['redirectToAddress'] ?? false,
       ),
-      binding: AuthBinding(), // تأكدنا من ربط الكنترولر بشاشة الـ OTP أيضاً
+      binding: AuthBinding(), 
     ),
     GetPage(
       name: AppRoutes.CHECKOUT_ADDRESS,
@@ -123,11 +122,11 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.ADS,
-      page: () => AdsView(),
+      page: () => const AdsView(),
     ),
     GetPage(
       name: AppRoutes.PROFILE,
-      page: () => const ProfilePage(),
+      page: () => ProfilePage(),
     ),
     GetPage(
       name: AppRoutes.WALLET,
@@ -139,7 +138,7 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.EDIT_PROFILE,
-      page: () => EditProfileScreen(),
+      page: () => const EditProfilePage(),
     ),
     GetPage(
       name: AppRoutes.REPORTS,

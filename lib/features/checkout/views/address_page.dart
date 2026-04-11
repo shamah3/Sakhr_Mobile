@@ -35,48 +35,48 @@ class AddressPage extends GetView<CheckoutController> {
             onPressed: () => Get.offAllNamed('/login'),
           ),
         ),
-      body: Column(
-        children: [
-          const SizedBox(height: 20),
-          _buildModernProgress(),
-          const SizedBox(height: 30),
+        body: Column(
+          children: [
+            const SizedBox(height: 20),
+            _buildModernProgress(),
+            const SizedBox(height: 30),
 
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              children: [
-                const Text(
-                  "طريقة التوصيل",
-                  style: TextStyle(fontWeight: FontWeight.w900, color: kTextColor, fontSize: 16),
-                ),
-                const SizedBox(height: 15),
-                _buildMapPickerButton(context),
-
-                const SizedBox(height: 30),
-
-                const Text(
-                  "عناوينك المحفوظة",
-                  style: TextStyle(fontWeight: FontWeight.w900, color: kTextColor, fontSize: 16),
-                ),
-                const SizedBox(height: 15),
-                Obx(() => Column(
-                  children: List.generate(
-                    controller.addresses.length,
-                    (index) => _buildAddressCard(index)
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                children: [
+                  const Text(
+                    "طريقة التوصيل",
+                    style: TextStyle(fontWeight: FontWeight.w900, color: kTextColor, fontSize: 16),
                   ),
-                )),
+                  const SizedBox(height: 15),
+                  _buildMapPickerButton(context),
 
-                const SizedBox(height: 20),
-                _buildAddManualButton(context),
-                const SizedBox(height: 30),
-              ],
+                  const SizedBox(height: 30),
+
+                  const Text(
+                    "عناوينك المحفوظة",
+                    style: TextStyle(fontWeight: FontWeight.w900, color: kTextColor, fontSize: 16),
+                  ),
+                  const SizedBox(height: 15),
+                  Obx(() => Column(
+                    children: List.generate(
+                      controller.addresses.length,
+                      (index) => _buildAddressCard(index)
+                    ),
+                  )),
+
+                  const SizedBox(height: 20),
+                  _buildAddManualButton(context),
+                  const SizedBox(height: 30),
+                ],
+              ),
             ),
-          ),
 
-          _buildBottomAction(),
-        ],
+            _buildBottomAction(),
+          ],
+        ),
       ),
-    ),
     );
   }
 
@@ -336,7 +336,7 @@ class AddressPage extends GetView<CheckoutController> {
               child: const Text("الاستمرار للدفع", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),
           ),
-          const SizedBox(height: 40), // Increased from 20 to 40
+          const SizedBox(height: 40), 
         ],
       ),
     );

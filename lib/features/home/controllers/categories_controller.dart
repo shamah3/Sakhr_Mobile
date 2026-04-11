@@ -220,9 +220,8 @@ class CategoriesController extends GetxController {
         }
       }
     } else {
-      const filteredSubs = []; // logic already in view, but let's centralize
-      // سيتم استخدام المنطق الحالي في الواجهة مؤقتاً أو نقله كلياً هنا
-      // لاستمرارية الكود سنترك التجميع للواجهة إذا لم يكن 'all'
+       // logic for single category brands can be added here or kept in view
+       // For consistency with current view implementation, we'll keep it simple
     }
     
     if (searchText.isEmpty) return brands;

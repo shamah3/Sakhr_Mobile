@@ -63,6 +63,9 @@ class CategoriesView extends GetView<CategoriesController> {
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator(color: kPrimaryColor, strokeWidth: 2));
         }
+        if (controller.apiCategories.isEmpty) {
+          return const SizedBox.shrink();
+        }
         return ListView.builder(
           itemCount: controller.apiCategories.length,
           itemBuilder: (context, index) {
@@ -147,7 +150,7 @@ class CategoriesView extends GetView<CategoriesController> {
         child: const Icon(Icons.grid_view_rounded, color: kPrimaryColor, size: 24),
       );
     }
-    String imageUrl = cat['image_url'] ?? cat['image'] ?? "";
+    String imageUrl = (cat['image_url'] ?? cat['image'] ?? "").toString();
     if (imageUrl.isNotEmpty && !imageUrl.contains("icons8.com")) {
       return CachedNetworkImage(
         imageUrl: imageUrl,
@@ -158,7 +161,7 @@ class CategoriesView extends GetView<CategoriesController> {
     }
     return Container(
       color: Colors.grey.shade100,
-      child: Icon(cat['id'] == 'all' ? Icons.grid_view_rounded : Icons.category_rounded, color: Colors.grey.shade300, size: 24),
+      child: Icon(Icons.category_rounded, color: Colors.grey.shade300, size: 24),
     );
   }
 
@@ -187,7 +190,7 @@ class CategoriesView extends GetView<CategoriesController> {
           children: [
             _buildMainBanner(cat),
             
-            const SizedBox(height: 12), // Reduced from 18
+            const SizedBox(height: 12), 
             
             if (filteredSubs.isNotEmpty) ...[
               _buildSectionHeader("الأقسام الفرعية"),
@@ -196,13 +199,13 @@ class CategoriesView extends GetView<CategoriesController> {
             ],
 
             if (brands.isNotEmpty) ...[
-              const SizedBox(height: 12), // Reduced from 18
+              const SizedBox(height: 12), 
               _buildSectionHeader("الماركات الشائعة"),
               const SizedBox(height: 8), 
               _buildBrandsGrid(brands),
-              const SizedBox(height: 40), // Reduced from 80
+              const SizedBox(height: 40), 
             ] else if (filteredSubs.isEmpty) ...[
-              const SizedBox(height: 40), // Reduced from 80
+              const SizedBox(height: 40), 
               const Center(child: Text("لا توجد نتائج مطابقة", style: TextStyle(color: Colors.grey))),
             ],
           ],
@@ -231,7 +234,7 @@ class CategoriesView extends GetView<CategoriesController> {
   }
 
   Widget _buildMainBanner(Map cat) {
-    String imgUrl = cat['image_url'] ?? cat['image'] ?? "";
+    String imgUrl = (cat['image_url'] ?? cat['image'] ?? "").toString();
     return Container(
       height: 160,
       width: double.infinity,
@@ -286,7 +289,7 @@ class CategoriesView extends GetView<CategoriesController> {
   Widget _buildSubCategoriesGrid(List subs) {
     return GridView.builder(
       shrinkWrap: true,
-      padding: EdgeInsets.zero, // Add this to remove default padding
+      padding: EdgeInsets.zero, 
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
@@ -311,9 +314,9 @@ class CategoriesView extends GetView<CategoriesController> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    width: 50, height: 50, // Fixed icon container size
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF9FAFB),
+                    width: 50, height: 50, 
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF9FAFB),
                       shape: BoxShape.circle,
                     ),
                     child: Center(
@@ -321,9 +324,8 @@ class CategoriesView extends GetView<CategoriesController> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  // ضبط ارتفاع النص لضمان محاذاة الصناديق أفقياً بشكل موحد
                   SizedBox(
-                    height: 28, // Height for approx 2 lines
+                    height: 28, 
                     child: Text(
                       sub['name']?.toString() ?? "",
                       textAlign: TextAlign.center,
@@ -343,13 +345,13 @@ class CategoriesView extends GetView<CategoriesController> {
   Widget _buildBrandsGrid(List brands) {
     return GridView.builder(
       shrinkWrap: true,
-      padding: EdgeInsets.zero, // Add this to remove default padding
+      padding: EdgeInsets.zero, 
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         mainAxisSpacing: 10,
         crossAxisSpacing: 10,
-        childAspectRatio: 2.3, // Branded pill look
+        childAspectRatio: 2.3, 
       ),
       itemCount: brands.length,
       itemBuilder: (context, index) {
@@ -379,7 +381,7 @@ class CategoriesView extends GetView<CategoriesController> {
 
   // أيقونة ذكية تختار الشكل بناءً على الاسم إذا لم تتوفر صورة
   Widget _buildCategoryIcon(Map cat, bool isSelected, {double size = 22}) {
-    String? imageUrl = cat['image_url'] ?? cat['image'];
+    String? imageUrl = (cat['image_url'] ?? cat['image'])?.toString();
     String name = (cat['name'] ?? "").toString();
 
     if (imageUrl != null && imageUrl.isNotEmpty) {
@@ -400,9 +402,8 @@ class CategoriesView extends GetView<CategoriesController> {
   // وظيفة ذكية لاختيار أيقونة تعمد على اسم القسم
   IconData _getSemanticIcon(String name) {
     String n = name.toLowerCase();
-    // تحسين وتوسيع منطق اختيار الأيقونات ليكون أكثر دقة واحترافية
     if (n.contains('لابتوب') || n.contains('laptop') || n.contains('حاسوب') || n.contains('كتاب') || n.contains('بوك')) {
-      if (n.contains('ألترا') || n.contains('ultra')) return Icons.laptop_mac; // أيقونة أنحف للألترا بوك
+      if (n.contains('ألترا') || n.contains('ultra')) return Icons.laptop_mac; 
       if (n.contains('جيمنج') || n.contains('gaming')) return Icons.computer_rounded;
       return Icons.laptop_rounded;
     }
@@ -429,18 +430,5 @@ class CategoriesView extends GetView<CategoriesController> {
     if (n.contains('منزل') || n.contains('home') || n.contains('بيت')) return Icons.home_work_rounded;
     
     return Icons.category_rounded;
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Row(
-      children: [
-        Container(
-            width: 4, height: 16,
-            decoration: BoxDecoration(color: Colors.orange, borderRadius: BorderRadius.circular(2))
-        ),
-        const SizedBox(width: 8),
-        Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: kTextColor)),
-      ],
-    );
   }
 }

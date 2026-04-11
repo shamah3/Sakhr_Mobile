@@ -32,25 +32,28 @@ class StoresController extends GetxController {
 
       // إذا نجح الاتصال بالمخدم (حتى لو القائمة فارغة)
       if (stores != null) {
+        allStores.assignAll(stores);
+        filteredStores.assignAll(stores);
+
         if (stores.isNotEmpty) {
-          allStores.assignAll(stores);
-          filteredStores.assignAll(stores);
-          
           // جلب إعلانات من أول 3 متاجر
           int fetchCount = stores.length > 3 ? 3 : stores.length;
           for (int i = 0; i < fetchCount; i++) {
             final ads = await _apiService.fetchStoreAdvertisements(stores[i].id);
-            if (ads != null) allAds.addAll(ads);
+            if (ads.isNotEmpty) allAds.addAll(ads);
           }
         } else {
-          allStores.clear();
-          filteredStores.clear();
           debugPrint("⚠️ STORES LIST IS EMPTY, TRYING DEFAULT STORE ID (1) FOR ADS");
-          // محاولة جلب إعلانات المتجر رقم 1 كاختبار في حال كانت المتاجر فارغة
           final ads = await _apiService.fetchStoreAdvertisements(1);
-          if (ads != null) allAds.addAll(ads);
+          if (ads.isNotEmpty) allAds.addAll(ads);
         }
         
+        // جلب الإعلانات العامة للإدارة أيضاً لزيادة المحتوى
+        final generalAds = await _apiService.fetchAdvertisements();
+        if (generalAds.isNotEmpty) {
+           allAds.addAll(generalAds);
+        }
+
         advertisements.assignAll(allAds);
         debugPrint("✅ LOAD COMPLETED: ${stores.length} stores, ${allAds.length} ads fetched");
       } else {

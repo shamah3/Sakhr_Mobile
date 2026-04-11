@@ -64,18 +64,18 @@ class AdvertisementModel {
     final store = json['store'] as Map<String, dynamic>?;
 
     return AdvertisementModel(
-      id: json['id'] ?? 0,
-      storeId: json['store_id'] ?? 0,
-      title: json['title'],
-      description: json['description'],
-      image: fixImageUrl(json['image'] ?? json['image_url']),
-      link: json['link'],
+      id: int.tryParse(json['id']?.toString() ?? "0") ?? 0,
+      storeId: int.tryParse(json['store_id']?.toString() ?? "0") ?? 0,
+      title: json['title']?.toString(),
+      description: json['description']?.toString(),
+      image: fixImageUrl(json['image']?.toString() ?? json['image_url']?.toString()),
+      link: json['link']?.toString(),
       budget: json['budget'] != null ? double.tryParse(json['budget'].toString()) : null,
-      startDate: json['start_date'],
-      endDate: json['end_date'],
-      targetUrl: json['target_url'],
-      storeName: store?['name'],
-      storeLogo: fixImageUrl(store?['logo_path']),
+      startDate: json['start_date']?.toString(),
+      endDate: json['end_date']?.toString(),
+      targetUrl: json['target_url']?.toString(),
+      storeName: store?['name']?.toString(),
+      storeLogo: fixImageUrl(store?['logo_path']?.toString()),
     );
   }
 

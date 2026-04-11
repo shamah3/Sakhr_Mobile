@@ -28,29 +28,29 @@ class PhoneVerificationView extends GetView<AuthController> {
             children: [
               const SizedBox(height: 30),
               // Enhanced WhatsApp/Phone Icon
-               Container(
-                 padding: const EdgeInsets.all(22),
-                 decoration: BoxDecoration(
-                   color: const Color(0xFF25D366).withOpacity(0.05),
-                   shape: BoxShape.circle,
-                   border: Border.all(color: const Color(0xFF25D366).withOpacity(0.1), width: 1),
-                 ),
-                 child: Stack(
-                   alignment: Alignment.center,
-                   children: [
-                     const Icon(FontAwesomeIcons.whatsapp, size: 55, color: Color(0xFF25D366)),
-                     Positioned(
-                       bottom: 0,
-                       right: 0,
-                       child: Container(
-                         padding: const EdgeInsets.all(4),
-                         decoration: const BoxDecoration(color: kPrimaryColor, shape: BoxShape.circle),
-                         child: const Icon(Icons.verified_user_rounded, size: 14, color: Colors.white),
-                       ),
-                     ),
-                   ],
-                 ),
-               ),
+              Container(
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF25D366).withOpacity(0.05),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFF25D366).withOpacity(0.1), width: 1),
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const Icon(FontAwesomeIcons.whatsapp, size: 55, color: Color(0xFF25D366)),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(color: kPrimaryColor, shape: BoxShape.circle),
+                        child: const Icon(Icons.verified_user_rounded, size: 14, color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 30),
               const Text(
                 "توثيق الحساب",
@@ -66,7 +66,7 @@ class PhoneVerificationView extends GetView<AuthController> {
                 ),
               ),
               const SizedBox(height: 50),
-              
+
               // Floating Input Card
               Container(
                 padding: const EdgeInsets.all(30),
@@ -112,7 +112,7 @@ class PhoneVerificationView extends GetView<AuthController> {
                       ),
                     ),
                     const SizedBox(height: 35),
-                    
+
                     Container(
                       width: double.infinity,
                       height: 55,
@@ -132,9 +132,9 @@ class PhoneVerificationView extends GetView<AuthController> {
                             Get.snackbar("تنبيه", "يرجى إدخال رقم هاتف صحيح");
                             return;
                           }
-                          
+
                           bool success = await controller.sendOtp(controller.phoneController.text);
-                          
+
                           if (success) {
                             Get.toNamed(AppRoutes.OTP, arguments: {
                               'phoneNumber': controller.phoneController.text,
@@ -150,9 +150,9 @@ class PhoneVerificationView extends GetView<AuthController> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                           elevation: 0,
                         ),
-                        child: controller.isSendingOtp.value 
-                             ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                             : const Row(
+                        child: controller.isSendingOtp.value
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                            : const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.mark_email_read_rounded, size: 20),

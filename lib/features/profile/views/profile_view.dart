@@ -4,7 +4,6 @@ import 'package:bytore/core/constants/constants.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:bytore/core/controllers/app_controller.dart';
 import 'package:bytore/core/routes/app_routes.dart';
-import 'package:bytore/features/authentication/controllers/auth_controller.dart';
 
 class ProfileView extends GetView<AppController> {
   const ProfileView({super.key});
@@ -21,12 +20,12 @@ class ProfileView extends GetView<AppController> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            _buildWhiteProfileHeader(), 
+            _buildWhiteProfileHeader(),
             Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  _buildOrdersSummary(),
+                   _buildOrdersSummary(),
                   const SizedBox(height: 25),
                   _buildSettingsSection(
                     "حسابي",
@@ -98,7 +97,7 @@ class ProfileView extends GetView<AppController> {
           ),
           const SizedBox(height: 4),
           Text(
-            controller.isLoggedIn.value ? "أهلاً بك في صخر" : 'قم بتسجيل الدخول للحصول على ميزات أكثر',
+            controller.isLoggedIn.value ? "أهلاً بك في بايتور" : 'قم بتسجيل الدخول للحصول على ميزات أكثر',
             style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
           ),
         ],
@@ -201,14 +200,9 @@ class ProfileView extends GetView<AppController> {
   Widget _buildLogoutButton() {
     return Obx(() {
       if (!controller.isLoggedIn.value) return const SizedBox.shrink();
-      
+
       return InkWell(
-        onTap: () {
-          final authController = Get.isRegistered<AuthController>() 
-              ? Get.find<AuthController>() 
-              : Get.put(AuthController());
-          authController.logout();
-        },
+        onTap: () => controller.updateLoginStatus(false),
         borderRadius: BorderRadius.circular(kDefaultRadius),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 16),
