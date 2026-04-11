@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'dart:async';
-import 'dart:math';
 import 'package:bytore/core/controllers/app_controller.dart';
 import 'package:bytore/core/services/notification_service.dart';
-import 'package:bytore/core/services/whatsapp_service.dart';
 import 'package:bytore/core/services/api_service.dart';
 
 class AuthController extends GetxController {
@@ -13,7 +11,7 @@ class AuthController extends GetxController {
 
   var isLoggedIn = false.obs;
   var isLoading = false.obs;
-  final Map<String, String> _users = {"777777777": "123456"}.obs;
+  final RxMap<String, String> _users = <String, String>{"777777777": "123456"}.obs;
 
   // --- Login Logic ---
   var emailController = TextEditingController();

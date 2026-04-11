@@ -31,7 +31,7 @@ class ApiService {
     String? token,
   }) async {
     try {
-      String url = "$baseUrl/products"; // Default products list 
+      String url = "$baseUrl/products";
       List<String> params = [];
 
       if (categorySlug != null && categorySlug != "all") {
@@ -104,52 +104,6 @@ class ApiService {
   }
 
   // ==================================================
-  // 🔥 جلب المنتجات الأكثر مبيعاً
-  // ==================================================
-  Future<List<Product>> fetchTopSellingProducts({String? token}) async {
-    try {
-      String url = "$baseUrl/products/top-selling";
-      debugPrint("📡 TOP SELLING PRODUCTS REQUEST: $url");
-
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          "Accept": "application/json",
-          if (token != null && token.isNotEmpty) "Authorization": "Bearer $token",
-        },
-      );
-
-      if (response.statusCode != 200) {
-        debugPrint("❌ TOP SELLING API ERROR [${response.statusCode}]: ${response.body}");
-        return [];
-      }
-
-      final dynamic decoded = jsonDecode(response.body);
-      List<dynamic> list = [];
-
-      if (decoded is Map) {
-        if (decoded.containsKey('data')) {
-          final dynamic d = decoded['data'];
-          if (d is List) list = d;
-          else if (d is Map && d.containsKey('data')) list = d['data'] is List ? d['data'] : [];
-        } else if (decoded.containsKey('products')) {
-          list = decoded['products'] is List ? decoded['products'] : [];
-        }
-      } else if (decoded is List) {
-        list = decoded;
-      }
-
-      return list
-          .where((e) => e is Map)
-          .map((e) => Product.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
-    } catch (e) {
-      debugPrint("🔥 Fetch Top Selling Products Error: $e");
-      return [];
-    }
-  }
-
-  // ==================================================
   // 📦 الطلبات
   // ==================================================
   Future<List<OrderModel>> fetchOrders(String token) async {
@@ -196,7 +150,7 @@ class ApiService {
   // ==================================================
   Future<Product?> fetchProductDetail(int id, {String? token}) async {
     try {
-      final String url = "$baseUrl/admin/management/products/$id";
+      final String url = "$baseUrl/products/$id";
       debugPrint("📡 PRODUCT DETAIL REQUEST: $url");
       
       final response = await http.get(
@@ -246,41 +200,25 @@ class ApiService {
         },
       );
 
-      if (response.statusCode != 200) {
-        debugPrint("❌ ADS API ERROR [${response.statusCode}]: ${response.body}");
-        return [];
-      }
+      if (response.statusCode != 200) return [];
 
       final dynamic decoded = jsonDecode(response.body);
       List<dynamic> list = [];
 
       if (decoded is Map && decoded.containsKey('data')) {
-        final d = decoded['data'];
-        if (d is List) list = d;
-        else if (d is Map && d.containsKey('data')) list = d['data'] is List ? d['data'] : [];
+        list = decoded['data'] is List ? decoded['data'] : [];
       } else if (decoded is List) {
         list = decoded;
       } else if (decoded is Map && decoded.containsKey('advertisements')) {
         list = decoded['advertisements'] is List ? decoded['advertisements'] : [];
       }
 
-      debugPrint("📦 ADS RAW DATA: ${list.length} items found");
-
-      List<AdvertisementModel> ads = [];
-      for (var e in list) {
-        if (e is Map) {
-          try {
-            ads.add(AdvertisementModel.fromJson(Map<String, dynamic>.from(e)));
-          } catch (err) {
-            debugPrint("⚠️ Failed to parse single ad: $err");
-          }
-        }
-      }
-
-      debugPrint("✅ ADS PARSED: ${ads.length} items");
-      return ads;
+      return list
+          .where((e) => e is Map)
+          .map((e) => AdvertisementModel.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
     } catch (e) {
-      debugPrint("🔥 Fetch Ads Exception: $e");
+      debugPrint("🔥 Fetch Ads Error: $e");
       return [];
     }
   }
@@ -290,110 +228,8 @@ class ApiService {
   // ==================================================
   Future<List<CouponModel>> fetchCoupons() async {
     try {
-      final String url = "$baseUrl/discounts";
-      debugPrint("📡 [COUPONS] REQUEST URL: $url");
-
-      final appController = Get.find<AppController>();
-      final String? token = appController.token.value.isNotEmpty ? appController.token.value : null;
-
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          "Accept": "application/json",
-          if (token != null) "Authorization": "Bearer $token",
-        },
-      ).timeout(const Duration(seconds: 10));
-
-      debugPrint("📡 [COUPONS] RESPONSE STATUS: ${response.statusCode}");
-      
-      if (response.statusCode != 200) {
-        debugPrint("❌ [COUPONS] ERROR: ${response.body}");
-        // Fallback to public access if authorized request failed
-        if (token != null) {
-          debugPrint("📡 [COUPONS] Retrying without token...");
-           final retryResponse = await http.get(Uri.parse(url), headers: {"Accept": "application/json"}).timeout(const Duration(seconds: 10));
-           if (retryResponse.statusCode == 200) {
-             debugPrint("✅ [COUPONS] Success after retry");
-             return _parseCoupons(retryResponse.body);
-           }
-        }
-        return [];
-      }
-
-      final list = _parseCoupons(response.body);
-      debugPrint("✅ [COUPONS] Successfully parsed ${list.length} coupons");
-      return list;
-    } catch (e) {
-      debugPrint("🔥 [COUPONS] EXCEPTION: $e");
-      return [];
-    }
-  }
-
-  // دالة مساعدة لمعالجة بيانات الكوبونات بشكل ذكي ومرن
-  List<CouponModel> _parseCoupons(String body) {
-    try {
-      final dynamic decoded = jsonDecode(body);
-      List<dynamic> rawList = [];
-
-      if (decoded is List) {
-        rawList = decoded;
-      } else if (decoded is Map) {
-        // فحص ذكي للبيانات المتداخلة
-        void collectFromValue(dynamic value) {
-          if (value is List) {
-            rawList.addAll(value);
-          } else if (value is Map) {
-            if (value.containsKey('data')) {
-              collectFromValue(value['data']);
-            } else if (value.containsKey('discounts')) {
-              collectFromValue(value['discounts']);
-            } else if (value.containsKey('coupons')) {
-              collectFromValue(value['coupons']);
-            } else if (value.values.isNotEmpty && value.values.first is Map) {
-              rawList.addAll(value.values);
-            }
-          }
-        }
-        collectFromValue(decoded);
-        if (rawList.isEmpty) {
-          decoded.forEach((key, value) {
-            if (value is List && rawList.isEmpty) rawList = value;
-          });
-        }
-      }
-
-      debugPrint("📡 [COUPONS] Raw items found: ${rawList.length}");
-
-      List<CouponModel> parsedCoupons = [];
-      for (var item in rawList) {
-        if (item is Map) {
-          try {
-            parsedCoupons.add(CouponModel.fromJson(Map<String, dynamic>.from(item)));
-          } catch (e) {
-            debugPrint("⚠️ [COUPONS] Failed to parse item: $e | Data: $item");
-          }
-        }
-      }
-
-      debugPrint("✅ [COUPONS] Successfully parsed ${parsedCoupons.length} out of ${rawList.length} items");
-      return parsedCoupons;
-    } catch (e) {
-      debugPrint("⚠️ [COUPONS] Parsing Exception: $e");
-      return [];
-    }
-  }
-
-  // ==================================================
-  // 🏪 جلب كوبونات المتاجر (Vendor Coupons)
-  // ==================================================
-  Future<List<CouponModel>> fetchVendorCoupons({int? storeId}) async {
-    try {
-      if (storeId == null) return [];
-      
-      // الرابط لخصومات متجر معين
-      String url = "$baseUrl/stores/$storeId/discount";
-      
-      debugPrint("📡 VENDOR COUPONS REQUEST: $url");
+      final String url = "$baseUrl/admin/discounts";
+      debugPrint("📡 COUPONS REQUEST: $url");
 
       final appController = Get.find<AppController>();
       final String? token = appController.token.value.isNotEmpty ? appController.token.value : null;
@@ -406,8 +242,13 @@ class ApiService {
         },
       );
 
-      debugPrint("📡 [DEBUG] VENDOR COUPONS STATUS: ${response.statusCode}");
-      if (response.statusCode != 200) return [];
+      debugPrint("📡 [DEBUG] COUPONS RESPONSE BODY: ${response.body}");
+      debugPrint("📡 [DEBUG] COUPONS STATUS CODE: ${response.statusCode}");
+
+      if (response.statusCode != 200) {
+        debugPrint("❌ [DEBUG] COUPONS API FAILED");
+        return [];
+      }
 
       final dynamic decoded = jsonDecode(response.body);
       List<dynamic> list = [];
@@ -415,25 +256,34 @@ class ApiService {
       if (decoded is List) {
         list = decoded;
       } else if (decoded is Map) {
+        // 1. Check common wrap keys
         if (decoded.containsKey('data')) {
           final dynamic d = decoded['data'];
           if (d is List) list = d;
           else if (d is Map && d.containsKey('data')) list = d['data'] is List ? d['data'] : [];
+          else if (d is Map && d.containsKey('coupons')) list = d['coupons'] is List ? d['coupons'] : [];
         }
         
+        // 2. If still empty, search for ANY list in the top level (Smart Scan)
         if (list.isEmpty) {
           decoded.forEach((key, value) {
-            if (value is List && list.isEmpty) list = value;
+            if (value is List && list.isEmpty) {
+              list = value;
+              debugPrint("📡 [SMART SCAN] Found list in key: $key");
+            }
           });
         }
       }
 
-      return list
+      final parsed = list
           .where((e) => e is Map)
           .map((e) => CouponModel.fromJson(Map<String, dynamic>.from(e)))
           .toList();
+
+      debugPrint("📡 [DEBUG] PARSED ${parsed.length} COUPONS");
+      return parsed;
     } catch (e) {
-      debugPrint("🔥 Fetch Vendor Coupons Error: $e");
+      debugPrint("🔥 Fetch Coupons Error: $e");
       return [];
     }
   }
@@ -511,50 +361,29 @@ class ApiService {
     }
   }
 
+  // ==================================================
+  // 📂 جلب الأقسام
+  // ==================================================
   Future<List<dynamic>> getCategories() async {
     try {
-      final String url = "$baseUrl/categories";
-      debugPrint("📡 CATEGORIES REQUEST: $url");
-
       final response = await http.get(
-        Uri.parse(url),
+        Uri.parse("$baseUrl/categories"),
         headers: {"Accept": "application/json"},
       );
 
-      if (response.statusCode != 200) {
-        debugPrint("❌ CATEGORIES API FAILED [${response.statusCode}]: ${response.body}");
+      if (response.statusCode != 200) return [];
+      final decoded = jsonDecode(response.body);
+
+      if (decoded is Map && decoded.containsKey('data')) {
+        final dynamic d = decoded['data'];
+        if (d is List) return d;
+        if (d is Map && d.containsKey('categories')) {
+          return d['categories'] is List ? d['categories'] : [];
+        }
         return [];
       }
-
-      final dynamic decoded = jsonDecode(response.body);
-      List<dynamic> list = [];
-
-      if (decoded is List) {
-        list = decoded;
-      } else if (decoded is Map) {
-        // 1. التحقق من المفاتيح الشائعة
-        if (decoded.containsKey('data')) {
-           final dynamic d = decoded['data'];
-           if (d is List) list = d;
-           else if (d is Map && d.containsKey('data')) list = d['data'] is List ? d['data'] : [];
-           else if (d is Map && d.containsKey('categories')) list = d['categories'] is List ? d['categories'] : [];
-        } else if (decoded.containsKey('categories')) {
-          list = decoded['categories'] is List ? decoded['categories'] : [];
-        }
-        
-        // 2. مسح شامل لأي قائمة في المستوى الأول (Smart Detection)
-        if (list.isEmpty) {
-          decoded.forEach((key, value) {
-            if (value is List && list.isEmpty) {
-              list = value;
-              debugPrint("📡 [SMART DETECT] Found categories in key: $key");
-            }
-          });
-        }
-      }
-
-      debugPrint("✅ CATEGORIES FETCHED: ${list.length} items");
-      return list;
+      if (decoded is List) return decoded;
+      return [];
     } catch (e) {
       debugPrint("🔥 Categories Error: $e");
       return [];
@@ -626,50 +455,20 @@ class ApiService {
   // ==================================================
   // 🏬 المتاجر
   // ==================================================
-  Future<List<StoreModel>?> fetchStores() async {
+  Future<List<StoreModel>> fetchStores() async {
     try {
       final response = await http.get(
         Uri.parse("$baseUrl/stores"),
         headers: {"Accept": "application/json"},
-      ).timeout(const Duration(seconds: 15));
-      
-      debugPrint("📡 [STORES DEBUG] URL: $baseUrl/stores");
-      debugPrint("📡 [STORES DEBUG] STATUS: ${response.statusCode}");
-      debugPrint("📡 [STORES DEBUG] BODY: ${response.body}");
-      
-      if (response.statusCode != 200) return null;
-      
-      final dynamic decoded = jsonDecode(response.body);
-      
-      // دالة ذكية للبحث عن أي قائمة داخل الرد مهما كان شكلها
-      List<dynamic> findData(dynamic data) {
-        if (data is List) return data;
-        if (data is Map) {
-          // جرب المفاتيح الشائعة أولاً
-          if (data.containsKey('data')) return findData(data['data']);
-          if (data.containsKey('stores')) return findData(data['stores']);
-          if (data.containsKey('items')) return findData(data['items']);
-          
-          // ابحث عن أول قائمة تحتوي على خرائط (Maps)
-          for (var value in data.values) {
-            if (value is List && value.isNotEmpty && value.first is Map) return value;
-            if (value is List) return value; // حتى لو كانت قائمة نصوص
-          }
-        }
-        return [];
-      }
-
-      List<dynamic> list = findData(decoded);
-      
-      final parsed = list
+      );
+      if (response.statusCode != 200) return [];
+      final decoded = jsonDecode(response.body);
+      List<dynamic> list = (decoded is Map ? decoded['data'] : decoded) ?? [];
+      return list
           .where((e) => e is Map)
           .map((e) => StoreModel.fromJson(Map<String, dynamic>.from(e)))
           .toList();
-          
-      debugPrint("✅ PARSED ${parsed.length} STORES");
-      return parsed;
     } catch (e) {
-      debugPrint("🔥 fetchStores error: $e");
       return [];
     }
   }
@@ -729,39 +528,14 @@ class ApiService {
         Uri.parse("$baseUrl/stores/$storeId/ads"),
         headers: {"Accept": "application/json"},
       );
-      
-      debugPrint("📡 STORE ADS RESPONSE ($storeId) [${response.statusCode}]: ${response.body}");
-      
       if (response.statusCode != 200) return [];
-      
-      final dynamic decoded = jsonDecode(response.body);
-      List<dynamic> list = [];
-      
-      if (decoded is List) {
-        list = decoded;
-      } else if (decoded is Map) {
-        if (decoded.containsKey('data')) {
-           final dynamic d = decoded['data'];
-           if (d is List) list = d;
-           else if (d is Map && d.containsKey('data')) list = d['data'] is List ? d['data'] : [];
-           else if (d is Map && d.containsKey('ads')) list = d['ads'] is List ? d['ads'] : [];
-        } else if (decoded.containsKey('ads')) {
-          list = decoded['ads'] is List ? decoded['ads'] : [];
-        }
-        
-        if (list.isEmpty) {
-          decoded.forEach((key, value) {
-            if (value is List && list.isEmpty) list = value;
-          });
-        }
-      }
-
+      final decoded = jsonDecode(response.body);
+      List<dynamic> list = (decoded is Map ? decoded['data'] : decoded) ?? [];
       return list
           .where((e) => e is Map)
           .map((e) => AdvertisementModel.fromJson(Map<String, dynamic>.from(e)))
           .toList();
     } catch (e) {
-      debugPrint("🔥 fetchStoreAdvertisements error ($storeId): $e");
       return [];
     }
   }
@@ -850,205 +624,79 @@ class ApiService {
   }
 
   // ==================================================
-  // 🔐 المصادقة والمستخدمين (Auth & Customers)
+  // 🔐 المصادقة والـ OTP (Mock)
   // ==================================================
-  
-  Future<bool> sendOtp(String phone) async {
-    try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/auth/send-code"),
-        headers: {"Accept": "application/json", "Content-Type": "application/json"},
-        body: jsonEncode({"phone": phone}),
-      );
-      return response.statusCode == 200 || response.statusCode == 201;
-    } catch (e) {
-      debugPrint("🔥 sendOtp Error: $e");
-      return false;
-    }
+  Future<bool> sendOtp(String phoneNumber) async {
+    // محاكاة إرسال OTP
+    await Future.delayed(const Duration(seconds: 1));
+    return true;
   }
 
-  Future<String?> verifyOtp(String phone, String code) async {
-    try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/auth/verify-code"),
-        headers: {"Accept": "application/json", "Content-Type": "application/json"},
-        body: jsonEncode({"phone": phone, "code": code}),
-      );
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final decoded = jsonDecode(response.body);
-        return decoded['token']; // assuming the token is returned in 'token'
-      }
-      return null;
-    } catch (e) {
-      debugPrint("🔥 verifyOtp Error: $e");
-      return null;
-    }
+  Future<String?> verifyOtp(String phoneNumber, String code) async {
+    // محاكاة التحقق من OTP
+    await Future.delayed(const Duration(seconds: 1));
+    if (code == "123456") return "mock_token_123456";
+    return null;
   }
 
-  Future<bool> registerCustomer(Map<String, dynamic> data) async {
-    try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/customers"),
-        headers: {"Accept": "application/json", "Content-Type": "application/json"},
-        body: jsonEncode(data),
-      );
-      return response.statusCode == 200 || response.statusCode == 201;
-    } catch (e) {
-      debugPrint("🔥 registerCustomer Error: $e");
-      return false;
-    }
-  }
-
-  Future<bool> logout(String token) async {
-    try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/auth/logout"),
-        headers: {
-          "Accept": "application/json",
-          "Authorization": "Bearer $token",
-        },
-      );
-      return response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204;
-    } catch (e) {
-      debugPrint("🔥 logout Error: $e");
-      return false;
-    }
-  }
-
-  Future<bool> changePassword(String currentPassword, String newPassword, String token) async {
-    try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/auth/change-password"),
-        headers: {"Accept": "application/json", "Content-Type": "application/json", "Authorization": "Bearer $token"},
-        body: jsonEncode({"current_password": currentPassword, "new_password": newPassword, "new_password_confirmation": newPassword}),
-      );
-      return response.statusCode == 200 || response.statusCode == 201;
-    } catch (e) {
-      return false;
-    }
+  Future<void> logout(String token) async {
+    // محاكاة تسجيل الخروج
+    await Future.delayed(const Duration(seconds: 1));
   }
 
   // ==================================================
-  // 💸 الدفع والطلبات والاسترجاع
+  // 🔥 جلب المنتجات الأكثر مبيعاً
   // ==================================================
-  Future<List<PaymentMethodModel>> fetchPaymentMethods() async {
+  Future<List<Product>> fetchTopSellingProducts() async {
     try {
-      final response = await http.get(Uri.parse("$baseUrl/payment-methods"), headers: {"Accept": "application/json"});
+      final String url = "$baseUrl/products/top-selling";
+      final response = await http.get(Uri.parse(url), headers: {"Accept": "application/json"});
       if (response.statusCode != 200) return [];
       final decoded = jsonDecode(response.body);
-      List<dynamic> list = (decoded is Map ? decoded['data'] : decoded) ?? [];
-      return list.where((e) => e is Map).map((e) => PaymentMethodModel.fromJson(Map<String, dynamic>.from(e))).toList();
+      List<dynamic> list = [];
+      if (decoded is Map && decoded.containsKey('data')) {
+        list = decoded['data'] is List ? decoded['data'] : [];
+      } else if (decoded is List) {
+        list = decoded;
+      } else if (decoded is Map && decoded.containsKey('products')) {
+        list = decoded['products'] is List ? decoded['products'] : [];
+      }
+      return list.where((e) => e is Map).map((e) => Product.fromJson(Map<String, dynamic>.from(e))).toList();
     } catch (e) {
+      debugPrint("🔥 Fetch Top Selling Error: $e");
       return [];
     }
   }
 
-  Future<bool> createOrder(Map<String, dynamic> data, String token) async {
-    try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/orders"),
-        headers: {"Accept": "application/json", "Content-Type": "application/json", "Authorization": "Bearer $token"},
-        body: jsonEncode(data),
-      );
-      return response.statusCode == 200 || response.statusCode == 201;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  Future<bool> createShippingAddress(Map<String, dynamic> data, String token) async {
-    try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/shipping-addresses"),
-        headers: {"Accept": "application/json", "Content-Type": "application/json", "Authorization": "Bearer $token"},
-        body: jsonEncode(data),
-      );
-      return response.statusCode == 200 || response.statusCode == 201;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  Future<bool> submitCustomReturn(Map<String, dynamic> data, String token) async {
-    try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/returns"),
-        headers: {"Accept": "application/json", "Content-Type": "application/json", "Authorization": "Bearer $token"},
-        body: jsonEncode(data),
-      );
-      return response.statusCode == 200 || response.statusCode == 201;
-    } catch (e) {
-      return false;
-    }
-  }
-
   // ==================================================
-  // 💬 التفاعل والشات والدعم
+  // 🎟️ جلب كوبونات البائع
   // ==================================================
-  Future<Map<String, dynamic>> sendChatbotMessage(String message) async {
+  Future<List<CouponModel>> fetchVendorCoupons({required int storeId}) async {
     try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/chatbot/responses"),
-        headers: {"Accept": "application/json", "Content-Type": "application/json"},
-        body: jsonEncode({"message": message}),
+      final String url = "$baseUrl/stores/$storeId/discounts";
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {"Accept": "application/json"},
       );
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+
+      if (response.statusCode != 200) return [];
+
+      final dynamic decoded = jsonDecode(response.body);
+      List<dynamic> list = [];
+
+      if (decoded is Map && decoded.containsKey('data')) {
+        list = decoded['data'] is List ? decoded['data'] : [];
+      } else if (decoded is List) {
+        list = decoded;
       }
-      return {};
-    } catch (e) {
-      return {};
-    }
-  }
 
-  Future<void> logCustomerActivity(Map<String, dynamic> data) async {
-    try {
-      await http.post(
-        Uri.parse("$baseUrl/customer-activities"),
-        headers: {"Accept": "application/json", "Content-Type": "application/json"},
-        body: jsonEncode(data),
-      );
+      return list
+          .where((e) => e is Map)
+          .map((e) => CouponModel.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
     } catch (e) {
-      debugPrint("Activity Log Error: $e");
-    }
-  }
-
-  Future<bool> createStoreReview(Map<String, dynamic> data, String token) async {
-    try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/store-reviews"),
-        headers: {"Accept": "application/json", "Content-Type": "application/json", "Authorization": "Bearer $token"},
-        body: jsonEncode(data),
-      );
-      return response.statusCode == 200 || response.statusCode == 201;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  Future<bool> submitSupportTicket(Map<String, dynamic> data, String token) async {
-    try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/support"),
-        headers: {"Accept": "application/json", "Content-Type": "application/json", "Authorization": "Bearer $token"},
-        body: jsonEncode(data),
-      );
-      return response.statusCode == 200 || response.statusCode == 201;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  Future<bool> sendMessageToVendor(Map<String, dynamic> data, String token) async {
-    try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/messages"),
-        headers: {"Accept": "application/json", "Content-Type": "application/json", "Authorization": "Bearer $token"},
-        body: jsonEncode(data),
-      );
-      return response.statusCode == 200 || response.statusCode == 201;
-    } catch (e) {
-      return false;
+      debugPrint("🔥 Fetch Vendor Coupons Error: $e");
+      return [];
     }
   }
 }

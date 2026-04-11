@@ -12,7 +12,6 @@ class ProductListController extends GetxController {
   final RxString categorySlug = "all".obs;
   final RxString categoryTitle = "المنتجات".obs;
   final RxString subCategorySlug = "all".obs;
-  final RxInt? storeId = RxInt(0).obs.value == 0 ? null : 0.obs; // Workaround for optional RxInt
   final RxnInt rxStoreId = RxnInt();
   
   final RxList<Product> products = <Product>[].obs;
