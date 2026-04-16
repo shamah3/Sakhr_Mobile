@@ -72,6 +72,11 @@ class Product {
       }
       
       String rawUrl = url.trim();
+
+      // ✅ Handle Local Assets directly
+      if (rawUrl.startsWith('assets/')) {
+        return rawUrl;
+      }
       
       // ✅ Handle JSON array strings like ["image.jpg"]
       if (rawUrl.startsWith('[') && rawUrl.endsWith(']')) {
@@ -190,9 +195,9 @@ class Product {
       deliveryTime: "3 أيام",
       category: json['category']?['name'] ?? "General",
       images: galleryImages,
-      threeDImages: json['three_d_images'] != null
+      threeDImages: (json['three_sixty_images'] ?? json['three_d_images']) != null
           ? List<String>.from(
-        (json['three_d_images'] as List)
+        ((json['three_sixty_images'] ?? json['three_d_images']) as List)
             .map((e) => fixImageUrl(e.toString())),
       )
           : [],
@@ -203,8 +208,30 @@ class Product {
           ? List<Map<String, dynamic>>.from(json['sizes'])
           : [],
       attributes: extractedAttributes,
-      threeDModel: json['three_d_model'],
+      threeDModel: json['three_d_model'] != null ? fixImageUrl(json['three_d_model']) : _getMappedLocal3DModel(json['name']?.toString() ?? ""),
     );
+  }
+
+  static String? _getMappedLocal3DModel(String name) {
+    final lowerName = name.toLowerCase();
+    if (lowerName.contains('mac') || lowerName.contains('laptop') || lowerName.contains('لابتوب')) {
+      return 'assets/models/Mac.glb';
+    } else if (lowerName.contains('printer') || lowerName.contains('طابعة')) {
+      return 'assets/models/printer3.glb';
+    } else if (lowerName.contains('سماعة') || lowerName.contains('headphone') || lowerName.contains('h1')) {
+      return 'assets/models/h1glb.glb';
+    } else if (lowerName.contains('h2')) {
+      return 'assets/models/h2glb.glb';
+    } else if (lowerName.contains('h3')) {
+      return 'assets/models/h3.glb';
+    } else if (lowerName.contains('p4')) {
+      return 'assets/models/p4glb.glb';
+    } else if (lowerName.contains('p5')) {
+      return 'assets/models/p5.glb';
+    } else if (lowerName.contains('p6')) {
+      return 'assets/models/p6.glb';
+    }
+    return null;
   }
 
   Map<String, dynamic> toJson() {

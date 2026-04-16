@@ -9,8 +9,8 @@ import 'package:bytore/features/product/views/product_detail_view.dart';
 import 'package:bytore/features/product/views/product_list_view.dart';
 import 'package:bytore/features/authentication/views/login_view.dart';
 import 'package:bytore/features/authentication/views/otp_verification_view.dart';
-import 'package:bytore/features/home/controllers/main_controller.dart';
-import 'package:bytore/features/home/controllers/home_controller.dart';
+// import 'package:bytore/features/home/controllers/main_controller.dart';
+// import 'package:bytore/features/home/controllers/home_controller.dart';
 import 'package:bytore/features/checkout/views/address_page.dart';
 import 'package:bytore/features/checkout/views/payment_page.dart';
 import 'package:bytore/features/checkout/views/success_page.dart';
@@ -18,6 +18,7 @@ import 'package:bytore/features/wishlist/views/wishlist_view.dart';
 import 'package:bytore/features/orders/views/tracking_view.dart';
 import 'package:bytore/features/profile/views/profile_page.dart';
 import 'package:bytore/features/home/views/ads_view.dart';
+import 'package:bytore/features/notifications/views/notification_view.dart';
 
 // Profile Sub-Pages Imports
 import 'package:bytore/features/profile/sub_pages/wallet_page.dart';
@@ -111,6 +112,18 @@ class AppPages {
       name: AppRoutes.CHECKOUT_SUCCESS,
       page: () => const SuccessPage(),
       binding: CheckoutBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.CART,
+      page: () => const CartView(),
+    ),
+    GetPage(
+      name: AppRoutes.PRODUCT_DETAIL,
+      page: () => ProductDetailView(product: Get.arguments),
+    ),
+    GetPage(
+      name: AppRoutes.NOTIFICATIONS,
+      page: () => const NotificationView(),
     ),
     GetPage(
       name: AppRoutes.WISHLIST,

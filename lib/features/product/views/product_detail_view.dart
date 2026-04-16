@@ -10,16 +10,19 @@ import 'package:bytore/features/home/views/components/item_card.dart';
 import 'package:bytore/core/utils/notification_helper.dart';
 import 'package:bytore/features/product/views/product_list_view.dart';
 import 'package:bytore/features/product/controllers/product_controller.dart';
+import '../../home/controllers/home_controller.dart';
 import 'package:bytore/features/product/views/components/three_d_viewer.dart';
 import 'package:bytore/core/components/custom_app_bar.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 import 'package:bytore/features/chat/views/chat_detail_view.dart';
+import 'package:bytore/features/profile/controllers/activities_controller.dart';
 
 class ProductDetailView extends StatelessWidget {
   final Product product;
-  final RxBool isManual3DActive = false.obs;
+  final RxBool isManual3DActive;
 
-  ProductDetailView({super.key, required this.product});
+  ProductDetailView({super.key, required this.product}) 
+      : isManual3DActive = (product.threeDModel != null && product.threeDModel!.isNotEmpty).obs;
 
   @override
   Widget build(BuildContext context) {
@@ -52,59 +55,43 @@ class ProductDetailView extends StatelessWidget {
               child: Stack(
                 alignment: Alignment.bottomCenter,
                 children: [
-                   Obx(() {
-                    // 1. Check for manual 3D model (asset based)
-                    if (isManual3DActive.value && 
-                        product.threeDModel != null && 
-                        product.threeDModel!.startsWith('assets/')) {
-                      return ModelViewer(
-                        src: product.threeDModel!,
-                        autoRotate: true,
-                        cameraControls: true,
-                        backgroundColor: Colors.transparent,
-                      );
-                    }
-                    // 2. Check for interactive 360/3D images
-                    else if (product.threeDImages.isNotEmpty) {
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 20),
-                        child: ThreeDProductViewer(images: product.threeDImages, height: 280),
-                      );
-                    }
-                    // 3. Fallback to standard PageView
-                    else {
-                      return PageView.builder(
-                        controller: controller.pageController,
-                        onPageChanged: (index) => controller.currentImageIndex.value = index,
-                        itemCount: controller.productImages.length,
-                        itemBuilder: (context, index) => Container(
-                          padding: const EdgeInsets.all(40),
-                          child: CustomImage(
-                            imageUrl: controller.productImages[index],
-                            fit: BoxFit.contain,
-                            width: double.infinity,
+                    Obx(() {
+                      if (controller.show3DModel.value && product.threeDModel != null && product.threeDModel!.isNotEmpty) {
+                        return Container(
+                          color: Colors.white,
+                          child: ModelViewer(
+                            src: product.threeDModel!,
+                            alt: "موديل 3D",
+                            autoRotate: true,
+                            cameraControls: true,
+                            backgroundColor: Colors.white,
                           ),
-                        ),
-                      );
-                    }
-                  }),
+                        );
+                      }
 
-                  // 3D toggle button (only for assets)
-                  if (product.threeDModel != null && product.threeDModel!.startsWith('assets/'))
-                    Positioned(
-                      top: 10,
-                      left: 20,
-                      child: Obx(() => ActionChip(
-                        onPressed: () => isManual3DActive.toggle(),
-                        label: Text(isManual3DActive.value ? "عرض الصور" : "عرض 3D",
-                            style: const TextStyle(fontSize: 10, color: Colors.white)),
-                        backgroundColor: kPrimaryColor,
-                        avatar: Icon(isManual3DActive.value ? Icons.image : Icons.view_in_ar,
-                            size: 14, color: Colors.white),
-                      )),
-                    ),
+                      if (product.threeDImages.isNotEmpty) {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 20),
+                          child: ThreeDProductViewer(images: product.threeDImages, height: 280),
+                        );
+                      } else {
+                        return PageView.builder(
+                          controller: controller.pageController,
+                          onPageChanged: (index) => controller.currentImageIndex.value = index,
+                          itemCount: controller.productImages.length,
+                          itemBuilder: (context, index) => Container(
+                            padding: const EdgeInsets.all(40),
+                            child: CustomImage(
+                              imageUrl: controller.productImages[index],
+                              fit: BoxFit.contain,
+                              width: double.infinity,
+                            ),
+                          ),
+                        );
+                      }
+                    }),
 
-                  if (product.threeDImages.isEmpty && !isManual3DActive.value)
+                  if (product.threeDImages.isEmpty)
                     Positioned(
                       bottom: 20,
                       right: 20,
@@ -117,6 +104,46 @@ class ProductDetailView extends StatelessWidget {
                         child: Obx(() => Text(
                           "${controller.currentImageIndex.value + 1}/${controller.productImages.length}",
                           style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                        )),
+                      ),
+                    ),
+
+                  // 3D Model Toggle Button
+                  if (product.threeDModel != null && product.threeDModel!.isNotEmpty)
+                    Positioned(
+                      top: 20,
+                      right: 20,
+                      child: GestureDetector(
+                        onTap: () => controller.toggle3DModel(),
+                        child: Obx(() => Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: controller.show3DModel.value ? kPrimaryColor : Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4)),
+                            ],
+                            border: Border.all(color: controller.show3DModel.value ? Colors.transparent : Colors.grey.shade200),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.view_in_ar_rounded,
+                                color: controller.show3DModel.value ? Colors.white : kPrimaryColor,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                controller.show3DModel.value ? "إغلاق 3D" : "عرض 3D",
+                                style: TextStyle(
+                                  color: controller.show3DModel.value ? Colors.white : kTextColor,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
                         )),
                       ),
                     ),
@@ -161,14 +188,8 @@ class ProductDetailView extends StatelessWidget {
                     style: TextStyle(fontSize: 14, color: Colors.black.withOpacity(0.6), height: 1.7),
                   )),
                   
-                  if (product.attributes.isNotEmpty && 
-                      (product.category.toLowerCase().contains('laptop') || 
-                       product.category.toLowerCase().contains('طابعات') ||
-                       product.category.toLowerCase().contains('سماعات') ||
-                       product.brandName.toLowerCase().contains('apple'))) ...[
-                    const SizedBox(height: 35),
-                    _buildPremiumTechSpecsGrid(),
-                  ],
+                  const SizedBox(height: 35),
+                  _buildPremiumTechSpecsGrid(),
 
                   const SizedBox(height: 30),
                   _buildDetailedTabs(context, controller),
@@ -207,7 +228,9 @@ class ProductDetailView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
-              child: Row(
+              child: Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
                 children: [
                    FittedBox(
                     fit: BoxFit.scaleDown,
@@ -216,7 +239,6 @@ class ProductDetailView extends StatelessWidget {
                       style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: kPrimaryColor),
                     )),
                   ),
-                  const SizedBox(width: 8),
                   Obx(() => controller.product.value.oldPrice > controller.currentPrice
                       ? FittedBox(
                           fit: BoxFit.scaleDown,
@@ -296,6 +318,14 @@ class ProductDetailView extends StatelessWidget {
         Expanded(
           child: GestureDetector(
             onTap: () {
+              // ✅ سجل النشاط: مراسلة التاجر
+              try {
+                Get.find<ActivitiesController>().logActivity(
+                  title: "مراسلة تاجر: ${product.storeName}",
+                  type: "chat"
+                );
+              } catch (_) {}
+              
               Get.to(() => const ChatDetailView(), arguments: {
                 'storeId': product.storeId,
                 'senderName': product.storeName,
@@ -480,6 +510,8 @@ class ProductDetailView extends StatelessWidget {
               Icon(Icons.rate_review_outlined, size: 40, color: Colors.grey[300]),
               const SizedBox(height: 10),
               Text("لا توجد مراجعات حالياً", style: TextStyle(color: Colors.grey[400], fontSize: 13)),
+              const SizedBox(height: 20),
+              _buildAddReviewButton(context, controller),
             ],
           ),
         );
@@ -488,7 +520,15 @@ class ProductDetailView extends StatelessWidget {
       return ListView(
         padding: const EdgeInsets.symmetric(vertical: 15),
         children: [
-          ...controller.reviews.take(3).map((r) => _commentTile(r.userName ?? "مستخدم لايت", r.comment, r.rating)).toList(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("${controller.reviews.length} تقييم", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              _buildAddReviewButton(context, controller),
+            ],
+          ),
+          const SizedBox(height: 15),
+          ...controller.reviews.take(3).map((r) => _commentTile(r.userName ?? "مستخدم", r.comment, r.rating)).toList(),
           const SizedBox(height: 10),
           if (controller.reviews.length > 3)
             OutlinedButton(
@@ -499,6 +539,93 @@ class ProductDetailView extends StatelessWidget {
         ],
       );
     });
+  }
+
+  Widget _buildAddReviewButton(BuildContext context, ProductController controller) {
+    return TextButton.icon(
+      onPressed: () => _showAddReviewDialog(context, controller),
+      icon: const Icon(Icons.add_comment_rounded, size: 18, color: kSecondaryColor),
+      label: const Text("أضف تقييمك", style: TextStyle(color: kSecondaryColor, fontWeight: FontWeight.bold, fontSize: 13)),
+    );
+  }
+
+  void _showAddReviewDialog(BuildContext context, ProductController controller) {
+    final commentController = TextEditingController();
+    final RxInt rating = 5.obs;
+
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("كيف كانت تجربتك؟", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 20),
+              Obx(() => Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) => IconButton(
+                  onPressed: () => rating.value = index + 1,
+                  icon: Icon(
+                    index < rating.value ? Icons.star_rounded : Icons.star_outline_rounded,
+                    color: Colors.orange,
+                    size: 30,
+                  ),
+                )),
+              )),
+              const SizedBox(height: 15),
+              TextField(
+                controller: commentController,
+                maxLines: 3,
+                textAlign: TextAlign.right,
+                decoration: InputDecoration(
+                  hintText: "اكتب تعليقك هنا...",
+                  hintStyle: const TextStyle(fontSize: 12),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  filled: true,
+                  fillColor: Colors.grey[50],
+                ),
+              ),
+              const SizedBox(height: 25),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Get.back(),
+                      child: const Text("إلغاء", style: TextStyle(color: Colors.grey)),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (commentController.text.trim().isEmpty) {
+                          Get.snackbar("تنبيه", "يرجى كتابة تعليق");
+                          return;
+                        }
+                        final success = await controller.postReview(rating.value, commentController.text.trim());
+                        if (success) {
+                          Get.back();
+                          Get.snackbar("نجاح", "تم إضافة تقييمك بنجاح", backgroundColor: Colors.green, colorText: Colors.white);
+                        } else {
+                          Get.snackbar("خطأ", "فشل في ارسال التقييم، قد تكون قيمت هذا المنتج مسبقاً", backgroundColor: Colors.red, colorText: Colors.white);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kPrimaryColor,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: const Text("إرسال", style: TextStyle(color: Colors.white)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _showAllReviewsSheet(BuildContext context, ProductController controller) {
@@ -555,39 +682,25 @@ class ProductDetailView extends StatelessWidget {
   }
 
   Widget _buildRecommendations() {
-    return ListView.builder(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      itemCount: 4,
-      itemBuilder: (context, index) {
-        final mockProduct = Product(
-            id: 100 + index,
-            name: index % 2 == 0 ? "سماعة بلوتوث برو" : "شاحن سريع 65W",
-            price: (index % 2 == 0 ? 150 : 45).toDouble(),
-            oldPrice: (index % 2 == 0 ? 180 : 55).toDouble(),
-            description: "وصف مختصر للمنتج المقترح",
-            brandName: "Bytore Accessories",
-            stock: 10,
-            status: "New",
-            warranty: "1 Year",
-            deliveryTime: "3-5 days",
-            imageUrl: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?q=80&w=2065&auto=format&fit=crop"
-        );
-
-        return Container(
-          width: 160,
-          margin: const EdgeInsets.only(left: 15),
-          child: Obx(() {
-            final appController = Get.find<AppController>();
-            return ItemCard(
-              product: mockProduct,
-              isWishlisted: appController.isWishlisted(mockProduct.id),
-              onWishlistToggle: () => appController.toggleWishlist(mockProduct.id),
-            );
-          }),
-        );
-      },
-    );
+    final ProductController controller = Get.find<ProductController>(tag: product.id.toString());
+    return Obx(() {
+      if (controller.similarProducts.isEmpty) {
+        return const Center(child: Text("لا توجد منتجات مشابهة حالياً", style: TextStyle(color: Colors.grey)));
+      }
+      return ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        itemCount: controller.similarProducts.length,
+        itemBuilder: (context, index) {
+          final prod = controller.similarProducts[index];
+          return Container(
+            width: 170,
+            margin: const EdgeInsets.only(left: 15),
+            child: ItemCard(product: prod, isCompact: true),
+          );
+        },
+      );
+    });
   }
 
   Widget _buildQuantityCounter(ProductController controller) {
@@ -688,10 +801,14 @@ class ProductDetailView extends StatelessWidget {
                 children: [
                   const Text("السعر النهائي", style: TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500)),
                   const SizedBox(height: 2),
-                  Obx(() => Text(
-                    appController.getFormattedPrice(controller.currentPrice),
-                    style: const TextStyle(color: kPrimaryColor, fontWeight: FontWeight.w900, fontSize: 24),
-                  )),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Obx(() => Text(
+                      appController.getFormattedPrice(controller.currentPrice),
+                      style: const TextStyle(color: kPrimaryColor, fontWeight: FontWeight.w900, fontSize: 24),
+                    )),
+                  ),
                 ],
               ),
             ),

@@ -8,7 +8,10 @@ import 'package:bytore/features/profile/controllers/activities_controller.dart';
 import 'package:bytore/features/orders/models/order_model.dart';
 import '../models/payment_method_model.dart';
 import 'package:local_auth/local_auth.dart';
-import 'package:bytore/core/constants/constants.dart';
+import 'package:bytore/features/profile/controllers/activities_controller.dart';
+import 'package:bytore/features/orders/models/order_model.dart';
+import 'package:bytore/features/notifications/controllers/notification_controller.dart';
+import '../models/payment_method_model.dart';
 
 class CheckoutController extends GetxController {
   final ApiService _apiService = ApiService();
@@ -141,14 +144,19 @@ class CheckoutController extends GetxController {
       }
 
       final orderData = {
-        "address": addresses[selectedAddressIndex.value]['address'],
-        "payment_method_id": paymentMethods.isNotEmpty ? paymentMethods[selectedMethodIndex.value].id : 1,
-        "items": cartController.items.values.map((item) => {
+        "user_id": _appController.user.value?.id ?? 1, // Get current user ID
+        "store_id": cartController.items.values.first.product.storeId, // Get store ID from first item
+        "products": cartController.items.values.map((item) => {
           "product_id": item.product.id,
           "quantity": item.quantity.value,
           "price": item.product.price,
         }).toList(),
         "total_price": cartController.totalAmount + (cartController.shippingCost ?? 0.0),
+        "payment_method": paymentMethods.isNotEmpty 
+            ? paymentMethods[selectedMethodIndex.value].name 
+            : "الدفع عند الاستلام",
+        "address": addresses[selectedAddressIndex.value]['address'],
+        "city": addresses[selectedAddressIndex.value]['city'] ?? "صنعاء", // Send city from addresses
       };
 
       final order = await _apiService.createOrder(orderData, token);
@@ -162,33 +170,50 @@ class CheckoutController extends GetxController {
           color: Colors.green,
         );
 
-        // Log Activity
+        // Update Notification Center
         try {
-          if (Get.isRegistered<ActivitiesController>()) {
-            Get.find<ActivitiesController>().logActivity(
-              title: 'إتمام طلب جديد بنجاح',
-              type: 'buy'
-            );
-          }
-        } catch (e) {}
+          Get.find<NotificationController>().addNotification(
+            "تم إتمام الطلب بنجاح",
+            "طلبك رقم #${order.id} قيد المعالجة الآن وسوف يتم توصيله قريباً.",
+            category: "الطلبات",
+          );
+        } catch (_) {}
+
+        // Update purchase reports so it appears instantly
+        try {
+          Get.find<PurchaseReportsController>().addOrder(order);
+        } catch (e) {
+          debugPrint("Failed to update PurchaseReportsController: $e");
+        }
 
         // Clear Cart
         cartController.clearCart();
         
-        // Refresh Purchase Reports
+        // سجل النشاط: إكمال عملية شراء
         try {
-          if (Get.isRegistered<PurchaseReportsController>()) {
-            Get.find<PurchaseReportsController>().loadOrders();
-          }
-        } catch (e) {}
-        
+          Get.find<ActivitiesController>().logActivity(
+            title: "إتمام طلب شراء رقم #${order.id}",
+            type: "buy"
+          );
+        } catch (e) {
+          debugPrint("Activity Log Error: $e");
+        }
+
         return order;
-      } else {
-        Get.snackbar("خطأ", "فشل في إتمام الطلب، يرجى المحاولة لاحقاً", backgroundColor: Colors.redAccent, colorText: Colors.white);
-        return null;
       }
+      return null;
     } catch (e) {
-      debugPrint("Error completing order: $e");
+      debugPrint("🔥 Critical Error completing order: $e");
+      String cleanError = e.toString().replaceAll("Exception: ", "");
+      
+      Get.snackbar(
+        "فشل إتمام الطلب", 
+        "تنبيه السيرفر: $cleanError", 
+        backgroundColor: Colors.redAccent, 
+        colorText: Colors.white,
+        duration: const Duration(seconds: 8),
+        icon: const Icon(Icons.error_outline, color: Colors.white),
+      );
       return null;
     } finally {
       isCompletingOrder.value = false;

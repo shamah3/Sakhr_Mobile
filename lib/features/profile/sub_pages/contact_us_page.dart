@@ -3,17 +3,21 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:get/get.dart';
 import 'package:bytore/core/components/custom_app_bar.dart';
+import 'package:bytore/features/profile/controllers/support_controller.dart';
 
 
 class ContactUsPage extends StatelessWidget {
-  const ContactUsPage({Key? key}) : super(key: key);
+  ContactUsPage({Key? key}) : super(key: key);
 
-  // --- الهوية البصرية لمتجر محسوب (نفس ألوانك) ---
+  // استدعاء الكنترولر الجديد
+  final SupportController supportController = Get.put(SupportController());
+
+  // --- الهوية البصرية لمتجر صخر (نفس ألوانك) ---
   static const Color primaryBlue = Color(0xFF015C92);
   static const Color secondaryOrange = Color(0xFFFFA931);
   static const Color backgroundColor = Color(0xFFF8FAFC);
 
-  // دالة فتح الروابط (بقيت كما هي ولكن يمكن استدعاؤها عبر GetX)
+  // دالة فتح الروابط
   Future<void> _launchURL(String url) async {
     final Uri uri = Uri.parse(url);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
@@ -26,71 +30,158 @@ class ContactUsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: const CustomAppBar(title: 'تواصل معنا'),
-      body: Column(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
+        child: Column(
           children: [
-            // --- AppBar المنحني الموحد ---
-            // _buildCurvedAppBar(), removed
-
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
-                child: Column(
-                  children: [
-                    _buildHeroIcon(),
-                    const SizedBox(height: 25),
-                    Text(
-                      'كيف يمكننا مساعدتك؟',
-                      style: GoogleFonts.cairo(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        color: primaryBlue,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'فريق دعم صخر متواجد لخدمتك والإجابة على استفساراتك في أسرع وقت ممكن.',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.cairo(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                        height: 1.6,
-                      ),
-                    ),
-                    const SizedBox(height: 35),
-
-                    // قنوات التواصل (الروابط)
-                    _buildContactMethod(
-                      icon: Icons.chat_bubble_outline_rounded,
-                      title: 'عبر الواتساب',
-                      subtitle: 'محادثة فورية مع فريق الدعم',
-                      color: const Color(0xFF25D366),
-                      onTap: () => _launchURL('https://wa.me/967777123456'),
-                    ),
-
-                    _buildContactMethod(
-                      icon: Icons.phone_in_talk_rounded,
-                      title: 'اتصال هاتفي',
-                      subtitle: '+967 777 123 456',
-                      color: primaryBlue,
-                      onTap: () => _launchURL('tel:+967777123456'),
-                    ),
-
-                    _buildContactMethod(
-                      icon: Icons.alternate_email_rounded,
-                      title: 'البريد الإلكتروني',
-                      subtitle: 'support@sakhr.com',
-                      color: secondaryOrange,
-                      onTap: () => _launchURL('mailto:support@sakhr.com'),
-                    ),
-
-                    const SizedBox(height: 20),
-                    _buildSocialSection(),
-                  ],
-                ),
+            _buildHeroIcon(),
+            const SizedBox(height: 25),
+            Text(
+              'كيف يمكننا مساعدتك؟',
+              style: GoogleFonts.cairo(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                color: primaryBlue,
               ),
             ),
+            const SizedBox(height: 8),
+            Text(
+              'فريق دعم صخر متواجد لخدمتك والإجابة على استفساراتك في أسرع وقت ممكن.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.cairo(
+                fontSize: 14,
+                color: Colors.grey[600],
+                height: 1.6,
+              ),
+            ),
+            const SizedBox(height: 35),
+
+            // 1. قنوات التواصل السريع
+            _buildContactMethod(
+              icon: Icons.chat_bubble_outline_rounded,
+              title: 'عبر الواتساب',
+              subtitle: 'محادثة فورية مع فريق الدعم',
+              color: const Color(0xFF25D366),
+              onTap: () => _launchURL('https://wa.me/967777123456'),
+            ),
+
+            _buildContactMethod(
+              icon: Icons.phone_in_talk_rounded,
+              title: 'اتصال هاتفي',
+              subtitle: '+967 777 123 456',
+              color: primaryBlue,
+              onTap: () => _launchURL('tel:+967777123456'),
+            ),
+
+            const SizedBox(height: 30),
+            
+            // 2. نموذج الدعم الفني المباشر
+            _buildSupportForm(),
+
+            const SizedBox(height: 30),
+            _buildSocialSection(),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSupportForm() {
+    return Container(
+      padding: const EdgeInsets.all(25),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+        border: Border.all(color: primaryBlue.withOpacity(0.05)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.edit_note_rounded, color: secondaryOrange),
+              const SizedBox(width: 10),
+              Text(
+                'أرسل تذكرة دعم فني',
+                style: GoogleFonts.cairo(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: primaryBlue,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _buildTextField(
+            controller: supportController.subjectController,
+            hint: 'عنوان المشكلة',
+            icon: Icons.subject_rounded,
+          ),
+          const SizedBox(height: 15),
+          _buildTextField(
+            controller: supportController.messageController,
+            hint: 'اشرح المشكلة هنا بالتفصيل...',
+            icon: Icons.message_outlined,
+            maxLines: 4,
+          ),
+          const SizedBox(height: 25),
+          Obx(() => SizedBox(
+            width: double.infinity,
+            height: 55,
+            child: ElevatedButton(
+              onPressed: supportController.isLoading.value 
+                  ? null 
+                  : () => supportController.submitSupportTicket(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryBlue,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                elevation: 0,
+              ),
+              child: supportController.isLoading.value
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : Text(
+                      'إرسال التذكرة',
+                      style: GoogleFonts.cairo(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+            ),
+          )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    int maxLines = 1,
+  }) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      style: GoogleFonts.cairo(fontSize: 14),
+      decoration: InputDecoration(
+        hintText: hint,
+        prefixIcon: Icon(icon, color: primaryBlue, size: 20),
+        filled: true,
+        fillColor: backgroundColor,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      ),
     );
   }
 

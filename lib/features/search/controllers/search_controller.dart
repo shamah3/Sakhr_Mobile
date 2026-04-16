@@ -1,6 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bytore/features/product/models/product_model.dart';
 import 'package:bytore/core/services/api_service.dart';
+import 'package:bytore/data/local_products.dart';
+import 'package:bytore/features/profile/controllers/activities_controller.dart';
 
 class SearchController extends GetxController {
   final String initialQuery;
@@ -21,16 +24,41 @@ class SearchController extends GetxController {
     super.onInit();
     searchQuery.value = initialQuery;
     fetchSearchResults();
+    
+    // سجل النشاط: البحث الأول
+    if (initialQuery.isNotEmpty) {
+      _logSearchActivity(initialQuery);
+    }
+  }
+
+  void _logSearchActivity(String query) {
+     try {
+      if (Get.isRegistered<ActivitiesController>()) {
+        Get.find<ActivitiesController>().logActivity(
+          title: "البحث عن: $query",
+          type: "search"
+        );
+      }
+    } catch (e) {
+      debugPrint("Activity Log Error: $e");
+    }
   }
 
   Future<void> fetchSearchResults() async {
     try {
       isLoading.value = true;
       final results = await _apiService.fetchProducts();
-      products.value = results;
+      
+      // 🔥 دمج المنتجات المحلية مع نتائج البحث القادمة من السيرفر
+      products.assignAll(results);
+      products.addAll(local3DProducts);
+      
       _applyLocalFiltering();
     } catch (e) {
-      Get.snackbar("خطأ", "فشل تحميل نتائج البحث");
+      // حتى لو فشل السيرفر، نظهر المنتجات المحلية
+      products.assignAll(local3DProducts);
+      _applyLocalFiltering();
+      debugPrint("Search error (showing local only): $e");
     } finally {
       isLoading.value = false;
     }
@@ -57,7 +85,13 @@ class SearchController extends GetxController {
   }
 
   void updateSearchQuery(String query) {
+    if (query == searchQuery.value) return;
     searchQuery.value = query;
     _applyLocalFiltering();
+    
+    // سجل النشاط عند توقف المستخدم عن الكتابة (تبسيطاً حالياً عند الاستدعاء)
+    if (query.length > 2) {
+      _logSearchActivity(query);
+    }
   }
 }

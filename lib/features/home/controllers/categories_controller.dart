@@ -196,32 +196,21 @@ class CategoriesController extends GetxController {
       for (var mainCat in apiCategories) {
         if (mainCat['id'] == 'all') continue;
         
-        // ماركات القسم الرئيسي مباشرة
         final List mainBrands = mainCat['brands'] as List? ?? [];
         for (var b in mainBrands) {
-          String name = b['name']?.toString() ?? "";
+          String name = (b['name'] ?? "").toString();
           if (!seenBrands.contains(name)) {
             brands.add(b);
             seenBrands.add(name);
           }
         }
-
-        // ماركات الأقسام الفرعية
-        final List children = mainCat['children'] as List? ?? [];
-        for (var sub in children) {
-          final List subBrands = sub['brands'] as List? ?? [];
-          for (var b in subBrands) {
-            String name = b['name']?.toString() ?? "";
-            if (!seenBrands.contains(name)) {
-              brands.add(b);
-              seenBrands.add(name);
-            }
-          }
-        }
       }
     } else {
-       // logic for single category brands can be added here or kept in view
-       // For consistency with current view implementation, we'll keep it simple
+      // ماركات القسم الحالي المختار فقط
+      final List currentBrands = cat['brands'] as List? ?? [];
+      for (var b in currentBrands) {
+        brands.add(b);
+      }
     }
     
     if (searchText.isEmpty) return brands;

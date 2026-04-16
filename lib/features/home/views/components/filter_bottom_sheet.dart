@@ -45,6 +45,7 @@ class FilterBottomSheet extends StatelessWidget {
     var tempBrand = appController.selectedBrand.value;
     var tempAvailability = appController.selectedAvailability.value;
     var tempWarranty = appController.warrantyText.value;
+    var tempRegion = appController.selectedRegion.value;
 
     final TextEditingController minPriceCtrl = TextEditingController(text: tempRange.start.round().toString());
     final TextEditingController maxPriceCtrl = TextEditingController(text: tempRange.end.round().toString());
@@ -156,9 +157,21 @@ class FilterBottomSheet extends StatelessWidget {
                       null,
                       label: "التوفر والحالة",
                       hint: "اختيار الحالة",
-                      items: ["الكل", "متوفر"],
+                      items: ["الكل", "متوفر", "غير متوفر"],
                       onChanged: (v) {
                         setModalState(() => tempAvailability = v ?? tempAvailability);
+                      },
+                    ),
+
+                    const SizedBox(height: 20),
+                    FilterWidgets.buildDropdownField(
+                      tempRegion,
+                      null,
+                      label: "المنطقة",
+                      hint: "اختيار المنطقة",
+                      items: ["الكل", "صنعاء", "عدن", "تعز", "إب", "الحديدة", "المكلا", "أخرى"],
+                      onChanged: (v) {
+                        setModalState(() => tempRegion = v ?? tempRegion);
                       },
                     ),
 
@@ -178,6 +191,7 @@ class FilterBottomSheet extends StatelessWidget {
                           brand: tempBrand,
                           availability: tempAvailability,
                           warranty: tempWarranty,
+                          region: tempRegion,
                         );
                         homeController.applyFilters();
                         Get.back();

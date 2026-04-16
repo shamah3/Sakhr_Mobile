@@ -10,6 +10,7 @@ import 'package:bytore/features/orders/models/order_model.dart';
 import 'package:bytore/features/profile/models/wallet_model.dart';
 import 'package:bytore/features/profile/models/complaint_model.dart';
 import 'package:bytore/features/profile/models/review_model.dart';
+import 'package:bytore/features/profile/models/activity_model.dart';
 import 'package:bytore/core/controllers/app_controller.dart';
 import 'package:bytore/features/home/models/coupon_model.dart';
 import 'package:get/get.dart';
@@ -59,14 +60,13 @@ class ApiService {
           "Accept": "application/json",
           if (token != null && token.isNotEmpty) "Authorization": "Bearer $token",
         },
-      );
+      ).timeout(const Duration(seconds: 30));
 
       debugPrint("📡 [DEBUG] PRODUCTS RESPONSE STATUS: ${response.statusCode}");
       debugPrint("📡 [DEBUG] PRODUCTS RESPONSE BODY: ${response.body}");
 
       if (response.statusCode != 200) {
-        debugPrint("❌ API ERROR [${response.statusCode}]: ${response.body}");
-        return [];
+        throw "Server Error [${response.statusCode}] at $url. Body: ${response.body.substring(0, response.body.length > 50 ? 50 : response.body.length)}";
       }
 
       final dynamic decoded = jsonDecode(response.body);
@@ -88,21 +88,24 @@ class ApiService {
       }
 
       List<Product> parsedProducts = [];
+      debugPrint("📡 [DEBUG] FOUND ${productsList.length} PRODUCTS IN JSON");
+      
       for (var e in productsList) {
         if (e is Map) {
           try {
-            parsedProducts.add(Product.fromJson(Map<String, dynamic>.from(e)));
+            var product = Product.fromJson(Map<String, dynamic>.from(e));
+            parsedProducts.add(product);
           } catch (err) {
-            debugPrint("⚠️ ERROR PARSING INDIVIDUAL PRODUCT: $err");
+            debugPrint("⚠️ ERROR PARSING INDIVIDUAL PRODUCT (ID: ${e['id']}): $err");
           }
         }
       }
 
-      debugPrint("✅ SUCCESSFULLY FETCHED PRODUCTS: ${parsedProducts.length}");
+      debugPrint("✅ SUCCESSFULLY PARSED ${parsedProducts.length} OUT OF ${productsList.length} PRODUCTS");
       return parsedProducts;
     } catch (e) {
       debugPrint("🔥 Fetch Products Error: $e");
-      return [];
+      rethrow; 
     }
   }
 
@@ -169,11 +172,18 @@ class ApiService {
         if (orderData != null) {
           return OrderModel.fromJson(orderData);
         }
+      } else {
+        final errorData = jsonDecode(response.body);
+        String errorMsg = errorData['message'] ?? "Unknown Server Error";
+        if (errorData['errors'] != null) {
+          errorMsg += ": " + errorData['errors'].toString();
+        }
+        throw Exception(errorMsg);
       }
       return null;
     } catch (e) {
-      debugPrint("Create Order Error: $e");
-      return null;
+      debugPrint("🔥 Create Order Error: $e");
+      rethrow;
     }
   }
 
@@ -401,7 +411,7 @@ class ApiService {
       final response = await http.get(
         Uri.parse("$baseUrl/categories"),
         headers: {"Accept": "application/json"},
-      );
+      ).timeout(const Duration(seconds: 30));
 
       debugPrint("📡 [DEBUG] CATEGORIES RESPONSE STATUS: ${response.statusCode}");
       debugPrint("📡 [DEBUG] CATEGORIES RESPONSE BODY: ${response.body}");
@@ -500,12 +510,17 @@ class ApiService {
       if (response.statusCode != 200) return [];
       final decoded = jsonDecode(response.body);
       List<dynamic> list = (decoded is Map ? decoded['data'] : decoded) ?? [];
-      return list
+      
+      List<StoreModel> parsedStores = list
           .where((e) => e is Map)
           .map((e) => StoreModel.fromJson(Map<String, dynamic>.from(e)))
           .toList();
+
+      debugPrint("✅ SUCCESSFULLY FETCHED STORES: ${parsedStores.length}");
+      return parsedStores;
     } catch (e) {
-      return [];
+      debugPrint("🔥 Fetch Stores Error: $e");
+      rethrow; 
     }
   }
 
@@ -582,8 +597,29 @@ class ApiService {
   Future<List<ReviewModel>> fetchProductReviews(int productId) async {
     try {
       final response = await http.get(
-        Uri.parse("$baseUrl/products/$productId/reviews"),
+        Uri.parse("$baseUrl/product-reviews?product_id=$productId"),
         headers: {"Accept": "application/json"},
+      );
+      if (response.statusCode != 200) return [];
+      final decoded = jsonDecode(response.body);
+      List<dynamic> list = (decoded is Map ? decoded['data'] : decoded) ?? [];
+      return list
+          .where((e) => e is Map)
+          .map((e) => ReviewModel.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<List<ReviewModel>> fetchUserReviews(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/product-reviews"),
+        headers: {
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
       );
       if (response.statusCode != 200) return [];
       final decoded = jsonDecode(response.body);
@@ -599,11 +635,8 @@ class ApiService {
 
   Future<bool> createReview(Map<String, dynamic> data, String token) async {
     try {
-      final productId = data['product_id'];
-      if (productId == null) return false;
-
       final response = await http.post(
-        Uri.parse("$baseUrl/products/$productId/reviews"),
+        Uri.parse("$baseUrl/product-reviews"),
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json",
@@ -611,26 +644,15 @@ class ApiService {
         },
         body: jsonEncode(data),
       );
-      return response.statusCode == 200 || response.statusCode == 201;
+      
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        debugPrint("❌ REVIEW API FAILED: ${response.statusCode}");
+        debugPrint("❌ BODY: ${response.body}");
+        return false;
+      }
+      return true;
     } catch (e) {
-      return false;
-    }
-  }
-
-  Future<bool> createComplaint(Map<String, dynamic> data, String token) async {
-    try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/complaints"),
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-          "Authorization": "Bearer $token",
-        },
-        body: jsonEncode(data),
-      );
-      return response.statusCode == 200 || response.statusCode == 201;
-    } catch (e) {
-      debugPrint("Create Complaint Error: $e");
+      debugPrint("🔥 Review Error Catch: $e");
       return false;
     }
   }
@@ -656,6 +678,25 @@ class ApiService {
       return [];
     }
   }
+
+  Future<bool> createComplaint(Map<String, dynamic> data, String token) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/complaints"),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode(data),
+      );
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint("Create Complaint Error: $e");
+      return false;
+    }
+  }
+
 
   // ==================================================
   // 🔐 المصادقة والـ OTP (Mock/Remote)
@@ -694,7 +735,7 @@ class ApiService {
   Future<bool> logout(String token) async {
     try {
       final response = await http.post(
-        Uri.parse("$baseUrl/logout"),
+        Uri.parse("$baseUrl/auth/logout"),
         headers: {
           "Accept": "application/json",
           "Content-Type": "application/json",
@@ -711,34 +752,119 @@ class ApiService {
   // ==================================================
   // 🔐 المصادقة والـ OTP
   // ==================================================
-  Future<bool> sendOtp(String phone) async {
+  Future<String?> sendOtp(String phone) async {
     try {
       final response = await http.post(
-        Uri.parse("$baseUrl/send-otp"),
+        Uri.parse("$baseUrl/auth/send-code"),
         headers: {"Accept": "application/json", "Content-Type": "application/json"},
         body: jsonEncode({"phone": phone}),
       );
-      return response.statusCode == 200 || response.statusCode == 201;
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final decoded = jsonDecode(response.body);
+        // Extracts the code from Laravel's sendResponse(['code' => $code])
+        if (decoded is Map && decoded.containsKey('data')) {
+           return decoded['data']['code']?.toString();
+        }
+      }
+      return null;
     } catch (e) {
       debugPrint("🔥 Send OTP Error: $e");
-      return false;
+      return null;
     }
   }
 
-  Future<String?> verifyOtp(String phone, String code) async {
+  Future<Map<String, dynamic>?> verifyOtp(String phone, String code) async {
     try {
       final response = await http.post(
-        Uri.parse("$baseUrl/verify-otp"),
+        Uri.parse("$baseUrl/auth/verify-code"),
         headers: {"Accept": "application/json", "Content-Type": "application/json"},
         body: jsonEncode({"phone": phone, "code": code}),
       );
       if (response.statusCode == 200 || response.statusCode == 201) {
         final decoded = jsonDecode(response.body);
-        return decoded['token'] ?? decoded['data']?['token'];
+        if (decoded is Map && decoded.containsKey('data')) {
+           return Map<String, dynamic>.from(decoded['data']);
+        }
       }
       return null;
     } catch (e) {
       debugPrint("🔥 Verify OTP Error: $e");
+      return null;
+    }
+  }
+
+  // ==================================================
+  // 🔐 تغيير كلمة السر
+  // ==================================================
+  Future<bool> changePassword({
+    required int userId,
+    required String oldPassword,
+    required String newPassword,
+    required String token,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/auth/change-password"),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({
+          "user_id": userId,
+          "old_password": oldPassword,
+          "new_password": newPassword,
+        }),
+      );
+      
+      debugPrint("📡 Change Password Response: ${response.statusCode} - ${response.body}");
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint("🔥 Change Password Error: $e");
+      return false;
+    }
+  }
+
+  // ==================================================
+  // 🔐 تسجيل حساب جديد
+  // ==================================================
+  Future<Map<String, dynamic>?> registerCustomer({
+    required String firstName,
+    required String lastName,
+    required String phone,
+    required String password,
+    String fingerprint = "1",
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/customers"),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          "first_name": firstName,
+          "last_name": lastName,
+          "phone": phone,
+          "password": password,
+          "fingerprint": fingerprint,
+        }),
+      );
+
+      debugPrint("📡 Register Response Code: ${response.statusCode}");
+      debugPrint("📡 Register Response Body: ${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map && decoded.containsKey('data')) {
+           return Map<String, dynamic>.from(decoded['data']);
+        }
+        return decoded is Map ? Map<String, dynamic>.from(decoded) : {};
+      }
+      return null;
+    } catch (e) {
+      debugPrint("🔥 Register Error: $e");
       return null;
     }
   }
@@ -912,7 +1038,7 @@ class ApiService {
   // 💬 الدردشة مع المتاجر
   Future<bool> sendChatMessage(int storeId, String message, String token) async {
     try {
-      final String url = "$baseUrl/chat/send";
+      final String url = "$baseUrl/messages"; // تم التعديل ليطابق المسار الفعلي في Laravel
       final response = await http.post(
         Uri.parse(url),
         headers: {
@@ -928,6 +1054,136 @@ class ApiService {
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
       debugPrint("🔥 Send Chat Message Error: $e");
+      return false;
+    }
+  }
+
+  // ⭐️ إرسال تقييم منتج
+  Future<bool> postProductReview({
+    required int productId,
+    required int userId,
+    required int rating,
+    required String comment,
+    required String token,
+  }) async {
+    return createReview({
+      "product_id": productId,
+      "user_id": userId,
+      "rating": rating,
+      "comment": comment,
+    }, token);
+  }
+
+  // ⭐️ إرسال تقييم متجر (سيستخدم الآن الـ endpoint الموحد أو الخاص به)
+  Future<bool> postStoreReview({
+    required int storeId,
+    required int rating,
+    required String comment,
+    required String token,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/store-reviews"),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({
+          "store_id": storeId,
+          "rating": rating,
+          "comment": comment,
+        }),
+      );
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint("🔥 Post Store Review Error: $e");
+      return false;
+    }
+  }
+
+  // 🛡️ جسور البيانات الجديدة (Data Bridges)
+  
+  // ⚡ سجل أنشطة العملاء
+  Future<bool> postCustomerActivity(Map<String, dynamic> data, String token) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/customer-activities"),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode(data),
+      );
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint("🔥 Post Activity Error: $e");
+      return false;
+    }
+  }
+
+  Future<List<ActivityModel>> fetchActivities(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/customer-activities"),
+        headers: {
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+      if (response.statusCode != 200) return [];
+      final decoded = jsonDecode(response.body);
+      List<dynamic> list = (decoded is Map ? decoded['data'] : decoded) ?? [];
+      return list
+          .where((e) => e is Map)
+          .map((e) => ActivityModel.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // 📦 المرتجعات
+  Future<bool> postReturnRequest(Map<String, dynamic> data, String token) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/returns"),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        debugPrint("❌ RETURN API FAILED: ${response.statusCode}");
+        debugPrint("❌ BODY: ${response.body}");
+        return false;
+      }
+      return true;
+    } catch (e) {
+      debugPrint("🔥 Post Return Error: $e");
+      return false;
+    }
+  }
+
+  // 🎧 الدعم الفني
+  Future<bool> postSupportTicket(Map<String, dynamic> data, String token) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/support"),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode(data),
+      );
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint("🔥 Post Support Error: $e");
       return false;
     }
   }

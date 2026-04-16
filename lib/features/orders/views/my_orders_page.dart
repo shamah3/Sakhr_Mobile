@@ -15,7 +15,7 @@ class MyOrdersPage extends StatelessWidget {
     final purchaseController = Get.find<PurchaseReportsController>();
 
     return DefaultTabController(
-      length: 5,
+      length: 7,
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
         appBar: AppBar(
@@ -46,8 +46,10 @@ class MyOrdersPage extends StatelessWidget {
             tabs: const [
               Tab(text: "الكل"),
               Tab(text: "قيد الانتظار"),
+              Tab(text: "قيد التجهيز"),
               Tab(text: "قيد التوصيل"),
-              Tab(text: "تم التوصيل"),
+              Tab(text: "قيد الاستلام"),
+              Tab(text: "تم الاستلام"),
               Tab(text: "متأخر"),
             ],
           ),
@@ -61,7 +63,9 @@ class MyOrdersPage extends StatelessWidget {
             children: [
               _buildOrderList(orders),
               _buildOrderList(orders.where((o) => o.status == OrderStatus.pending).toList()),
+              _buildOrderList(orders.where((o) => o.status == OrderStatus.processing).toList()),
               _buildOrderList(orders.where((o) => o.status == OrderStatus.outForDelivery).toList()),
+              _buildOrderList(orders.where((o) => o.status == OrderStatus.readyForPickup).toList()),
               _buildOrderList(orders.where((o) => o.status == OrderStatus.delivered).toList()),
               _buildOrderList(orders.where((o) => o.status == OrderStatus.late).toList()),
             ],
@@ -119,6 +123,7 @@ class MyOrdersPage extends StatelessWidget {
       case OrderStatus.confirmed: statusIcon = Icons.check_circle_outline_rounded; break;
       case OrderStatus.processing: statusIcon = Icons.inventory_2_outlined; break;
       case OrderStatus.outForDelivery: statusIcon = Icons.local_shipping_outlined; break;
+      case OrderStatus.readyForPickup: statusIcon = Icons.hail_rounded; break;
       case OrderStatus.delivered: statusIcon = Icons.home_work_outlined; break;
       case OrderStatus.late: statusIcon = Icons.warning_amber_rounded; break;
     }
@@ -192,7 +197,7 @@ class MyOrdersPage extends StatelessWidget {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => Get.toNamed(AppRoutes.TRACKING, arguments: order.id),
+                          onPressed: () => Get.toNamed(AppRoutes.TRACKING, arguments: order),
                           style: OutlinedButton.styleFrom(
                             side: BorderSide(color: Colors.grey.shade200),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -207,7 +212,7 @@ class MyOrdersPage extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () => Get.toNamed(AppRoutes.TRACKING, arguments: order.id),
+                          onPressed: () => Get.toNamed(AppRoutes.TRACKING, arguments: order),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: kPrimaryColor,
                             foregroundColor: Colors.white,

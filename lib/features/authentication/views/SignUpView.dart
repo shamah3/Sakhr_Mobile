@@ -46,11 +46,12 @@ class SignUpView extends GetView<AuthController> {
                     hint: "رقم الهاتف",
                     icon: Icons.phone_android_rounded,
                     keyboardType: TextInputType.phone,
+                    controller: controller.phoneController,
                   ),
                   const SizedBox(height: 12),
-                  _buildPasswordField("كلمة المرور"),
+                  _buildPasswordField("كلمة المرور", controller.passwordController),
                   const SizedBox(height: 12),
-                  _buildPasswordField("تأكيد كلمة المرور"),
+                  _buildPasswordField("تأكيد كلمة المرور", TextEditingController()), // Placeholder for confirmation
 
                   const SizedBox(height: 30),
 
@@ -111,34 +112,25 @@ class SignUpView extends GetView<AuthController> {
   }
 
   Widget _buildRegisterButton() {
-    return SizedBox(
+    return Obx(() => SizedBox(
       width: double.infinity,
       height: 50,
       child: ElevatedButton(
-        onPressed: () {
-          final names = controller.nameController.text.trim().split(' ');
-          final first = names.isNotEmpty && names.first.isNotEmpty ? names.first : 'مستخدم جديد';
-          final last = names.length > 1 ? names.sublist(1).join(' ') : '';
-          Get.find<AppController>().updateUserName(first, last);
-
-// دالة التسجيل التفاعلية
-          Get.snackbar("نجاح", "تم إنشاء الحساب، يرجى تسجيل الدخول برقمك",
-              backgroundColor: Colors.green, colorText: Colors.white);
-
-          Get.back(); // Return to Login
-        },
+        onPressed: controller.isLoading.value ? null : () => controller.register(),
         style: ElevatedButton.styleFrom(
           backgroundColor: kSakhrBlue,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           elevation: 0,
         ),
-        child: Text(
+        child: controller.isLoading.value
+            ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+            : Text(
           "تسجيل حساب جديد",
           style: GoogleFonts.cairo(
               fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildTextField({
@@ -173,10 +165,11 @@ class SignUpView extends GetView<AuthController> {
     );
   }
 
-  Widget _buildPasswordField(String hint) {
+  Widget _buildPasswordField(String hint, TextEditingController textController) {
     return SizedBox(
       height: 50,
       child: TextFormField(
+        controller: textController,
         textAlign: TextAlign.right,
         obscureText: true,
         style: GoogleFonts.cairo(fontSize: 14),

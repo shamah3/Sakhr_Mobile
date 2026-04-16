@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:bytore/features/profile/controllers/settings_controller.dart';
 import 'package:bytore/core/routes/app_routes.dart';
 import 'package:bytore/core/components/custom_app_bar.dart';
+import 'package:bytore/features/profile/sub_pages/change_password_page.dart';
 
 
 class SettingsPage extends StatelessWidget {
@@ -36,7 +37,7 @@ class SettingsPage extends StatelessWidget {
                   _buildInteractiveItem(
                     icon: Icons.lock_reset_rounded,
                     title: 'تغيير كلمة المرور',
-                    onTap: () => Get.to(() => const SizedBox()), // Placeholder for change password
+                    onTap: () => Get.to(() => ChangePasswordPage()), 
                   ),
   
                   const SizedBox(height: 25),

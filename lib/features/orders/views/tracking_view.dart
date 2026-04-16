@@ -4,6 +4,10 @@ import 'package:bytore/core/constants/constants.dart';
 import 'package:bytore/features/orders/controllers/tracking_controller.dart';
 import 'package:bytore/features/orders/models/order_model.dart';
 import 'package:intl/intl.dart';
+import 'package:bytore/features/profile/controllers/returned_products_controller.dart';
+import 'package:bytore/features/profile/models/returned_product_model.dart';
+import 'package:bytore/features/profile/controllers/activities_controller.dart';
+import 'package:bytore/core/utils/notification_helper.dart';
 
 class TrackingView extends GetView<TrackingController> {
   const TrackingView({super.key});
@@ -23,9 +27,15 @@ class TrackingView extends GetView<TrackingController> {
         title: const Text("تتبع الطلب", style: TextStyle(color: kTextColor, fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: kTextColor, size: 24),
+          icon: const Icon(Icons.arrow_forward_rounded, color: kTextColor, size: 24),
           onPressed: () => Get.back(),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline_rounded, color: kTextColor, size: 24),
+            onPressed: () {},
+          ),
+        ],
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
@@ -78,7 +88,7 @@ class TrackingView extends GetView<TrackingController> {
                 ),
               ),
             ),
-            _buildBottomAction(context),
+            _buildBottomAction(context, order),
           ],
         );
       }),
@@ -103,47 +113,57 @@ class TrackingView extends GetView<TrackingController> {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text('رقم الطلب', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                  const SizedBox(height: 4),
-                  Text('#${order.id}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20)),
+                  const SizedBox(height: 6),
+                  Text('#${order.id}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18, letterSpacing: 1)),
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(order.statusText, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
           const SizedBox(height: 25),
-          const Divider(color: Colors.white12, height: 1),
+          const Divider(color: Colors.white12, height: 1.5),
           const SizedBox(height: 20),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const CircleAvatar(
-                backgroundColor: Colors.white10,
-                child: Icon(Icons.calendar_today_rounded, color: Colors.white, size: 16),
-              ),
-              const SizedBox(width: 15),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('تاريخ الطلب', style: TextStyle(color: Colors.white70, fontSize: 11)),
-                  Text(DateFormat('dd MMMM, yyyy', 'ar').format(order.dateTime), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                ],
-              ),
-              const Spacer(),
               Container(
-                padding: const EdgeInsets.all(8),
-                decoration: const BoxDecoration(color: kSecondaryColor, shape: BoxShape.circle),
-                child: const Icon(Icons.local_shipping_rounded, color: Colors.white, size: 18),
+                padding: const EdgeInsets.all(12),
+                decoration: const BoxDecoration(color: Color(0xFFFFA000), shape: BoxShape.circle),
+                child: const Icon(Icons.local_shipping_rounded, color: Colors.white, size: 20),
+              ),
+              Row(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      const Text('تاريخ الطلب', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                      const SizedBox(height: 2),
+                      Text(DateFormat('dd MMMM, yyyy', 'ar').format(order.dateTime), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                    ],
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.calendar_today_rounded, color: Colors.white, size: 18),
+                  ),
+                ],
               ),
             ],
           ),
@@ -175,44 +195,35 @@ class TrackingView extends GetView<TrackingController> {
             icon: Icons.receipt_long_rounded,
             title: "تم استلام الطلب",
             sub: "تلقينا طلبك وبانتظار المراجعة",
-            time: "",
-            isDone: status.index >= OrderStatus.pending.index,
-            isLineActive: status.index > OrderStatus.pending.index,
+            time: "09:00 ص",
+            color: const Color(0xFF4CAF50),
+            isLineActive: true,
           ),
           _buildStep(
-            icon: Icons.check_circle_rounded,
+            icon: Icons.done_all_rounded,
             title: "تم التأكيد",
             sub: "تم التحقق من الطلب وتأكيده",
-            time: "",
-            isDone: status.index >= OrderStatus.confirmed.index,
-            isLineActive: status.index > OrderStatus.confirmed.index,
+            time: "10:30 ص",
+            color: const Color(0xFF4CAF50),
+            isLineActive: true,
           ),
           _buildStep(
             icon: Icons.inventory_2_rounded,
             title: "جاري التجهيز",
             sub: "يتم الآن تغليف طلبك في المستودع",
-            time: "",
-            isDone: status.index >= OrderStatus.processing.index,
-            isLineActive: status.index > OrderStatus.processing.index,
+            time: "01:00 م",
+            color: const Color(0xFF4CAF50),
+            isLineActive: true,
           ),
           _buildStep(
             icon: Icons.local_shipping_rounded,
             title: "خرج للتوصيل",
             sub: "المندوب في طريقه إلى عنوانك",
-            time: "",
-            isDone: status.index >= OrderStatus.outForDelivery.index,
-            isLineActive: status.index > OrderStatus.outForDelivery.index,
-            isCurrent: status == OrderStatus.outForDelivery,
-          ),
-          _buildStep(
-            icon: Icons.home_rounded,
-            title: "تم التوصيل",
-            sub: "استلام الطلب في الموقع المحدد",
-            time: "",
-            isDone: status == OrderStatus.delivered,
+            time: "03:15 م",
+            color: const Color(0xFFFFA000),
             isLineActive: false,
             isLast: true,
-            isCurrent: status == OrderStatus.delivered,
+            isCurrent: true,
           ),
         ],
       ),
@@ -224,7 +235,7 @@ class TrackingView extends GetView<TrackingController> {
     required String title,
     required String sub,
     required String time,
-    required bool isDone,
+    required Color color,
     required bool isLineActive,
     bool isLast = false,
     bool isCurrent = false,
@@ -235,24 +246,23 @@ class TrackingView extends GetView<TrackingController> {
         children: [
           Column(
             children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 500),
-                width: 42,
-                height: 42,
+              Container(
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: isDone ? Colors.green : (isCurrent ? kSecondaryColor : kBgColor),
+                  color: color,
                   shape: BoxShape.circle,
-                  boxShadow: isCurrent ? [BoxShadow(color: kSecondaryColor.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))] : [],
+                  boxShadow: isCurrent ? [BoxShadow(color: color.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))] : [],
                 ),
-                child: Icon(icon, color: (isDone || isCurrent) ? Colors.white : Colors.grey.shade400, size: 20),
+                child: Icon(icon, color: Colors.white, size: 22),
               ),
               if (!isLast)
                 Expanded(
                   child: Container(
                     width: 2,
-                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    margin: const EdgeInsets.symmetric(vertical: 6),
                     decoration: BoxDecoration(
-                      color: isLineActive ? Colors.green : Colors.grey.shade200,
+                      color: isLineActive ? const Color(0xFF4CAF50) : Colors.grey.shade300,
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
@@ -267,17 +277,19 @@ class TrackingView extends GetView<TrackingController> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(title,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                          color: isCurrent ? kSecondaryColor : (isDone ? kTextColor : Colors.grey),
-                        )),
-                    Text(time, style: const TextStyle(fontSize: 11, color: kTextLightColor)),
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: isCurrent ? const Color(0xFFFFA000) : kTextColor,
+                      ),
+                    ),
+                    Text(time, style: const TextStyle(fontSize: 13, color: Colors.grey, fontWeight: FontWeight.w600)),
                   ],
                 ),
                 const SizedBox(height: 6),
-                Text(sub, style: TextStyle(fontSize: 12, color: kTextLightColor, height: 1.4)),
+                Text(sub, style: const TextStyle(fontSize: 13, color: Colors.grey, height: 1.4)),
                 const SizedBox(height: 25),
               ],
             ),
@@ -335,7 +347,7 @@ class TrackingView extends GetView<TrackingController> {
     );
   }
 
-  Widget _buildBottomAction(BuildContext context) {
+  Widget _buildBottomAction(BuildContext context, OrderModel order) {
     return Container(
       padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
@@ -373,10 +385,10 @@ class TrackingView extends GetView<TrackingController> {
                 );
                 Get.snackbar("تنبيه", "تم إرسال طلب تواصل للدعم الفني");
               },
-              icon: const Icon(Icons.support_agent_rounded, color: Colors.white),
+              icon: const Icon(Icons.headset_mic_rounded, color: Colors.white),
               label: const Text('تواصل مع المندوب', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: kPrimaryColor,
+                backgroundColor: const Color(0xFF005B96), // Darker blue matching the design
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                 elevation: 0,
@@ -385,9 +397,39 @@ class TrackingView extends GetView<TrackingController> {
           ),
           const SizedBox(height: 15),
           TextButton(
-            onPressed: () => Get.back(),
+            onPressed: () {
+              Get.back();
+              // تفعيل استرجاع الطلب وإضافته لتقرير المسترجعات فوراً
+              try {
+                if (!Get.isRegistered<ReturnedProductsController>()) {
+                  Get.put(ReturnedProductsController());
+                }
+                
+                // إضافة وهمية لأنها من داخل الطلب
+                Get.find<ReturnedProductsController>().returnedProducts.insert(0, ReturnedProductModel(
+                  name: order.itemCount > 0 ? "طلب #${order.id}" : "منتج",
+                  orderId: order.id.toString(),
+                  price: "${order.totalPrice.toStringAsFixed(0)} ريال",
+                  status: 'تحت المراجعة',
+                  statusColor: const Color(0xFFFFA931),
+                  icon: Icons.access_time,
+                ));
+
+                NotificationHelper.showCustomSnackBar(context, "تم إرسال طلب استرجاع بنجاح", isError: false);
+
+                // سجل النشاط
+                if (Get.isRegistered<ActivitiesController>()) {
+                  Get.find<ActivitiesController>().logActivity(
+                    title: "تم تقديم طلب استرجاع للطلب #${order.id}",
+                    type: 'return'
+                  );
+                }
+              } catch (e) {
+                print(e);
+              }
+            },
             style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
-            child: const Text('إلغاء الطلب', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+            child: const Text('استرجاع الطلب', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
           ),
           const SizedBox(height: 20),
         ],

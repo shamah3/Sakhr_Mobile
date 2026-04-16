@@ -109,8 +109,14 @@ class StoresView extends GetView<StoresController> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const SizedBox(width: 48),
-          
+          if (onReturnHome != null)
+            IconButton(
+              icon: const Icon(Icons.arrow_forward_ios_rounded, color: kTextColor, size: 20),
+              onPressed: onReturnHome,
+            )
+          else
+            const SizedBox(width: 48),
+            
           const Expanded(
             child: Center(
               child: Text(
@@ -125,13 +131,7 @@ class StoresView extends GetView<StoresController> {
             ),
           ),
           
-          if (onReturnHome != null)
-            IconButton(
-              icon: const Icon(Icons.arrow_forward_ios_rounded, color: kTextColor, size: 20),
-              onPressed: onReturnHome,
-            )
-          else
-            const SizedBox(width: 48),
+          const SizedBox(width: 48),
         ],
       ),
     );
@@ -212,7 +212,9 @@ class StoresView extends GetView<StoresController> {
                     child: ClipOval(
                       child: CustomImage(
                         imageUrl: store.logo ?? "",
-                        fit: BoxFit.contain,
+                        fit: BoxFit.cover,
+                        width: 85,
+                        height: 85,
                       ),
                     ),
                   ),

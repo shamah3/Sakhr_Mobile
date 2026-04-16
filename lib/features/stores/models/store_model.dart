@@ -72,7 +72,7 @@ class StoreModel {
     return StoreModel(
       id: int.tryParse(json['id']?.toString() ?? "0") ?? 0,
       name: json['name']?.toString() ?? "بدون اسم",
-      logo: fixImageUrl(json['logo']?.toString() ?? json['image_url']?.toString()),
+      logo: fixImageUrl(json['logo']?.toString() ?? json['image']?.toString() ?? json['image_url']?.toString() ?? json['avatar']?.toString()),
       description: json['description']?.toString(),
       phone: json['phone']?.toString(),
       email: json['email']?.toString(),

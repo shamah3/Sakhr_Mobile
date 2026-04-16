@@ -34,16 +34,17 @@ class AuthController extends GetxController {
     isSendingOtp.value = true;
     
     // 1. Send via API (Primary)
-    bool success = await _apiService.sendOtp(phoneNumber);
+    String? fetchedCode = await _apiService.sendOtp(phoneNumber);
+    bool success = fetchedCode != null;
     
     // 2. Fallback or parallel send via WhatsApp if needed (premium feature)
     if (success) {
-      currentOtp.value = "123456"; // Default mock or fetched if API provided it
+      currentOtp.value = fetchedCode; 
       _otpExpiry = DateTime.now().add(const Duration(minutes: 5)); 
       
       // Optional: Also send via WhatsApp for premium feel
       try {
-        await WhatsAppService().sendOTP(phone: phoneNumber, otp: "123456");
+        await WhatsAppService().sendOTP(phone: phoneNumber, otp: fetchedCode!);
       } catch (e) {}
     }
     
@@ -53,7 +54,7 @@ class AuthController extends GetxController {
       NotificationService().showNotification(
         id: 999,
         title: "كود التحقق",
-        body: "تم إرسال كود التحقق بنجاح إلى هاتفك",
+        body: "كود التحقق الخاص بك هو: $fetchedCode (لأغراض التجربة)",
       );
     }
     return success;
@@ -79,16 +80,28 @@ class AuthController extends GetxController {
     }
 
     final String phoneNumber = phoneController.text.trim();
-    // التحقق عبر الـ API
-    final token = await _apiService.verifyOtp(phoneNumber, enteredCode);
+    final data = await _apiService.verifyOtp(phoneNumber, enteredCode);
+    final String? serverToken = data != null ? data['token'] : null;
 
-    if (token != null || (currentOtp.value != null && currentOtp.value == enteredCode)) {
+    if (serverToken != null || (currentOtp.value != null && currentOtp.value == enteredCode)) {
       currentOtp.value = null;
       _otpExpiry = null;
       _countdownTimer?.cancel();
       resendCountdown.value = 0;
       
-      appController.token.value = token ?? "mock_local_token_123456";
+      // Ensure we use the server token if available, otherwise fallback
+      appController.token.value = serverToken ?? "mock_local_token_123456";
+
+      // Save user info if available
+      if (data != null && data.containsKey('user')) {
+        appController.user.value = UserModel.fromJson(Map<String, dynamic>.from(data['user']));
+        appController.updateUserName(
+          appController.user.value!.firstName, 
+          appController.user.value!.lastName,
+          phone: appController.user.value!.phone
+        );
+      }
+
       updateLoginStatus(true);
       return true;
     }
@@ -152,6 +165,48 @@ class AuthController extends GetxController {
       await appController.clearSession(); // Clears memory and persistent storage
       updateLoginStatus(false);
       Get.offAllNamed('/login');
+    }
+  }
+
+  Future<void> register() async {
+    try {
+      final name = nameController.text.trim();
+      final phone = phoneController.text.trim();
+      final password = passwordController.text.trim();
+
+      if (name.isEmpty || phone.isEmpty || password.isEmpty) {
+        Get.snackbar("تنبيه", "يرجى ملء جميع الحقول المطلوبة");
+        return;
+      }
+
+      isLoading.value = true;
+
+      // تقسيم الاسم
+      final names = name.split(' ');
+      final firstName = names.isNotEmpty ? names.first : 'مستخدم';
+      final lastName = names.length > 1 ? names.sublist(1).join(' ') : 'جديد';
+
+      final response = await _apiService.registerCustomer(
+        firstName: firstName,
+        lastName: lastName,
+        phone: phone,
+        password: password,
+      );
+
+      if (response != null) {
+        Get.snackbar("نجاح", "تم إنشاء الحساب بنجاح، يمكنك الآن تسجيل الدخول",
+            backgroundColor: Colors.green, colorText: Colors.white);
+        
+        // الانتقال لصفحة تسجيل الدخول
+        Get.back();
+      } else {
+        Get.snackbar("خطأ", "فشل إنشاء الحساب، قد يكون الرقم مسجلاً مسبقاً",
+            backgroundColor: Colors.red, colorText: Colors.white);
+      }
+    } catch (e) {
+      debugPrint("Error in register: $e");
+    } finally {
+      isLoading.value = false;
     }
   }
 

@@ -5,6 +5,7 @@ enum OrderStatus {
   confirmed,
   processing,
   outForDelivery,
+  readyForPickup,
   delivered,
   late,
 }
@@ -31,21 +32,23 @@ class OrderModel {
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
+    List items = json['order_items'] ?? json['items'] ?? [];
+    
     return OrderModel(
       id: json['id'] ?? 0,
       dateTime: json['created_at'] != null 
-          ? DateTime.parse(json['created_at']) 
+          ? DateTime.tryParse(json['created_at']) ?? DateTime.now()
           : DateTime.now(),
       status: _mapStatus(json['status'] ?? "pending"),
-      totalPrice: (json['total_price'] ?? 0).toDouble(),
-      itemCount: json['items_count'] ?? 0,
-      shippingAddress: json['address'] ?? "",
-      itemsNames: (json['items_names'] as List? ?? [])
-          .map((e) => e.toString())
-          .toList(),
-      productIds: (json['product_ids'] as List? ?? [])
-          .map((e) => int.tryParse(e.toString()) ?? 0)
-          .toList(),
+      totalPrice: double.tryParse((json['total_amount'] ?? json['total_price'] ?? 0).toString()) ?? 0.0,
+      itemCount: items.isNotEmpty ? items.length : (json['items_count'] ?? 0),
+      shippingAddress: json['shipping_address'] ?? json['address'] ?? "",
+      itemsNames: items.isNotEmpty 
+          ? items.map((e) => e['product'] != null ? e['product']['name'].toString() : 'منتج').toList()
+          : (json['items_names'] as List? ?? []).map((e) => e.toString()).toList(),
+      productIds: items.isNotEmpty
+          ? items.map((e) => int.tryParse(e['product_id'].toString()) ?? 0).toList()
+          : (json['product_ids'] as List? ?? []).map((e) => int.tryParse(e.toString()) ?? 0).toList(),
     );
   }
 
@@ -55,7 +58,10 @@ class OrderModel {
       case 'confirmed': return OrderStatus.confirmed;
       case 'processing': return OrderStatus.processing;
       case 'outfordelivery': 
-      case 'out_for_delivery': return OrderStatus.outForDelivery;
+      case 'out_for_delivery': 
+      case 'shipped': return OrderStatus.outForDelivery;
+      case 'ready_for_pickup':
+      case 'readyforpickup': return OrderStatus.readyForPickup;
       case 'delivered': return OrderStatus.delivered;
       case 'late': return OrderStatus.late;
       default: return OrderStatus.pending;
@@ -70,11 +76,13 @@ class OrderModel {
       case OrderStatus.confirmed:
         return "تم التأكيد";
       case OrderStatus.processing:
-        return "جاري التجهيز";
+        return "قيد التجهيز";
       case OrderStatus.outForDelivery:
         return "قيد التوصيل";
+      case OrderStatus.readyForPickup:
+        return "قيد الاستلام";
       case OrderStatus.delivered:
-        return "تم التوصيل";
+        return "تم الاستلام";
       case OrderStatus.late:
         return "متأخر";
     }
@@ -90,6 +98,8 @@ class OrderModel {
         return Colors.purple;
       case OrderStatus.outForDelivery:
         return Colors.indigo;
+      case OrderStatus.readyForPickup:
+        return Colors.teal;
       case OrderStatus.delivered:
         return Colors.green;
       case OrderStatus.late:

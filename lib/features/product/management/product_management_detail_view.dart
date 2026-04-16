@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:bytore/features/product/management/product_management_controller.dart';
 import 'package:bytore/core/constants/constants.dart';
 import 'package:bytore/core/components/custom_app_bar.dart';
+import 'package:model_viewer_plus/model_viewer_plus.dart';
 
 class ProductManagementDetailView extends GetView<ProductManagementController> {
   const ProductManagementDetailView({Key? key}) : super(key: key);
@@ -87,6 +88,21 @@ class ProductManagementDetailView extends GetView<ProductManagementController> {
   }
 
   Widget _buildImageGallery(dynamic product) {
+    if (product.threeDModel != null && product.threeDModel!.isNotEmpty) {
+      return Container(
+        height: 350,
+        width: double.infinity,
+        color: Colors.white,
+        child: ModelViewer(
+          src: product.threeDModel!,
+          autoRotate: true,
+          cameraControls: true,
+          backgroundColor: Colors.transparent,
+          alt: "معاينة 3D",
+        ),
+      );
+    }
+    
     return Container(
       height: 300,
       width: double.infinity,

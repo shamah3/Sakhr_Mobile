@@ -14,6 +14,7 @@ import 'package:bytore/features/profile/controllers/reviews_controller.dart';
 import 'package:bytore/features/chat/controllers/chat_controller.dart';
 import 'package:bytore/features/profile/controllers/edit_profile_controller.dart';
 import 'package:bytore/features/chat/controllers/chatbot_controller.dart';
+import 'package:bytore/features/notifications/controllers/notification_controller.dart';
 
 class InitialBinding extends Bindings {
   @override
@@ -29,11 +30,14 @@ class InitialBinding extends Bindings {
     Get.lazyPut(() => AuthController(), fenix: true);
     Get.lazyPut(() => CheckoutController(), fenix: true);
     
-    // Profile features
-    Get.lazyPut(() => PurchaseReportsController(), fenix: true);
-    Get.lazyPut(() => ActivitiesController(), fenix: true);
-    Get.lazyPut(() => ReturnedProductsController(), fenix: true);
-    Get.lazyPut(() => ReviewsController(), fenix: true);
+    
+    // Profile features (Now permanent for lifecycle tracking)
+    Get.put(NotificationController(), permanent: true);
+    Get.put(PurchaseReportsController(), permanent: true);
+    Get.put(ActivitiesController(), permanent: true);
+    Get.put(ReturnedProductsController(), permanent: true);
+    Get.put(ReviewsController(), permanent: true);
+    
     Get.lazyPut(() => ChatController(), fenix: true);
     Get.lazyPut(() => EditProfileController(), fenix: true);
     Get.lazyPut(() => ChatbotController(), fenix: true);

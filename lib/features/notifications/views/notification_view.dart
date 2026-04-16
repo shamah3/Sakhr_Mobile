@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bytore/core/constants/constants.dart';
-import '../controllers/notification_controller.dart';
+import 'package:bytore/core/controllers/app_controller.dart';
 import '../models/notification_model.dart';
 
 class NotificationView extends StatelessWidget {
@@ -9,7 +9,7 @@ class NotificationView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(NotificationController());
+    final appController = Get.find<AppController>();
 
     return DefaultTabController(
       length: 3,
@@ -28,10 +28,10 @@ class NotificationView extends StatelessWidget {
             style: TextStyle(color: kTextColor, fontWeight: FontWeight.bold, fontSize: 18),
           ),
           actions: [
-            Obx(() => controller.notifications.isNotEmpty
+            Obx(() => appController.notifications.isNotEmpty
                 ? Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    child: _buildDeleteAllButton(context, controller),
+                    child: _buildDeleteAllButton(context, appController),
                   )
                 : const SizedBox.shrink()),
           ],
@@ -49,14 +49,11 @@ class NotificationView extends StatelessWidget {
           ),
         ),
         body: Obx(() {
-          if (controller.isLoading.value) {
-            return const Center(child: CircularProgressIndicator());
-          }
           return TabBarView(
             children: [
-              _buildNotificationSection(controller, "الكل"),
-              _buildNotificationSection(controller, "الطلبات"),
-              _buildNotificationSection(controller, "العروض"),
+              _buildNotificationSection(appController, "الكل"),
+              _buildNotificationSection(appController, "الطلبات"),
+              _buildNotificationSection(appController, "العروض"),
             ],
           );
         }),
@@ -64,13 +61,14 @@ class NotificationView extends StatelessWidget {
     );
   }
 
-  Widget _buildNotificationSection(NotificationController controller, String category) {
+  Widget _buildNotificationSection(AppController appController, String category) {
     final filteredList = category == "الكل"
-        ? controller.notifications
-        : controller.notifications.where((n) {
-            final String cat = n.category ?? "الكل";
-            if (category == "الطلبات" && (n.title.contains('طلب') || cat == "الطلبات")) return true;
-            if (category == "العروض" && (n.title.contains('عرض') || n.title.contains('خصم') || cat == "العروض")) return true;
+        ? appController.notifications
+        : appController.notifications.where((n) {
+            final String cat = n['category'] ?? "الكل";
+            final String title = n['title'] ?? "";
+            if (category == "الطلبات" && (title.contains('طلب') || cat == "الطلبات")) return true;
+            if (category == "العروض" && (title.contains('عرض') || title.contains('خصم') || cat == "العروض")) return true;
             return cat == category;
           }).toList();
 
@@ -81,11 +79,21 @@ class NotificationView extends StatelessWidget {
       itemCount: filteredList.length,
       itemBuilder: (context, index) {
         final item = filteredList[index];
+        final notificationModel = NotificationModel.fromJson({
+          ...item,
+          'id': index,
+          'content': item['body'], // Map body to content for fromJson
+          'is_read': item['read'], // Map read to is_read for fromJson
+        });
+
         return Dismissible(
-          key: Key(item.id.toString()),
+          key: UniqueKey(),
           direction: DismissDirection.endToStart,
           onDismissed: (direction) {
-            controller.deleteNotification(item.id);
+            final realIndex = appController.notifications.indexOf(item);
+            if (realIndex != -1) {
+              appController.deleteNotification(realIndex);
+            }
           },
           background: Container(
             alignment: Alignment.centerLeft,
@@ -97,7 +105,7 @@ class NotificationView extends StatelessWidget {
             ),
             child: const Icon(Icons.delete_sweep, color: Colors.white, size: 30),
           ),
-          child: _buildNotificationCard(item),
+          child: _buildNotificationCard(notificationModel),
         );
       },
     );
@@ -176,7 +184,7 @@ class NotificationView extends StatelessWidget {
     );
   }
 
-  Widget _buildDeleteAllButton(BuildContext context, NotificationController controller) {
+  Widget _buildDeleteAllButton(BuildContext context, AppController appController) {
     return GestureDetector(
       onTap: () {
         Get.dialog(
@@ -188,7 +196,7 @@ class NotificationView extends StatelessWidget {
               TextButton(onPressed: () => Get.back(), child: const Text('إلغاء', style: TextStyle(color: Colors.grey))),
               TextButton(
                 onPressed: () {
-                  controller.clearNotifications();
+                  appController.clearNotifications();
                   Get.back();
                 },
                 child: const Text('حذف الكل', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),

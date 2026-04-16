@@ -4,6 +4,8 @@ import 'package:bytore/features/product/models/product_model.dart';
 import 'package:bytore/core/services/api_service.dart';
 import 'package:bytore/features/profile/models/review_model.dart';
 import 'package:bytore/core/controllers/app_controller.dart';
+import 'package:bytore/features/profile/controllers/activities_controller.dart';
+import 'package:bytore/features/home/controllers/home_controller.dart';
 
 class ProductController extends GetxController {
   final Rx<Product> product;
@@ -11,6 +13,7 @@ class ProductController extends GetxController {
   var isRefreshing = false.obs;
   var isFetchingReviews = false.obs;
   var reviews = <ReviewModel>[].obs;
+  var similarProducts = <Product>[].obs; // 🔥 منتجات مشابهة
   
   ProductController({required Product product}) : product = product.obs;
 
@@ -22,6 +25,11 @@ class ProductController extends GetxController {
   var selectedSize = Rxn<Map<String, dynamic>>();
   var displayImageUrl = "".obs;
   var overriddenPrice = Rxn<double>();
+  var show3DModel = false.obs;
+
+  void toggle3DModel() {
+    show3DModel.value = !show3DModel.value;
+  }
 
   @override
   void onInit() {
@@ -29,10 +37,24 @@ class ProductController extends GetxController {
     _initializeStates();
     refreshProduct();
     fetchReviews();
+    _fetchSimilarProducts();
+
+    // سجل النشاط: مشاهدة المنتج
+    try {
+      if (Get.isRegistered<ActivitiesController>()) {
+        Get.find<ActivitiesController>().logActivity(
+          title: "مشاهدة منتج: ${product.value.name}",
+          type: "view"
+        );
+      }
+    } catch (e) {
+      debugPrint("Activity Log Error: $e");
+    }
   }
 
   void _initializeStates() {
     displayImageUrl.value = product.value.imageUrl;
+    show3DModel.value = product.value.threeDModel != null && product.value.threeDModel!.isNotEmpty;
     
     if (product.value.colors.isNotEmpty) {
       selectedColor.value = product.value.colors[0];
@@ -78,6 +100,55 @@ class ProductController extends GetxController {
       debugPrint("Error fetching reviews: $e");
     } finally {
       isFetchingReviews.value = false;
+    }
+  }
+  
+  void _fetchSimilarProducts() {
+    try {
+      if (Get.isRegistered<HomeController>()) {
+        final homeController = Get.find<HomeController>();
+        final category = product.value.category;
+        
+        // خوارزمية التوصية: نفس القسم باستثناء المنتج الحالي
+        final similar = homeController.allProducts.where((p) => 
+          p.category == category && p.id != product.value.id
+        ).toList();
+        
+        // نأخذ أول 6 منتجات فقط
+        similarProducts.assignAll(similar.take(6).toList());
+      }
+    } catch (e) {
+      debugPrint("Error fetching similar products: $e");
+    }
+  }
+
+  Future<bool> postReview(int rating, String comment) async {
+    try {
+      final appController = Get.find<AppController>();
+      final token = appController.token.value;
+      
+      if (token.isEmpty) {
+        Get.snackbar("تنبيه", "يجب تسجيل الدخول أولاً لإضافة تقييم", 
+            backgroundColor: Colors.orange, colorText: Colors.white);
+        return false;
+      }
+
+      final success = await _apiService.postProductReview(
+        productId: product.value.id,
+        userId: appController.user.value?.id ?? 0,
+        rating: rating,
+        comment: comment,
+        token: token,
+      );
+
+      if (success) {
+        fetchReviews(); // تحديث القائمة بعد الإضافة
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint("Error posting review: $e");
+      return false;
     }
   }
 

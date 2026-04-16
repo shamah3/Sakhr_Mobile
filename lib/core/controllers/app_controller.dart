@@ -11,6 +11,7 @@ import 'package:bytore/features/profile/controllers/activities_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:bytore/features/notifications/models/notification_model.dart';
+import 'package:bytore/features/notifications/controllers/notification_controller.dart';
 
 class AppController extends GetxController {
   final ApiService _apiService = ApiService();
@@ -60,7 +61,6 @@ class AppController extends GetxController {
       lastName.value = prefs.getString('last_name') ?? "";
       phoneNumber.value = prefs.getString('phone_number') ?? "777777777";
       profilePicturePath.value = prefs.getString('profile_picture_path') ?? "";
-      profilePictureUrl.value = prefs.getString('profile_picture_url') ?? "";
       isBiometricEnabled.value = prefs.getBool('is_biometric_enabled') ?? false;
       
       final String? userJson = prefs.getString('user_data');
@@ -151,7 +151,7 @@ class AppController extends GetxController {
           notifications.insert(0, {
             'title': remote.title,
             'body': remote.body,
-            'time': "الآن",
+            'created_at': DateTime.now().toIso8601String(),
             'color': kPrimaryColor.value,
             'read': false,
             'category': 'المنصة',
@@ -250,22 +250,29 @@ class AppController extends GetxController {
       wishlistIds.remove(productId);
     } else {
       wishlistIds.add(productId);
+      
+      // ✅ سجل النشاط: إضافة للمفضلة
+      try {
+        Get.find<ActivitiesController>().logActivity(
+          title: productName != null ? "إضافة المنتج '$productName' للمفضلة" : "إضافة منتج للمفضلة",
+          type: "favorite"
+        );
+      } catch (_) {}
+      
       NotificationService().showNotification(
         id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
         title: 'المفضلة',
         body: 'تم إضافة المنتج للمفضلة',
       );
       
+      // Update Notification Center
       try {
-        if (Get.isRegistered<ActivitiesController>()) {
-          Get.find<ActivitiesController>().logActivity(
-            title: 'إضافة "${productName ?? "منتج"}" للمفضلة',
-            type: 'fav'
-          );
-        }
-      } catch (e) {
-        debugPrint("Activity log error: $e");
-      }
+        Get.find<NotificationController>().addNotification(
+          "المفضلة",
+          'تم إضافة المنتج للمفضلة',
+          category: "الكل"
+        );
+      } catch (_) {}
     }
   }
 
@@ -275,13 +282,10 @@ class AppController extends GetxController {
   int get notificationCount => notifications.where((n) => n['read'] == false).length;
 
   void addNotification({required String title, required String body, Color? color, String category = 'الكل'}) {
-    final DateTime now = DateTime.now();
-    final String timeStr = "${now.hour}:${now.minute.toString().padLeft(2, '0')}";
-    
     notifications.insert(0, {
       'title': title,
       'body': body,
-      'time': timeStr,
+      'created_at': DateTime.now().toIso8601String(),
       'color': color?.value ?? kPrimaryColor.value,
       'read': false,
       'category': category,
@@ -317,26 +321,42 @@ class AppController extends GetxController {
     _saveNotifications();
   }
 
-  // Filter State
-  var priceRange = const RangeValues(0, 50000).obs;
+  // Filter State (Price range increased to 2 Million for YER currency)
+  var priceRange = const RangeValues(0, 2000000).obs;
   var activeCategory = "الكل".obs;
   var selectedBrand = "الكل".obs;
   var selectedAvailability = "الكل".obs;
+  var selectedRegion = "الكل".obs;
 
   var warrantyText = "".obs;
 
-  void updateFilters({RangeValues? range, String? category, String? brand, String? availability, String? warranty}) {
+  void updateFilters({RangeValues? range, String? category, String? brand, String? availability, String? warranty, String? region}) {
     if (range != null) priceRange.value = range;
     if (category != null) activeCategory.value = category;
     if (brand != null) selectedBrand.value = brand;
     if (availability != null) selectedAvailability.value = availability;
     if (warranty != null) warrantyText.value = warranty;
+    if (region != null) selectedRegion.value = region;
   }
 
   void updateUserName(String first, String last, {String? phone}) {
     firstName.value = first;
     lastName.value = last;
     if (phone != null) phoneNumber.value = phone;
+    
+    // 🔥 تحديث كائن المستخدم الأساسي لضمان المزامنة والوراثة
+    if (user.value != null) {
+      user.value = UserModel(
+        id: user.value!.id,
+        firstName: first,
+        lastName: last,
+        phone: phone ?? user.value!.phone,
+        email: user.value!.email,
+        profilePhotoUrl: user.value!.profilePhotoUrl,
+      );
+    }
+    
+    _saveSession(); // حفظ فوري في الذاكرة
   }
 
   void updateLoginStatus(bool status) {

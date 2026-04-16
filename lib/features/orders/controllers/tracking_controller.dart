@@ -14,24 +14,31 @@ class TrackingController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    final orderId = Get.arguments;
-    if (orderId != null && orderId is int) {
-      loadOrderDetails(orderId);
+    final args = Get.arguments;
+    if (args != null) {
+      if (args is OrderModel) {
+        order.value = args;
+        loadOrderDetails(args.id, showLoading: false);
+      } else if (args is int) {
+        loadOrderDetails(args, showLoading: true);
+      }
     }
   }
 
-  Future<void> loadOrderDetails(int id) async {
+  Future<void> loadOrderDetails(int id, {bool showLoading = true}) async {
     try {
-      isLoading.value = true;
+      if (showLoading) isLoading.value = true;
       final token = _appController.token.value;
       if (token.isEmpty) return;
 
       final data = await _apiService.fetchOrderDetail(id, token);
-      order.value = data;
+      if (data != null) {
+        order.value = data;
+      }
     } catch (e) {
       debugPrint("Error loading order tracking: $e");
     } finally {
-      isLoading.value = false;
+      if (showLoading) isLoading.value = false;
     }
   }
 

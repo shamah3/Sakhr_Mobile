@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:bytore/features/product/models/product_model.dart';
 import 'package:bytore/core/services/notification_service.dart';
 import 'package:bytore/features/profile/controllers/activities_controller.dart';
+import 'package:bytore/features/notifications/controllers/notification_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
@@ -119,14 +120,21 @@ class CartController extends GetxController {
       body: 'تم إضافة ${product.name} إلى السلة',
     );
     
+    // Update Notification Center
+    try {
+      Get.find<NotificationController>().addNotification(
+        "السلة",
+        "تم إضافة ${product.name} إلى السلة",
+        category: "الكل"
+      );
+    } catch (_) {}
+
     // Log Activity
     try {
-      if (Get.isRegistered<ActivitiesController>()) {
-        Get.find<ActivitiesController>().logActivity(
-          title: 'إضافة "${product.name}" للسلة',
-          type: 'fav' 
-        );
-      }
+      Get.find<ActivitiesController>().logActivity(
+        title: 'إضافة "${product.name}" للسلة',
+        type: 'cart' 
+      );
     } catch (e) {
       print("ActivitiesController log error: $e");
     }

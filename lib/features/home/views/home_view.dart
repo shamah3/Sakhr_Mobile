@@ -45,17 +45,18 @@ class HomeView extends GetView<HomeController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildPillSearchBar(),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 25), // Increased spacing as requested
+
                     _buildBlueBanner(),
                     const SizedBox(height: 24),
                     _buildSectionHeader("الأقسام"),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 15),
                   ],
                 ),
               ),
             ),
             _buildCategoriesSection(appController),
-            const SliverToBoxAdapter(child: SizedBox(height: 35)),
+            const SliverToBoxAdapter(child: SizedBox(height: 10)),
 
             Obx(() => controller.isFilterActive()
                 ? _buildProductsGrid(appController)
@@ -76,12 +77,13 @@ class HomeView extends GetView<HomeController> {
   Widget _buildStandardSections(BuildContext context, AppController appController) {
     return Column(
       children: [
+        // المنتجات الأكثر طلباً
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 40),
+              const SizedBox(height: 25),
               _buildSectionHeader("المنتجات الأكثر طلباً", showViewAll: true, onTap: () {
                 Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': "الأكثر طلباً", 'apiCategorySlug': 'all'}, id: 1);
               }),
@@ -91,33 +93,46 @@ class HomeView extends GetView<HomeController> {
         ),
         _buildTopSellingHorizontalList(appController),
 
-        const SizedBox(height: 35),
-
+        // 🔥 قسم تجربة الـ 3D و 360 (المنتجات المحلية)
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
             children: [
+              const SizedBox(height: 25),
+              _buildSectionHeader("منتجات 3D و 360 درجة", showViewAll: false),
+              const SizedBox(height: 15),
+            ],
+          ),
+        ),
+        _buildLocal3DProductsHorizontalList(appController),
+
+        // "وصل حديثاً"
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            children: [
+              const SizedBox(height: 25),
               _buildSectionHeader("وصل حديثاً", showViewAll: true, onTap: () {
                 Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': "وصل حديثاً", 'apiCategorySlug': 'in_stock'}, id: 1);
               }),
-              const SizedBox(height: 18),
+              const SizedBox(height: 15),
             ],
           ),
         ),
         _buildHorizontalProductList("In Stock", appController),
 
-        const SizedBox(height: 35),
-
+        // الخصومات والكوبونات
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
             children: [
+              const SizedBox(height: 25),
               _buildSectionHeader(
                 "الخصومات والكوبونات", 
                 showViewAll: true,
                 onTap: () => Get.to(() => const AllCouponsView()),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 15),
             ],
           ),
         ),
@@ -642,7 +657,9 @@ class HomeView extends GetView<HomeController> {
           p != null && (category == "الكل" || p.status == category || p.name.contains(category))
         ).take(8).toList();
 
-        final displayProducts = products.isEmpty ? controller.allProducts.take(8).toList() : products;
+        final displayProducts = (products.isEmpty ? controller.allProducts : products)
+            .where((p) => p.id < 9000) // يتم استبعاد منتجات 3D (والتي تبدأ من 9000) بناءً على طلب المستخدم
+            .take(8).toList();
 
         return ListView.builder(
           scrollDirection: Axis.horizontal,
@@ -730,43 +747,55 @@ class HomeView extends GetView<HomeController> {
               final isAll = cat['id'] == 'all';
               final isSelected = catController.selectedCategoryIndex.value == index;
               
-              return GestureDetector(
-                onTap: () {
-                  catController.selectedCategoryIndex.value = index; 
-                  if (isAll) {
-                    Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': "الكل", 'apiCategorySlug': 'all'}, id: 1);
-                  } else {
-                    Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': cat['name'], 'apiCategorySlug': cat['slug']}, id: 1);
-                  }
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.only(left: 10),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isSelected ? kPrimaryColor : const Color(0xFFF9FAFB),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: isSelected ? kPrimaryColor : Colors.grey.withOpacity(0.08),
-                    ),
-                    boxShadow: isSelected 
-                      ? [BoxShadow(color: kPrimaryColor.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 4))]
-                      : null,
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOutCubic,
+                margin: const EdgeInsets.only(left: 10),
+                decoration: BoxDecoration(
+                  color: isSelected ? const Color(0xFF0277BD) : Colors.white, // Blue background from image
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected ? const Color(0xFF0277BD) : Colors.grey.withOpacity(0.2),
+                    width: 1,
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildCategoryIconShort(cat, isSelected, size: 24),
-                      const SizedBox(width: 10),
-                      Text(
-                        (cat['name'] ?? "").toString(),
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : kTextColor.withOpacity(0.8),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
-                        ),
+                  boxShadow: isSelected 
+                    ? [BoxShadow(color: const Color(0xFF0277BD).withOpacity(0.3), blurRadius: 6, offset: const Offset(0, 3))]
+                    : [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 2, offset: const Offset(0, 1))],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () {
+                      catController.selectedCategoryIndex.value = index; 
+                      if (isAll) {
+                        Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': "الكل", 'apiCategorySlug': 'all'}, id: 1);
+                      } else {
+                        Get.toNamed(AppRoutes.PRODUCT_LIST, arguments: {'categoryTitle': cat['name'], 'apiCategorySlug': cat['slug']}, id: 1);
+                      }
+                    },
+                    splashColor: isSelected ? Colors.white.withOpacity(0.2) : kPrimaryColor.withOpacity(0.1),
+                    child: Container(
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            (cat['name'] ?? "").toString(),
+                            maxLines: 1,
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : kTextColor.withOpacity(0.8),
+                              fontSize: 13,
+                              fontWeight: isSelected ? FontWeight.w900 : FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          _buildCategoryIconShort(cat, isSelected, size: 18),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               );
@@ -830,26 +859,77 @@ class HomeView extends GetView<HomeController> {
     );
   }
 
-  Widget _buildAdDetailRow(IconData icon, String label, String value) {
+  Widget _buildAdDetailRow(IconData icon, String title, String value) {
     return Row(
       children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: kBgColor,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, size: 18, color: kPrimaryColor),
-        ),
+        Icon(icon, color: kPrimaryColor, size: 18),
         const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-            Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kTextColor)),
-          ],
-        ),
+        Text(title, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+        const Spacer(),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: kTextColor)),
       ],
+    );
+  }
+
+  Widget _buildLocal3DProductsHorizontalList(AppController appController) {
+    return Container(
+      height: 280,
+      margin: const EdgeInsets.only(bottom: 20),
+      child: Obx(() {
+        final products = controller.local3DProductsList;
+
+        if (products.isEmpty) {
+          return const Center(child: Text("جاري تحميل منتجات 3D...", style: TextStyle(color: Colors.grey, fontSize: 12)));
+        }
+
+        return ListView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          itemCount: products.length,
+          itemBuilder: (context, index) {
+            final product = products[index];
+            return Container(
+              width: 190,
+              margin: const EdgeInsets.only(left: 15),
+              child: Stack(
+                children: [
+                  ItemCard(
+                    product: product,
+                    isWishlisted: appController.isWishlisted(product.id),
+                    onWishlistToggle: () => appController.toggleWishlist(product.id),
+                  ),
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: kPrimaryColor.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(Icons.view_in_ar_rounded, color: Colors.white, size: 14),
+                          SizedBox(width: 4),
+                          Text("3D", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      }),
     );
   }
 }

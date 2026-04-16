@@ -35,16 +35,20 @@ class NotificationController extends GetxController {
   Future<void> addNotification(String title, String body, {String? category}) async {
     try {
       final token = _appController.token.value;
-      if (token.isEmpty) return;
+      
+      // ✅ إشعار محلي فوري للمزامنة
+      _appController.addNotification(
+        title: title, 
+        body: body, 
+        category: category ?? "الكل"
+      );
 
-      final success = await _apiService.createNotification({
-        "title": title,
-        "content": body,
-        "category": category,
-      }, token);
-
-      if (success) {
-        await loadNotifications();
+      if (token.isNotEmpty) {
+        await _apiService.createNotification({
+          "title": title,
+          "content": body,
+          "category": category,
+        }, token);
       }
     } catch (e) {
       debugPrint("Error adding notification: $e");
@@ -58,7 +62,7 @@ class NotificationController extends GetxController {
   }
 
   void clearNotifications() {
-    // Same as above, local clear if no backend endpoint.
+    _appController.clearNotifications();
     notifications.clear();
   }
 }
