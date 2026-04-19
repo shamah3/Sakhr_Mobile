@@ -219,8 +219,9 @@ class HomeController extends GetxController {
       }
       
       // Warranty match
-      final matchesWarranty = appController.warrantyText.value.isEmpty ||
-                              p.warranty.contains(appController.warrantyText.value);
+      final matchesWarranty = appController.warrantyText.value == "الكل" || 
+                              appController.warrantyText.value.isEmpty ||
+                              p.warranty == appController.warrantyText.value;
 
       // Region match
       final matchesRegion = appController.selectedRegion.value == "الكل" || 

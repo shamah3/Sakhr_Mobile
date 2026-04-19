@@ -3,10 +3,10 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:bytore/core/constants/constants.dart';
 import '../controllers/auth_controller.dart';
-import 'package:bytore/core/controllers/app_controller.dart';
 
 class SignUpView extends GetView<AuthController> {
-  const SignUpView({super.key});
+  final bool redirectToAddress;
+  const SignUpView({super.key, this.redirectToAddress = false});
 
   static const Color kSakhrBlue = Color(0xFF015C92);
   static const Color kSakhrGold = Color(0xFFFFA931);
@@ -18,24 +18,32 @@ class SignUpView extends GetView<AuthController> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-// الهيدر المصغر الخاص بـ "صخر" مع زر العودة
+            // الهيدر المصغر الخاص بـ "صخر" مع زر العودة
             _buildSmallHeader(context),
 
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               child: Column(
                 children: [
-                  Text("إنشاء حساب جديد",
-                      style: GoogleFonts.cairo(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                          color: kTextColor)),
+                  Text(
+                    "إنشاء حساب جديد",
+                    style: GoogleFonts.cairo(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      color: kTextColor,
+                    ),
+                  ),
                   const SizedBox(height: 5),
-                  Text("انضم إلى عائلة صخر واستمتع بأفضل الخدمات",
-                      style: GoogleFonts.cairo(color: Colors.grey.shade500, fontSize: 12)),
+                  Text(
+                    "انضم إلى عائلة صخر واستمتع بأفضل الخدمات",
+                    style: GoogleFonts.cairo(
+                      color: Colors.grey.shade500,
+                      fontSize: 12,
+                    ),
+                  ),
                   const SizedBox(height: 30),
 
-// حقول البيانات
+                  // حقول البيانات
                   _buildTextField(
                     hint: "الاسم الكامل",
                     icon: Icons.person_outline_rounded,
@@ -49,18 +57,24 @@ class SignUpView extends GetView<AuthController> {
                     controller: controller.phoneController,
                   ),
                   const SizedBox(height: 12),
-                  _buildPasswordField("كلمة المرور", controller.passwordController),
+                  _buildPasswordField(
+                    "كلمة المرور",
+                    controller.passwordController,
+                  ),
                   const SizedBox(height: 12),
-                  _buildPasswordField("تأكيد كلمة المرور", TextEditingController()), // Placeholder for confirmation
+                  _buildPasswordField(
+                    "تأكيد كلمة المرور",
+                    controller.confirmPasswordController,
+                  ),
 
                   const SizedBox(height: 30),
 
-// زر التسجيل الرئيسي
+                  // زر التسجيل الرئيسي
                   _buildRegisterButton(),
 
                   const SizedBox(height: 25),
 
-// العودة لتسجيل الدخول
+                  // العودة لتسجيل الدخول
                   _buildLoginPrompt(),
                 ],
               ),
@@ -86,21 +100,30 @@ class SignUpView extends GetView<AuthController> {
         child: Stack(
           children: [
             IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+              icon: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
               onPressed: () => Get.back(),
             ),
             Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.person_add_rounded, size: 35, color: kSakhrGold),
+                  const Icon(
+                    Icons.person_add_rounded,
+                    size: 35,
+                    color: kSakhrGold,
+                  ),
                   const SizedBox(height: 5),
                   Text(
                     "SAKHR | صخر",
                     style: GoogleFonts.cairo(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900),
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ],
               ),
@@ -112,25 +135,41 @@ class SignUpView extends GetView<AuthController> {
   }
 
   Widget _buildRegisterButton() {
-    return Obx(() => SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton(
-        onPressed: controller.isLoading.value ? null : () => controller.register(),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: kSakhrBlue,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          elevation: 0,
-        ),
-        child: controller.isLoading.value
-            ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-            : Text(
-          "تسجيل حساب جديد",
-          style: GoogleFonts.cairo(
-              fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+    return Obx(
+      () => SizedBox(
+        width: double.infinity,
+        height: 50,
+        child: ElevatedButton(
+          onPressed: controller.isLoading.value
+              ? null
+              : () => controller.register(),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: kSakhrBlue,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            elevation: 0,
+          ),
+          child: controller.isLoading.value
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+              : Text(
+                  "تسجيل حساب جديد",
+                  style: GoogleFonts.cairo(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
         ),
       ),
-    ));
+    );
   }
 
   Widget _buildTextField({
@@ -165,7 +204,10 @@ class SignUpView extends GetView<AuthController> {
     );
   }
 
-  Widget _buildPasswordField(String hint, TextEditingController textController) {
+  Widget _buildPasswordField(
+    String hint,
+    TextEditingController textController,
+  ) {
     return SizedBox(
       height: 50,
       child: TextFormField(
@@ -175,8 +217,16 @@ class SignUpView extends GetView<AuthController> {
         style: GoogleFonts.cairo(fontSize: 14),
         decoration: InputDecoration(
           hintText: hint,
-          prefixIcon: Icon(Icons.lock_outline_rounded, color: kSakhrBlue.withOpacity(0.5), size: 20),
-          suffixIcon: Icon(Icons.visibility_off_outlined, size: 18, color: Colors.grey.shade400),
+          prefixIcon: Icon(
+            Icons.lock_outline_rounded,
+            color: kSakhrBlue.withOpacity(0.5),
+            size: 20,
+          ),
+          suffixIcon: Icon(
+            Icons.visibility_off_outlined,
+            size: 18,
+            color: Colors.grey.shade400,
+          ),
           filled: true,
           fillColor: kBgColor,
           border: OutlineInputBorder(
@@ -192,13 +242,20 @@ class SignUpView extends GetView<AuthController> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text("لديك حساب بالفعل؟",
-            style: GoogleFonts.cairo(color: Colors.grey, fontSize: 13)),
+        Text(
+          "لديك حساب بالفعل؟",
+          style: GoogleFonts.cairo(color: Colors.grey, fontSize: 13),
+        ),
         TextButton(
           onPressed: () => Get.back(),
-          child: Text("سجل دخولك",
-              style: GoogleFonts.cairo(
-                  color: kSakhrGold, fontWeight: FontWeight.bold, fontSize: 13)),
+          child: Text(
+            "سجل دخولك",
+            style: GoogleFonts.cairo(
+              color: kSakhrGold,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
         ),
       ],
     );

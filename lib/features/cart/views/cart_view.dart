@@ -6,6 +6,7 @@ import 'package:bytore/core/constants/constants.dart';
 import 'package:bytore/features/checkout/views/address_page.dart';
 import 'package:bytore/features/authentication/views/login_view.dart';
 import 'package:bytore/core/controllers/app_controller.dart';
+import 'package:bytore/core/routes/app_routes.dart';
 
 class CartView extends StatefulWidget {
   final VoidCallback? onReturnHome;
@@ -230,9 +231,9 @@ class _CartViewState extends State<CartView> {
               ElevatedButton(
                 onPressed: () {
                   if (appController.isLoggedIn.value) {
-                    Get.to(() => const AddressPage());
+                    Get.toNamed(AppRoutes.CHECKOUT_ADDRESS, id: 5);
                   } else {
-                    Get.to(() => LoginView(redirectToAddress: true));
+                    Get.toNamed(AppRoutes.LOGIN, arguments: {'redirectToAddress': true}, id: 5);
                   }
                 },
                 style: ElevatedButton.styleFrom(

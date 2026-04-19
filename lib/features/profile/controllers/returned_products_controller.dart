@@ -20,12 +20,6 @@ class ReturnedProductsController extends GetxController {
   var returnedProducts = <ReturnedProductModel>[].obs;
   var isLoading = false.obs;
 
-  @override
-  void onInit() {
-    super.onInit();
-    // fetchReturnedProducts(); // Optional: if we want to load existing ones
-  }
-
   // دالة لفتح نافذة اختيار منتج للاسترجاع
   void addNewReturnRequest() {
     final purchaseController = Get.find<PurchaseReportsController>();
@@ -60,14 +54,24 @@ class ReturnedProductsController extends GetxController {
                   return order.itemsNames.asMap().entries.map((entry) {
                     final index = entry.key;
                     final itemName = entry.value;
-                    final productId = order.productIds.length > index ? order.productIds[index] : 0;
-                    
+                    final productId = order.productIds.length > index
+                        ? order.productIds[index]
+                        : 0;
+
                     return Card(
                       margin: const EdgeInsets.only(bottom: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
                       child: ListTile(
-                        leading: const Icon(Icons.inventory_2_outlined, color: Colors.blue),
-                        title: Text(itemName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        leading: const Icon(
+                          Icons.inventory_2_outlined,
+                          color: Colors.blue,
+                        ),
+                        title: Text(
+                          itemName,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
                         subtitle: Text("طلب: ${order.id}"),
                         trailing: const Icon(Icons.keyboard_arrow_left),
                         onTap: () {
@@ -86,46 +90,65 @@ class ReturnedProductsController extends GetxController {
     );
   }
 
-  Future<void> _submitReturnRequest(OrderModel order, String itemName, int productId) async {
+  Future<void> _submitReturnRequest(
+    OrderModel order,
+    String itemName,
+    int productId,
+  ) async {
     try {
       isLoading.value = true;
       final token = _appController.token.value;
-      if (token.isEmpty) return;
+      final user = await _appController.ensureUserLoaded();
+      if (token.isEmpty || user == null || user.id <= 0) {
+        Get.snackbar(
+          'انتهت الجلسة',
+          'يرجى تسجيل الدخول مرة أخرى قبل تقديم طلب الإرجاع.',
+          backgroundColor: secondaryOrange,
+          colorText: Colors.white,
+        );
+        return;
+      }
 
-      final success = await _apiService.postReturnRequest({
+      await _apiService.postReturnRequest({
         "order_id": order.id,
         "product_id": productId,
         "reason": "Requested via Mobile App",
       }, token);
 
-      if (success) {
-        // إضافة محلياً للعرض الفوري
-        returnedProducts.insert(0, ReturnedProductModel(
+      // إضافة محلياً للعرض الفوري
+      returnedProducts.insert(
+        0,
+        ReturnedProductModel(
           name: itemName,
           orderId: order.id.toString(),
-          price: "${(order.totalPrice / (order.itemsNames.isEmpty ? 1 : order.itemsNames.length)).toStringAsFixed(0)} ريال",
+          price:
+              "${(order.totalPrice / (order.itemsNames.isEmpty ? 1 : order.itemsNames.length)).toStringAsFixed(0)} ريال",
           status: 'تحت المراجعة',
           statusColor: secondaryOrange,
           icon: Icons.access_time,
-        ));
+        ),
+      );
 
-        // تسجيل النشاط
-        Get.find<ActivitiesController>().logActivity(
-          title: "تم تقديم طلب استرجاع: $itemName",
-          type: 'return'
-        );
+      // تسجيل النشاط
+      Get.find<ActivitiesController>().logActivity(
+        title: "تم تقديم طلب استرجاع: $itemName",
+        type: 'return',
+      );
 
-        Get.snackbar(
-          'تم بنجاح',
-          'تم رفع طلب استرجاع للمنتج $itemName',
-          backgroundColor: statusGreen,
-          colorText: Colors.white,
-        );
-      } else {
-        Get.snackbar('خطأ', 'فشل إرسال طلب تواصل، حاول لاحقاً');
-      }
+      Get.snackbar(
+        'تم بنجاح',
+        'تم رفع طلب استرجاع للمنتج $itemName',
+        backgroundColor: statusGreen,
+        colorText: Colors.white,
+      );
     } catch (e) {
       debugPrint("Error submitting return: $e");
+      Get.snackbar(
+        'خطأ',
+        e.toString().replaceFirst('Exception: ', ''),
+        backgroundColor: statusRed,
+        colorText: Colors.white,
+      );
     } finally {
       isLoading.value = false;
     }

@@ -5,11 +5,13 @@ import 'package:bytore/core/constants/constants.dart';
 class ThreeDProductViewer extends StatefulWidget {
   final List<String> images;
   final double height;
+  final int rotation;
 
   const ThreeDProductViewer({
     super.key,
     required this.images,
     this.height = 300,
+    this.rotation = 0,
   });
 
   @override
@@ -31,8 +33,22 @@ class _ThreeDProductViewerState extends State<ThreeDProductViewer> {
   }
 
   void _preloadImages() {
-    for (String url in widget.images) {
-      precacheImage(CachedNetworkImageProvider(url), context).then((_) {
+    for (String path in widget.images) {
+      final ImageProvider provider = path.startsWith('assets/')
+          ? AssetImage(path)
+          : CachedNetworkImageProvider(path);
+      
+      precacheImage(provider, context).then((_) {
+        if (!mounted) return;
+        setState(() {
+          _imagesLoaded++;
+          if (_imagesLoaded == widget.images.length) {
+            _isLoading = false;
+          }
+        });
+      }).catchError((error) {
+        debugPrint("Error preloading 360 image: $error");
+        if (!mounted) return;
         setState(() {
           _imagesLoaded++;
           if (_imagesLoaded == widget.images.length) {
@@ -94,15 +110,20 @@ class _ThreeDProductViewerState extends State<ThreeDProductViewer> {
           
           GestureDetector(
             onHorizontalDragUpdate: _onHorizontalDragUpdate,
-            child: Image(
-              image: CachedNetworkImageProvider(widget.images[_currentIndex]),
-              gaplessPlayback: true, // Prevents flickering
-              fit: BoxFit.contain,
-              height: widget.height,
-              width: double.infinity,
-              errorBuilder: (context, error, stackTrace) => const Center(
-                child: Icon(Icons.error_outline, color: Colors.red),
-              ),
+            child: RotatedBox(
+              quarterTurns: widget.rotation,
+              child: Image(
+                  image: widget.images[_currentIndex].startsWith('assets/')
+                      ? AssetImage(widget.images[_currentIndex]) as ImageProvider
+                      : CachedNetworkImageProvider(widget.images[_currentIndex]),
+                  gaplessPlayback: true, // Prevents flickering
+                  fit: BoxFit.contain,
+                  height: widget.height,
+                  width: double.infinity,
+                  errorBuilder: (context, error, stackTrace) => const Center(
+                    child: Icon(Icons.error_outline, color: Colors.red),
+                  ),
+                ),
             ),
           ),
 

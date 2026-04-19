@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:bytore/core/constants/constants.dart';
 import 'package:bytore/core/controllers/cart_controller.dart';
 import 'package:bytore/core/controllers/app_controller.dart';
-import 'package:bytore/features/checkout/views/success_page.dart';
 import '../controllers/checkout_controller.dart';
 
 class PaymentPage extends GetView<CheckoutController> {
@@ -19,8 +18,14 @@ class PaymentPage extends GetView<CheckoutController> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: const Text("وسيلة الدفع",
-            style: TextStyle(color: kTextColor, fontWeight: FontWeight.bold, fontSize: 18)),
+        title: const Text(
+          "وسيلة الدفع",
+          style: TextStyle(
+            color: kTextColor,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: kTextColor, size: 20),
@@ -40,7 +45,11 @@ class PaymentPage extends GetView<CheckoutController> {
               children: [
                 const Text(
                   "اختر وسيلة الدفع",
-                  style: TextStyle(fontWeight: FontWeight.w900, color: kTextColor, fontSize: 16),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    color: kTextColor,
+                    fontSize: 16,
+                  ),
                 ),
                 const SizedBox(height: 15),
 
@@ -53,17 +62,20 @@ class PaymentPage extends GetView<CheckoutController> {
                   }
                   return Column(
                     children: List.generate(
-                        controller.paymentMethods.length,
-                            (index) => _buildPaymentMethod(index)
+                      controller.paymentMethods.length,
+                      (index) => _buildPaymentMethod(index),
                     ),
                   );
                 }),
 
                 Obx(() {
-                  if (controller.selectedMethodIndex.value == 0) {
+                  final method = controller.selectedPaymentMethod;
+                  if (method?.id == 'wallet') {
                     return _buildWalletSection();
-                  } else if (controller.selectedMethodIndex.value == 1) {
+                  } else if (method?.id == 'bank_transfer') {
                     return _buildBankDetails();
+                  } else if (method?.id == 'floosak_wallet') {
+                    return _buildFloosakInfo();
                   }
                   return const SizedBox.shrink();
                 }),
@@ -90,11 +102,9 @@ class PaymentPage extends GetView<CheckoutController> {
           // مرحلة العنوان: مكتملة (تظهر كـ Done)
           _stepNode(Icons.check_circle_rounded, "العنوان", false, isDone: true),
           _stepLine(true), // خط ملون بالأزرق لأنه يتبع مرحلة مكتملة
-
           // مرحلة الدفع: النشطة حالياً
           _stepNode(Icons.payment_rounded, "الدفع", true),
           _stepLine(false), // خط رمادي للمرحلة القادمة
-
           // مرحلة التأكيد: غير نشطة
           _stepNode(Icons.assignment_turned_in_rounded, "التأكيد", false),
         ],
@@ -102,22 +112,33 @@ class PaymentPage extends GetView<CheckoutController> {
     );
   }
 
-  Widget _stepNode(IconData icon, String label, bool isActive, {bool isDone = false}) {
+  Widget _stepNode(
+    IconData icon,
+    String label,
+    bool isActive, {
+    bool isDone = false,
+  }) {
     return Column(
       children: [
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: isActive ? kPrimaryColor : (isDone ? Colors.white : kBgColor),
+            color: isActive
+                ? kPrimaryColor
+                : (isDone ? Colors.white : kBgColor),
             shape: BoxShape.circle,
             border: Border.all(
-                color: (isActive || isDone) ? kPrimaryColor : Colors.grey.shade200,
-                width: 1.5
+              color: (isActive || isDone)
+                  ? kPrimaryColor
+                  : Colors.grey.shade200,
+              width: 1.5,
             ),
           ),
           child: Icon(
             isDone ? Icons.check : icon,
-            color: isActive ? Colors.white : (isDone ? kPrimaryColor : Colors.grey.shade400),
+            color: isActive
+                ? Colors.white
+                : (isDone ? kPrimaryColor : Colors.grey.shade400),
             size: 18,
           ),
         ),
@@ -125,9 +146,11 @@ class PaymentPage extends GetView<CheckoutController> {
         Text(
           label,
           style: TextStyle(
-              color: (isActive || isDone) ? kTextColor : Colors.grey,
-              fontSize: 11,
-              fontWeight: (isActive || isDone) ? FontWeight.bold : FontWeight.normal
+            color: (isActive || isDone) ? kTextColor : Colors.grey,
+            fontSize: 11,
+            fontWeight: (isActive || isDone)
+                ? FontWeight.bold
+                : FontWeight.normal,
           ),
         ),
       ],
@@ -162,14 +185,28 @@ class PaymentPage extends GetView<CheckoutController> {
         children: [
           const Text(
             "التحويل لحسابنا في بنك الأمل والكويت على الرقم التالي:",
-            style: TextStyle(fontWeight: FontWeight.bold, color: kTextColor, fontSize: 14),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: kTextColor,
+              fontSize: 14,
+            ),
           ),
           const SizedBox(height: 15),
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("رقم الحساب:", style: TextStyle(fontSize: 14, color: kTextLightColor)),
-              Text("123456789", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: kPrimaryColor)),
+              Text(
+                "رقم الحساب:",
+                style: TextStyle(fontSize: 14, color: kTextLightColor),
+              ),
+              Text(
+                "123456789",
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 18,
+                  color: kPrimaryColor,
+                ),
+              ),
             ],
           ),
         ],
@@ -189,8 +226,19 @@ class PaymentPage extends GetView<CheckoutController> {
         decoration: BoxDecoration(
           color: isSelected ? Colors.white : kBgColor,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? kPrimaryColor : Colors.transparent, width: 1.5),
-          boxShadow: isSelected ? [BoxShadow(color: kPrimaryColor.withOpacity(0.1), blurRadius: 15, offset: const Offset(0, 8))] : [],
+          border: Border.all(
+            color: isSelected ? kPrimaryColor : Colors.transparent,
+            width: 1.5,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: kPrimaryColor.withOpacity(0.1),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ]
+              : [],
         ),
         child: Row(
           children: [
@@ -198,21 +246,44 @@ class PaymentPage extends GetView<CheckoutController> {
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: isSelected ? kPrimaryColor : Colors.grey.shade300, width: 2),
+                border: Border.all(
+                  color: isSelected ? kPrimaryColor : Colors.grey.shade300,
+                  width: 2,
+                ),
                 color: isSelected ? kPrimaryColor : Colors.transparent,
               ),
-              child: Icon(Icons.check, size: 12, color: isSelected ? Colors.white : Colors.transparent),
+              child: Icon(
+                Icons.check,
+                size: 12,
+                color: isSelected ? Colors.white : Colors.transparent,
+              ),
             ),
             const SizedBox(width: 20),
-            Icon(method.defaultIcon, color: isSelected ? kPrimaryColor : Colors.grey, size: 24),
+            Icon(
+              method.defaultIcon,
+              color: isSelected ? kPrimaryColor : Colors.grey,
+              size: 24,
+            ),
             const SizedBox(width: 15),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(method.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(
+                    method.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
                   if (method.description != null)
-                    Text(method.description!, style: const TextStyle(fontSize: 12, color: kTextLightColor)),
+                    Text(
+                      method.description!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: kTextLightColor,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -228,11 +299,19 @@ class PaymentPage extends GetView<CheckoutController> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, -5))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
       ),
       child: Obx(() {
         String currency = "ر.ي";
-        try { currency = (app as dynamic).selectedCurrency.value; } catch (e) {}
+        try {
+          currency = (app as dynamic).selectedCurrency.value;
+        } catch (e) {}
 
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -240,10 +319,20 @@ class PaymentPage extends GetView<CheckoutController> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text("المجموع الإجمالي", style: TextStyle(color: kTextLightColor, fontWeight: FontWeight.bold)),
+                const Text(
+                  "المجموع الإجمالي",
+                  style: TextStyle(
+                    color: kTextLightColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 Text(
-                    "${cart.totalAmount.toStringAsFixed(2)} $currency",
-                    style: const TextStyle(fontWeight: FontWeight.w900, color: kSecondaryColor, fontSize: 18)
+                  "${cart.totalAmount.toStringAsFixed(2)} $currency",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    color: kSecondaryColor,
+                    fontSize: 18,
+                  ),
                 ),
               ],
             ),
@@ -253,31 +342,47 @@ class PaymentPage extends GetView<CheckoutController> {
               height: 55,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(15),
-                boxShadow: [BoxShadow(color: kPrimaryColor.withOpacity(0.2), blurRadius: 15, offset: const Offset(0, 8))],
+                boxShadow: [
+                  BoxShadow(
+                    color: kPrimaryColor.withOpacity(0.2),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
               child: ElevatedButton(
-                  onPressed: controller.isCompletingOrder.value 
-                  ? null 
-                  : () async {
-                  final order = await controller.completeOrder();
-                  if (order != null) {
-                    Get.offAll(() => SuccessPage(order: order));
-                  }
-                },
+                onPressed: controller.isCompletingOrder.value
+                    ? null
+                    : () async {
+                        await controller.completeOrder();
+                      },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimaryColor,
                   foregroundColor: Colors.white,
                   disabledBackgroundColor: kPrimaryColor.withOpacity(0.6),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
                   elevation: 0,
                 ),
-                child: controller.isCompletingOrder.value 
-                  ? const SizedBox(
-                      width: 24, 
-                      height: 24, 
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                    )
-                  : const Text("إتمام الدفع وتأكيد الطلب", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                child: controller.isCompletingOrder.value
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        controller.isFloosakSelected
+                            ? "متابعة الدفع عبر فلوسك"
+                            : "إتمام الدفع وتأكيد الطلب",
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ),
             const SizedBox(height: 40), // Increased from 20 to 40
@@ -292,7 +397,10 @@ class PaymentPage extends GetView<CheckoutController> {
     return Container(
       margin: const EdgeInsets.only(top: 10),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: kBgColor, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(
+        color: kBgColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Column(
         children: [
           _buildWalletDropdown(),
@@ -304,9 +412,57 @@ class PaymentPage extends GetView<CheckoutController> {
               hintText: "رقم هاتف المحفظة",
               filled: true,
               fillColor: Colors.white,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+                borderSide: BorderSide.none,
+              ),
               prefixIcon: const Icon(Icons.phone_android, color: kPrimaryColor),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFloosakInfo() {
+    return Container(
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: kPrimaryColor.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: kPrimaryColor.withValues(alpha: 0.12)),
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.account_balance_wallet_rounded, color: kPrimaryColor),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  "الدفع عبر محفظة فلوسك",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: kTextColor,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          Text(
+            "سيتم استخدام رقم الهاتف المسجل في حسابك داخل المنصة. لا تحتاج لإدخال رقم محفظة مختلف.",
+            style: TextStyle(color: kTextLightColor, fontSize: 13, height: 1.6),
+            textAlign: TextAlign.right,
+          ),
+          SizedBox(height: 8),
+          Text(
+            "بعد إنشاء الطلب سيتم إرسال طلب الدفع، ثم ستدخل رمز التحقق الخاص بفلوسك عند الحاجة.",
+            style: TextStyle(color: kTextLightColor, fontSize: 13, height: 1.6),
+            textAlign: TextAlign.right,
           ),
         ],
       ),
@@ -323,7 +479,10 @@ class PaymentPage extends GetView<CheckoutController> {
               hintText: "كود الخصم",
               filled: true,
               fillColor: kBgColor,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+                borderSide: BorderSide.none,
+              ),
             ),
           ),
         ),
@@ -332,21 +491,30 @@ class PaymentPage extends GetView<CheckoutController> {
           onPressed: controller.applyCoupon,
           style: ElevatedButton.styleFrom(
             backgroundColor: kSecondaryColor,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
             padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 15),
           ),
-          child: const Text("تطبيق", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          child: const Text(
+            "تطبيق",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
         ),
       ],
     );
   }
 
   Widget _buildWalletDropdown() {
-    return Obx(() => DropdownButtonFormField<String>(
-      value: controller.selectedWallet.value ?? controller.wallets[0],
-      items: controller.wallets.map((w) => DropdownMenuItem(value: w, child: Text(w))).toList(),
-      onChanged: (val) => controller.selectWallet(val!),
-      decoration: const InputDecoration(border: InputBorder.none),
-    ));
+    return Obx(
+      () => DropdownButtonFormField<String>(
+        value: controller.selectedWallet.value ?? controller.wallets[0],
+        items: controller.wallets
+            .map((w) => DropdownMenuItem(value: w, child: Text(w)))
+            .toList(),
+        onChanged: (val) => controller.selectWallet(val!),
+        decoration: const InputDecoration(border: InputBorder.none),
+      ),
+    );
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class PaymentMethodModel {
-  final int id;
+  final String id;
   final String name;
   final String? description;
   final String? iconUrl;
@@ -17,7 +17,7 @@ class PaymentMethodModel {
 
   factory PaymentMethodModel.fromJson(Map<String, dynamic> json) {
     return PaymentMethodModel(
-      id: json['id'] ?? 0,
+      id: (json['id'] ?? '').toString(),
       name: json['name'] ?? "",
       description: json['description'],
       iconUrl: json['icon_url'] ?? json['image'],
@@ -26,10 +26,28 @@ class PaymentMethodModel {
   }
 
   IconData get defaultIcon {
-    if (name.contains('كاش') || name.contains('نقد')) return Icons.money_rounded;
-    if (name.contains('بنكي') || name.contains('تحويل')) return Icons.account_balance_rounded;
-    if (name.contains('بطاقة') || name.contains('فيزا')) return Icons.credit_card_rounded;
-    if (name.contains('محفظة')) return Icons.account_balance_wallet_rounded;
+    switch (id) {
+      case 'cash':
+        return Icons.money_rounded;
+      case 'bank_transfer':
+        return Icons.account_balance_rounded;
+      case 'wallet':
+      case 'floosak_wallet':
+        return Icons.account_balance_wallet_rounded;
+    }
+
+    if (name.contains('كاش') || name.contains('نقد')) {
+      return Icons.money_rounded;
+    }
+    if (name.contains('بنكي') || name.contains('تحويل')) {
+      return Icons.account_balance_rounded;
+    }
+    if (name.contains('بطاقة') || name.contains('فيزا')) {
+      return Icons.credit_card_rounded;
+    }
+    if (name.contains('محفظة')) {
+      return Icons.account_balance_wallet_rounded;
+    }
     return Icons.payment_rounded;
   }
 }

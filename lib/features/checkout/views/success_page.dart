@@ -7,6 +7,7 @@ import 'package:bytore/features/home/controllers/main_controller.dart';
 import 'package:bytore/features/orders/views/tracking_view.dart';
 
 import 'package:bytore/features/orders/models/order_model.dart';
+import 'package:bytore/features/profile/controllers/reviews_controller.dart';
 
 class SuccessPage extends StatelessWidget {
   final OrderModel? order;
@@ -14,6 +15,17 @@ class SuccessPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // تفعيل نافذة التقييم تلقائياً بعد ظهور الصفحة
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(seconds: 2), () {
+        if (Get.isRegistered<ReviewsController>()) {
+          Get.find<ReviewsController>().showSakhrRatingDialog();
+        } else {
+          Get.put(ReviewsController()).showSakhrRatingDialog();
+        }
+      });
+    });
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(

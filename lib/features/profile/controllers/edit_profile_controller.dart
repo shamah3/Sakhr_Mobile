@@ -24,10 +24,22 @@ class EditProfileController extends GetxController {
   void onInit() {
     super.onInit();
     // Initialize with real data from AppController
-    firstNameController = TextEditingController(text: _appController.user.value?.firstName ?? _appController.firstName.value);
-    lastNameController = TextEditingController(text: _appController.user.value?.lastName ?? _appController.lastName.value);
-    emailController = TextEditingController(text: _appController.user.value?.email ?? "");
-    phoneController = TextEditingController(text: _appController.user.value?.phone ?? _appController.phoneNumber.value);
+    firstNameController = TextEditingController(
+      text:
+          _appController.user.value?.firstName ??
+          _appController.firstName.value,
+    );
+    lastNameController = TextEditingController(
+      text:
+          _appController.user.value?.lastName ?? _appController.lastName.value,
+    );
+    emailController = TextEditingController(
+      text: _appController.user.value?.email ?? "",
+    );
+    phoneController = TextEditingController(
+      text:
+          _appController.user.value?.phone ?? _appController.phoneNumber.value,
+    );
   }
 
   Future<void> saveProfile() async {
@@ -46,7 +58,8 @@ class EditProfileController extends GetxController {
       isLoading.value = true;
 
       final token = _appController.token.value;
-      
+      await _appController.ensureUserLoaded();
+
       // If no token, we can only update locally (Visitor mode)
       bool success = true;
       if (token.isNotEmpty) {
@@ -55,7 +68,7 @@ class EditProfileController extends GetxController {
           lastName: lastNameController.text.trim(),
           email: emailController.text.trim(),
           phone: phoneController.text.trim(),
-          fingerprint: "1", 
+          fingerprint: "1",
           profileImagePath: _appController.profilePicturePath.value,
           token: token,
         );
@@ -76,7 +89,7 @@ class EditProfileController extends GetxController {
           colorText: Colors.white,
           snackPosition: SnackPosition.BOTTOM,
         );
-        
+
         Get.back();
       } else {
         Get.snackbar(
@@ -106,7 +119,7 @@ class EditProfileController extends GetxController {
       final picker = ImagePicker();
       final XFile? image = await picker.pickImage(
         source: ImageSource.gallery,
-        imageQuality: 70, 
+        imageQuality: 70,
       );
 
       if (image != null) {
@@ -123,7 +136,7 @@ class EditProfileController extends GetxController {
 
   Future<void> _uploadProfileImage(String filePath) async {
     final token = _appController.token.value;
-    if (token.isEmpty) return; 
+    if (token.isEmpty) return;
 
     try {
       isUploadingImage.value = true;
@@ -135,7 +148,10 @@ class EditProfileController extends GetxController {
         }
         Get.snackbar("تم بنجاح", "تم تحديث الصورة الشخصية في المنصة");
       } else {
-        Get.snackbar("تنبيه", "تم حفظ الصورة محلياً فقط، فشل الرفع للمنصة حالياً");
+        Get.snackbar(
+          "تنبيه",
+          "تم حفظ الصورة محلياً فقط، فشل الرفع للمنصة حالياً",
+        );
       }
     } catch (e) {
       debugPrint("Error uploading image: $e");

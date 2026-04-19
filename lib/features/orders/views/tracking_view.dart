@@ -174,6 +174,18 @@ class TrackingView extends GetView<TrackingController> {
 
   Widget _buildVisualTimeline(OrderModel order) {
     final status = order.status;
+
+    // تحديد الفهرس الحالي بناءً على التسلسل المنطقي
+    final statusSequence = [
+      OrderStatus.pending,
+      OrderStatus.confirmed,
+      OrderStatus.processing,
+      OrderStatus.outForDelivery,
+      OrderStatus.delivered,
+    ];
+    
+    int currentIdx = statusSequence.indexOf(status);
+    if (currentIdx == -1) currentIdx = 0;
     
     return Container(
       padding: const EdgeInsets.all(25),
@@ -195,35 +207,47 @@ class TrackingView extends GetView<TrackingController> {
             icon: Icons.receipt_long_rounded,
             title: "تم استلام الطلب",
             sub: "تلقينا طلبك وبانتظار المراجعة",
-            time: "09:00 ص",
-            color: const Color(0xFF4CAF50),
-            isLineActive: true,
+            time: "الآن",
+            color: currentIdx >= 0 ? const Color(0xFF4CAF50) : Colors.grey.shade300,
+            isLineActive: currentIdx > 0,
+            isCurrent: currentIdx == 0,
           ),
           _buildStep(
             icon: Icons.done_all_rounded,
             title: "تم التأكيد",
             sub: "تم التحقق من الطلب وتأكيده",
-            time: "10:30 ص",
-            color: const Color(0xFF4CAF50),
-            isLineActive: true,
+            time: currentIdx >= 1 ? "منذ قليل" : "--:--",
+            color: currentIdx >= 1 ? const Color(0xFF4CAF50) : Colors.grey.shade300,
+            isLineActive: currentIdx > 1,
+            isCurrent: currentIdx == 1,
           ),
           _buildStep(
             icon: Icons.inventory_2_rounded,
             title: "جاري التجهيز",
             sub: "يتم الآن تغليف طلبك في المستودع",
-            time: "01:00 م",
-            color: const Color(0xFF4CAF50),
-            isLineActive: true,
+            time: currentIdx >= 2 ? "تحديث الآن" : "--:--",
+            color: currentIdx >= 2 ? const Color(0xFF4CAF50) : Colors.grey.shade300,
+            isLineActive: currentIdx > 2,
+            isCurrent: currentIdx == 2,
           ),
           _buildStep(
             icon: Icons.local_shipping_rounded,
             title: "خرج للتوصيل",
             sub: "المندوب في طريقه إلى عنوانك",
-            time: "03:15 م",
-            color: const Color(0xFFFFA000),
+            time: currentIdx >= 3 ? "تحديث الآن" : "--:--",
+            color: currentIdx >= 3 ? const Color(0xFF4CAF50) : Colors.grey.shade300,
+            isLineActive: currentIdx > 3,
+            isCurrent: currentIdx == 3,
+          ),
+          _buildStep(
+            icon: Icons.check_circle_outline_rounded,
+            title: "تم الاستلام",
+            sub: "تم تسليم الطلب بنجاح",
+            time: currentIdx >= 4 ? "تم" : "--:--",
+            color: currentIdx >= 4 ? const Color(0xFF4CAF50) : Colors.grey.shade300,
             isLineActive: false,
             isLast: true,
-            isCurrent: true,
+            isCurrent: currentIdx == 4,
           ),
         ],
       ),

@@ -28,51 +28,19 @@ class StoreModel {
   });
 
   factory StoreModel.fromJson(Map<String, dynamic> json) {
-    String fixImageUrl(String? url) {
-      if (url == null || url.isEmpty) return "https://via.placeholder.com/300";
-      String rawUrl = url.trim();
-      
-      String finalUrl = "";
-      
-      // إذا كان الرابط كاملاً
-      if (rawUrl.startsWith("http")) {
-        // تصحيح localhost/127.0.0.1
-        if (rawUrl.contains("localhost") || rawUrl.contains("127.0.0.1")) {
-          finalUrl = rawUrl
-              .replaceAll("localhost", ApiService.baseIp.split(':')[0])
-              .replaceAll("127.0.0.1", ApiService.baseIp.split(':')[0]);
-        } else {
-          finalUrl = rawUrl;
-        }
-      } else {
-        // تنظيف المسار
-        String path = rawUrl;
-        if (path.startsWith('/')) path = path.substring(1);
-        if (path.startsWith('public/')) path = path.substring(7);
-        
-        bool hasPrefix = path.startsWith('storage/') || 
-                         path.startsWith('uploads/') || 
-                         path.startsWith('assets/') ||
-                         path.startsWith('images/');
-
-        if (hasPrefix) {
-          finalUrl = "${ApiService.serverUrl}/$path";
-        } else {
-          finalUrl = "${ApiService.serverUrl}/storage/$path";
-        }
-      }
-
-      try {
-        return Uri.parse(finalUrl).toString();
-      } catch (e) {
-        return finalUrl;
-      }
-    }
-
     return StoreModel(
       id: int.tryParse(json['id']?.toString() ?? "0") ?? 0,
       name: json['name']?.toString() ?? "بدون اسم",
-      logo: fixImageUrl(json['logo']?.toString() ?? json['image']?.toString() ?? json['image_url']?.toString() ?? json['avatar']?.toString()),
+      logo: ApiService.fixImageUrl(
+        json['logo_path']?.toString() ?? 
+        json['logo_url']?.toString() ?? 
+        json['shop_logo']?.toString() ??
+        json['logo']?.toString() ?? 
+        json['image_path']?.toString() ??
+        json['image']?.toString() ?? 
+        json['image_url']?.toString() ?? 
+        json['avatar']?.toString()
+      ),
       description: json['description']?.toString(),
       phone: json['phone']?.toString(),
       email: json['email']?.toString(),

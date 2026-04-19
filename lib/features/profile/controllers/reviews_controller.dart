@@ -7,6 +7,7 @@ import 'package:bytore/core/services/api_service.dart';
 import 'package:bytore/features/profile/controllers/purchase_reports_controller.dart';
 import 'package:bytore/features/profile/controllers/activities_controller.dart';
 import 'package:bytore/features/orders/models/order_model.dart';
+import 'package:bytore/features/product/controllers/product_controller.dart';
 
 class ReviewsController extends GetxController with GetSingleTickerProviderStateMixin {
   late TabController tabController;
@@ -107,6 +108,16 @@ class ReviewsController extends GetxController with GetSingleTickerProviderState
         // حذفه من قائمة الانتظار
         pendingList.remove(pendingItem);
 
+        // ✅ تحديث قائمة التعليقات في تفاصيل المنتج إذا كانت الواجهة مفتوحة
+        try {
+          final String tag = pendingItem.productId.toString();
+          if (Get.isRegistered<ProductController>(tag: tag)) {
+             Get.find<ProductController>(tag: tag).fetchReviews();
+          }
+        } catch (e) {
+          debugPrint("Note: Could not refresh ProductController: $e");
+        }
+
         // إضافة للأنشطة
         try {
           Get.find<ActivitiesController>().logActivity(
@@ -187,6 +198,116 @@ class ReviewsController extends GetxController with GetSingleTickerProviderState
         child: const Text("إلغاء", style: TextStyle(color: Colors.grey)),
       ),
     );
+  }
+
+  // --- 🌟 تقييم منصة صخر (Platform Rating) 🌟 ---
+
+  // دالة لإظهار نافذة تقييم المنصة (تستدعى تلقائياً أو يدوياً)
+  void showSakhrRatingDialog() {
+    double tempRating = 5;
+    final commentController = TextEditingController();
+
+    Get.defaultDialog(
+      title: "تقييم منصة صخر",
+      titleStyle: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF015C92)),
+      content: Column(
+        children: [
+          const Text(
+            "رأيك يهمنا! كيف كانت تجربتك مع صخر؟",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 14),
+          ),
+          const SizedBox(height: 20),
+          StatefulBuilder(
+            builder: (context, setState) {
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) {
+                  return IconButton(
+                    onPressed: () {
+                      setState(() => tempRating = index + 1.0);
+                    },
+                    icon: Icon(
+                      Icons.star_rounded, 
+                      color: index < tempRating ? Colors.orange : Colors.grey[300], 
+                      size: 35
+                    ),
+                  );
+                }),
+              );
+            }
+          ),
+          const SizedBox(height: 15),
+          TextField(
+            controller: commentController,
+            decoration: InputDecoration(
+              hintText: "أخبرنا بمزيد من التفاصيل (اختياري)",
+              hintStyle: TextStyle(fontSize: 12, color: Colors.grey.shade400),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              filled: true,
+              fillColor: Colors.grey.shade50,
+            ),
+            maxLines: 3,
+          ),
+        ],
+      ),
+      confirm: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF015C92),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
+          ),
+          onPressed: () {
+            submitSakhrReview(tempRating, commentController.text);
+            Get.back();
+          },
+          child: const Text("إرسال التقييم", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        ),
+      ),
+      barrierDismissible: true,
+    );
+  }
+
+  // إرسال تقييم صخر (Store ID = 1)
+  void submitSakhrReview(double rating, String comment) async {
+    try {
+      isLoading.value = true;
+      final token = _appController.token.value;
+      if (token.isEmpty) return;
+
+      final success = await _apiService.postStoreReview(
+        storeId: 1, // ID الخاص بمنصة صخر
+        rating: rating.toInt(),
+        comment: comment,
+        token: token,
+      );
+
+      if (success) {
+        // إضافة للأنشطة
+        try {
+          Get.find<ActivitiesController>().logActivity(
+            title: "تقييم منصة صخر: $rating نجوم",
+            type: 'star'
+          );
+        } catch (e) {}
+
+        Get.snackbar(
+          "شكراً لك", 
+          "نسعى دائماً لتقديم الأفضل لك في صخر", 
+          backgroundColor: Colors.green, 
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      } else {
+        Get.snackbar("تنبيه", "فشل إرسال التقييم، يرجى المحاولة لاحقاً", backgroundColor: Colors.orange, colorText: Colors.white);
+      }
+    } catch (e) {
+      debugPrint("Error submitting Sakhr review: $e");
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   @override

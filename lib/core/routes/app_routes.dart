@@ -12,6 +12,8 @@ abstract class AppRoutes {
   static const OTP = '/otp';
   static const CHECKOUT_ADDRESS = '/checkout-address';
   static const CHECKOUT_PAYMENT = '/checkout-payment';
+  // ignore: constant_identifier_names
+  static const CHECKOUT_FLOOSAK_PAYMENT = '/checkout-floosak-payment';
   static const CHECKOUT_SUCCESS = '/checkout-success';
   static const NOTIFICATIONS = '/notifications';
   static const WISHLIST = '/wishlist';

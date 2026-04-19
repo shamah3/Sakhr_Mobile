@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:bytore/core/services/api_service.dart';
 import 'package:bytore/features/home/views/components/filter_bottom_sheet.dart';
 import 'package:bytore/core/components/custom_image.dart';
 import 'package:bytore/core/components/currency_switcher.dart';
@@ -331,11 +333,15 @@ class HomeView extends GetView<HomeController> {
           child: Container(
             height: 50, width: 50,
             decoration: BoxDecoration(
-              color: kPrimaryColor,
+              gradient: const LinearGradient(
+                colors: [Color(0xFF0277BD), Color(0xFF01579B)],
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+              ),
               borderRadius: BorderRadius.circular(15),
               boxShadow: [
                 BoxShadow(
-                  color: kPrimaryColor.withAlpha((0.3 * 255).round()),
+                  color: const Color(0xFF0277BD).withOpacity(0.3),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -358,7 +364,7 @@ class HomeView extends GetView<HomeController> {
         children: [
           CarouselSlider(
             options: CarouselOptions(
-              height: 180,
+              height: 195,
               viewportFraction: 1.0,
               autoPlay: true,
               enlargeCenterPage: false,
@@ -370,94 +376,102 @@ class HomeView extends GetView<HomeController> {
                   Get.dialog(
                     Dialog(
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      child: SingleChildScrollView(
-                        child: Container(
-                          padding: const EdgeInsets.all(22),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
+                      child: Container(
+                        padding: const EdgeInsets.all(22),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: SingleChildScrollView(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const Text("تفاصيل الإعلان", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: kPrimaryColor)),
-                                  IconButton(onPressed: () => Get.back(), icon: const Icon(Icons.close, size: 20)),
+                                  const SizedBox(width: 40),
+                                  Text("تفاصيل الإعلان", style: GoogleFonts.cairo(fontSize: 20, fontWeight: FontWeight.bold, color: kPrimaryColor)),
+                                  IconButton(onPressed: () => Get.back(), icon: const Icon(Icons.close_rounded, size: 22, color: Colors.grey)),
                                 ],
                               ),
-                              const SizedBox(height: 10),
+                              const Divider(height: 30, thickness: 0.5),
                               ClipRRect(
-                                borderRadius: BorderRadius.circular(15),
+                                borderRadius: BorderRadius.circular(20),
                                 child: CustomImage(
                                   imageUrl: ad.image,
-                                  height: 180,
+                                  height: 200,
                                   width: double.infinity,
-                                  fit: BoxFit.cover,
+                                  fit: BoxFit.contain,
                                 ),
                               ),
-                              const SizedBox(height: 15),
-                              Text(ad.title ?? "إعلان ترويجي", 
-                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: kTextColor)),
-                              const SizedBox(height: 8),
-                              Text(ad.description ?? "", 
-                                  style: const TextStyle(fontSize: 14, color: Colors.grey, height: 1.4)),
-                              
-                              const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 15),
-                                child: Divider(),
+                              const SizedBox(height: 20),
+                              Text(
+                                ad.title ?? "إعلان ترويجي", 
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.cairo(fontSize: 20, fontWeight: FontWeight.w900, color: kTextColor, height: 1.2)
                               ),
-                              
-                              _buildAdDetailRow(Icons.account_balance_wallet_rounded, "الميزانية", "${ad.budget?.toStringAsFixed(2) ?? '0.00'} $kCurrency"),
                               const SizedBox(height: 12),
-                              _buildAdDetailRow(Icons.calendar_today_rounded, "فترة الإعلان", 
-                                  "${(ad.startDate ?? '-').split('T')[0]} إلى ${(ad.endDate ?? '-').split('T')[0]}"),
-                              const SizedBox(height: 12),
-                              _buildAdDetailRow(Icons.store_rounded, "المتجر المعلن", ad.storeName ?? "متجر شريك"),
-                              
-                              const SizedBox(height: 30),
-                              
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 10),
+                                child: Text(
+                                  ad.description ?? "", 
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.cairo(fontSize: 14, color: Colors.grey.shade600, height: 1.6)
+                                ),
+                              ),
+                              const SizedBox(height: 35),
                               Row(
                                 children: [
                                   Expanded(
-                                    child: ElevatedButton(
-                                      onPressed: () {
-                                        Get.back();
-                                        if (ad.targetUrl != null && ad.targetUrl!.isNotEmpty) {
-                                          // Logic to open URL
-                                        } else {
-                                          Get.toNamed('/product-list', arguments: {'storeId': ad.storeId, 'categoryTitle': ad.storeName ?? "المتجر"});
-                                        }
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: kPrimaryColor,
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(vertical: 16),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                                        elevation: 0,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        boxShadow: [BoxShadow(color: kPrimaryColor.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))],
                                       ),
-                                      child: const Text("زيارة المتجر", style: TextStyle(fontWeight: FontWeight.bold)),
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          Get.back();
+                                          if (ad.targetUrl != null && ad.targetUrl!.isNotEmpty) {
+                                            // Open URL logic
+                                          } else {
+                                            Get.toNamed('/product-list', arguments: {'storeId': ad.storeId, 'categoryTitle': ad.storeName ?? "المتجر"});
+                                          }
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: kPrimaryColor,
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(vertical: 16),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                                          elevation: 0,
+                                        ),
+                                        child: Text("زيارة المتجر", style: GoogleFonts.cairo(fontWeight: FontWeight.w900, fontSize: 15)),
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
-                                    child: OutlinedButton(
-                                      onPressed: () {
-                                        Get.back();
-                                        Get.toNamed('/ads');
-                                      },
-                                      style: OutlinedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(vertical: 16),
-                                        side: const BorderSide(color: kPrimaryColor, width: 1.5),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        boxShadow: [BoxShadow(color: kSecondaryColor.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))],
                                       ),
-                                      child: const Text("جميع العروض", style: TextStyle(color: kPrimaryColor, fontWeight: FontWeight.bold)),
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          Get.back();
+                                          Get.toNamed('/ads');
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: kSecondaryColor,
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(vertical: 16),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                                          elevation: 0,
+                                        ),
+                                        child: Text("تصفح العروض", style: GoogleFonts.cairo(fontWeight: FontWeight.w900, fontSize: 15)),
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
+                              const SizedBox(height: 10),
                             ],
                           ),
                         ),
@@ -478,11 +492,7 @@ class HomeView extends GetView<HomeController> {
                         ),
                         borderRadius: BorderRadius.circular(25),
                         boxShadow: [
-                           BoxShadow(
-                             color: kPrimaryColor.withOpacity(0.2),
-                             blurRadius: 15,
-                             offset: const Offset(0, 8),
-                           ),
+                           BoxShadow(color: kPrimaryColor.withOpacity(0.2), blurRadius: 15, offset: const Offset(0, 8)),
                         ],
                       ),
                       child: Stack(
@@ -519,21 +529,13 @@ class HomeView extends GetView<HomeController> {
                                     ),
                                   ),
                                   const SizedBox(height: 12),
-                                  
                                   Text(
                                     ad.title ?? "",
-                                    style: const TextStyle(
-                                      color: Colors.white, 
-                                      fontWeight: FontWeight.w900, 
-                                      fontSize: 18, 
-                                      height: 1.4,
-                                      letterSpacing: 0.2,
-                                    ),
+                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18, height: 1.4, letterSpacing: 0.2),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   const SizedBox(height: 10),
-                                  
                                   Row(
                                     children: [
                                       const Icon(Icons.access_time_filled_rounded, color: Colors.white54, size: 12),
@@ -545,24 +547,14 @@ class HomeView extends GetView<HomeController> {
                                     ],
                                   ),
                                   const SizedBox(height: 20),
-                                  
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                                     decoration: BoxDecoration(
                                       color: kSecondaryColor,
                                       borderRadius: BorderRadius.circular(15),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: kSecondaryColor.withOpacity(0.2), 
-                                          blurRadius: 10, 
-                                          offset: const Offset(0, 4)
-                                        ),
-                                      ],
+                                      boxShadow: [BoxShadow(color: kSecondaryColor.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4))],
                                     ),
-                                    child: const Text(
-                                      "اكتشف العرض",
-                                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12),
-                                    ),
+                                    child: const Text("اكتشف العرض", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12)),
                                   ),
                                 ],
                               ),
@@ -575,10 +567,7 @@ class HomeView extends GetView<HomeController> {
                                 tag: 'ad_image_${ad.id}',
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(20),
-                                  child: CustomImage(
-                                    imageUrl: ad.image,
-                                    fit: BoxFit.cover,
-                                  ),
+                                  child: CustomImage(imageUrl: ad.image, fit: BoxFit.cover),
                                 ),
                               ),
                             ),
@@ -612,7 +601,7 @@ class HomeView extends GetView<HomeController> {
 
   Widget _buildTopSellingHorizontalList(AppController appController) {
     return Container(
-      height: 280,
+      height: 290, // Increased from 280 to prevent overflow
       margin: const EdgeInsets.only(bottom: 20),
       child: Obx(() {
         if (controller.isLoading.value && controller.topSellingProducts.isEmpty) {
@@ -646,7 +635,7 @@ class HomeView extends GetView<HomeController> {
 
   Widget _buildHorizontalProductList(String category, AppController appController) {
     return Container(
-      height: 280,
+      height: 290, // Increased from 280 to prevent overflow
       margin: const EdgeInsets.only(bottom: 20),
       child: Obx(() {
         if (controller.isLoading.value && controller.allProducts.isEmpty) {
@@ -730,8 +719,8 @@ class HomeView extends GetView<HomeController> {
 
     return SliverToBoxAdapter(
       child: Container(
-        height: 55, 
-        margin: const EdgeInsets.only(bottom: 15),
+        height: 55, // Optimized height to avoid excessive spacing
+        margin: const EdgeInsets.only(bottom: 12),
         child: Obx(() {
           if (catController.isLoading.value) {
             return const Center(child: CircularProgressIndicator(strokeWidth: 2, color: kPrimaryColor));
@@ -752,14 +741,21 @@ class HomeView extends GetView<HomeController> {
                 curve: Curves.easeOutCubic,
                 margin: const EdgeInsets.only(left: 10),
                 decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFF0277BD) : Colors.white, // Blue background from image
-                  borderRadius: BorderRadius.circular(12),
+                  gradient: isSelected 
+                    ? const LinearGradient(
+                        colors: [Color(0xFF0277BD), Color(0xFF01579B)],
+                        begin: Alignment.topRight,
+                        end: Alignment.bottomLeft,
+                      )
+                    : null,
+                  color: isSelected ? null : Colors.white,
+                  borderRadius: BorderRadius.circular(15),
                   border: Border.all(
                     color: isSelected ? const Color(0xFF0277BD) : Colors.grey.withOpacity(0.2),
-                    width: 1,
+                    width: isSelected ? 0 : 1,
                   ),
                   boxShadow: isSelected 
-                    ? [BoxShadow(color: const Color(0xFF0277BD).withOpacity(0.3), blurRadius: 6, offset: const Offset(0, 3))]
+                    ? [BoxShadow(color: const Color(0xFF0277BD).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))]
                     : [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 2, offset: const Offset(0, 1))],
                 ),
                 child: Material(
@@ -777,22 +773,25 @@ class HomeView extends GetView<HomeController> {
                     splashColor: isSelected ? Colors.white.withOpacity(0.2) : kPrimaryColor.withOpacity(0.1),
                     child: Container(
                       alignment: Alignment.center,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            (cat['name'] ?? "").toString(),
-                            maxLines: 1,
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : kTextColor.withOpacity(0.8),
-                              fontSize: 13,
-                              fontWeight: isSelected ? FontWeight.w900 : FontWeight.bold,
+                          _buildCategoryIconShort(cat, isSelected, size: 22),
+                          const SizedBox(width: 12),
+                          Flexible(
+                            child: Text(
+                              (cat['name'] ?? "").toString(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.cairo(
+                                color: isSelected ? Colors.white : kTextColor.withOpacity(0.8),
+                                fontSize: 13,
+                                fontWeight: isSelected ? FontWeight.w900 : FontWeight.bold,
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          _buildCategoryIconShort(cat, isSelected, size: 18),
                         ],
                       ),
                     ),
@@ -812,15 +811,18 @@ class HomeView extends GetView<HomeController> {
           color: isSelected ? Colors.white : kPrimaryColor, size: size);
     }
 
-    String? imageUrl = cat['image_url'] ?? cat['image'];
-    if (imageUrl != null && imageUrl.isNotEmpty && !imageUrl.contains("icons8.com")) {
+    // نستخدم نفس المنطق الناجح في واجهة الأقسام
+    String? imageUrl = cat['image_url'] ?? cat['icon_url'] ?? cat['image'] ?? cat['icon_path'];
+    
+    if (imageUrl != null && imageUrl.toString().isNotEmpty) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(4),
         child: CustomImage(
-          imageUrl: imageUrl,
+          imageUrl: imageUrl.toString(),
           width: size,
           height: size,
           fit: BoxFit.contain,
+          borderRadius: 4,
         ),
       );
     }
@@ -873,7 +875,7 @@ class HomeView extends GetView<HomeController> {
 
   Widget _buildLocal3DProductsHorizontalList(AppController appController) {
     return Container(
-      height: 280,
+      height: 310, // Increased from 280 to accommodate card + 3D badge
       margin: const EdgeInsets.only(bottom: 20),
       child: Obx(() {
         final products = controller.local3DProductsList;

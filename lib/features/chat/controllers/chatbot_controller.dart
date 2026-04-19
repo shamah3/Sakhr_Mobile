@@ -47,7 +47,7 @@ class ChatbotController extends GetxController {
     }
   }
 
-  void sendMessage(String userMsg) {
+  Future<void> sendMessage(String userMsg) async {
     if (userMsg.trim().isEmpty) return;
 
     messages.add(ChatMessage(
@@ -58,40 +58,33 @@ class ChatbotController extends GetxController {
 
     isTyping.value = true;
 
-    // Simulate thinking delay
-    Future.delayed(const Duration(seconds: 1), () {
-      String response = _findBestResponse(userMsg);
-      
+    try {
+      final token = _appController.token.value;
+      String? botResponse = await _apiService.smartSearch(
+        userMsg,
+        token: token.isNotEmpty ? token : null,
+      );
+
+      // Fallback if API fails
+      botResponse ??= "عذراً، لم أتمكن من الحصول على إجابة حالياً.";
+
       messages.add(ChatMessage(
-        text: response,
+        text: botResponse,
         isMe: false,
         time: _getCurrentTime(),
       ));
 
+      // Send log to server (optional but maintaining logic)
+      _saveResponseToServer(userMsg, botResponse);
+    } catch (e) {
+      debugPrint("❌ Chatbot sendMessage error: $e");
+      messages.add(ChatMessage(
+        text: "حدث خطأ أثناء الاتصال بالمساعد الذكي.",
+        isMe: false,
+        time: _getCurrentTime(),
+      ));
+    } finally {
       isTyping.value = false;
-
-      // Send log to server
-      _saveResponseToServer(userMsg, response);
-    });
-  }
-
-  String _findBestResponse(String input) {
-    final lowerInput = input.toLowerCase();
-    
-    // Check against fetched rules
-    for (var rule in rules) {
-      if (lowerInput.contains(rule.triggerKeyword.toLowerCase())) {
-        return rule.responseText;
-      }
-    }
-
-    // Default Fallbacks
-    if (lowerInput.contains('لابتوب') || lowerInput.contains('كمبيوتر')) {
-      return 'لدينا مجموعة رائعة من اللابتوبات الحديثة، هل تبحث عن شيء مخصص للألعاب أم للأعمال المكتبية؟';
-    } else if (lowerInput.contains('سعر') || lowerInput.contains('رخيص')) {
-      return 'لدينا عروض مميزة حالياً، يمكنك تصفح قسم "الخصومات" في الصفحة الرئيسية.';
-    } else {
-      return 'هذا مثير للاهتمام! هل تود أن أبحث لك عن منتجات متعلقة بـ "$input"؟';
     }
   }
 

@@ -16,6 +16,7 @@ import 'package:bytore/core/components/custom_app_bar.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 import 'package:bytore/features/chat/views/chat_detail_view.dart';
 import 'package:bytore/features/profile/controllers/activities_controller.dart';
+import 'package:bytore/core/routes/app_routes.dart';
 
 class ProductDetailView extends StatelessWidget {
   final Product product;
@@ -51,7 +52,7 @@ class ProductDetailView extends StatelessWidget {
         slivers: [
           SliverToBoxAdapter(
             child: SizedBox(
-              height: 350,
+              height: 280,
               child: Stack(
                 alignment: Alignment.bottomCenter,
                 children: [
@@ -72,7 +73,11 @@ class ProductDetailView extends StatelessWidget {
                       if (product.threeDImages.isNotEmpty) {
                         return Padding(
                           padding: const EdgeInsets.only(top: 20),
-                          child: ThreeDProductViewer(images: product.threeDImages, height: 280),
+                          child: ThreeDProductViewer(
+                            images: product.threeDImages, 
+                            height: 280,
+                            rotation: (product.id == 9011) ? 1 : 0, // Horizontal only for this product
+                          ),
                         );
                       } else {
                         return PageView.builder(
@@ -154,44 +159,50 @@ class ProductDetailView extends StatelessWidget {
 
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildPremiumHeader(controller, appController),
-                  const SizedBox(height: 25),
+                  const SizedBox(height: 15),
                   
                   _buildStatsRow(controller),
-                  const SizedBox(height: 25),
+                  const SizedBox(height: 15),
 
                   _buildServiceSection(context, controller),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 20),
 
-                  if (product.colors.isNotEmpty || product.sizes.isNotEmpty) ...[
-                    _buildVariantSection(controller),
-                    const SizedBox(height: 30),
-                  ],
+                  Obx(() {
+                    final p = controller.product.value;
+                    if (p.colors.isEmpty && p.sizes.isEmpty) return const SizedBox.shrink();
+                    return Column(
+                      children: [
+                        _buildVariantSection(controller),
+                        const SizedBox(height: 20),
+                      ],
+                    );
+                  }),
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text("الكمية المطلوبة", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: kTextColor)),
+                      const Text("الكمية المطلوبة", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: kTextColor)),
                       _buildQuantityCounter(controller),
                     ],
                   ),
-                  const SizedBox(height: 35),
+                  const SizedBox(height: 20),
 
-                  const Text("عن المنتج", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: kTextColor)),
-                  const SizedBox(height: 12),
+                  const Text("عن المنتج", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: kTextColor)),
+                  const SizedBox(height: 8),
                   Obx(() => Text(
                     controller.product.value.description.isNotEmpty ? controller.product.value.description : "هذا المنتج يوفر لك تجربة فريدة بجودة خامات عالية وتصميم مريح للاستخدام اليومي المكثف مع مراعاة أدق التفاصيل.",
-                    style: TextStyle(fontSize: 14, color: Colors.black.withOpacity(0.6), height: 1.7),
+                    style: TextStyle(fontSize: 13, color: Colors.black.withOpacity(0.6), height: 1.6),
                   )),
                   
-                  const SizedBox(height: 35),
+                  const SizedBox(height: 20),
                   _buildPremiumTechSpecsGrid(),
 
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 20),
                   _buildDetailedTabs(context, controller),
                 ],
               ),
@@ -211,7 +222,7 @@ class ProductDetailView extends StatelessWidget {
           textDirection: controller.getDirection(controller.product.value.name),
           child: Text(
             controller.product.value.name,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: kTextColor, height: 1.2),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: kTextColor, height: 1.2),
           ),
         )),
         Obx(() => controller.product.value.shortDescription.isNotEmpty
@@ -236,7 +247,7 @@ class ProductDetailView extends StatelessWidget {
                     fit: BoxFit.scaleDown,
                     child: Obx(() => Text(
                       appController.getFormattedPrice(controller.currentPrice),
-                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: kPrimaryColor),
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: kPrimaryColor),
                     )),
                   ),
                   Obx(() => controller.product.value.oldPrice > controller.currentPrice
@@ -306,7 +317,7 @@ class ProductDetailView extends StatelessWidget {
             color: Colors.orange,
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 8),
         Expanded(
           child: _buildServiceChip(
             icon: Icons.local_shipping_outlined,
@@ -314,26 +325,28 @@ class ProductDetailView extends StatelessWidget {
             color: Colors.blue,
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 8),
         Expanded(
           child: GestureDetector(
             onTap: () {
-              // ✅ سجل النشاط: مراسلة التاجر
+              // ✅ سجل النشاط: زيارة المتجر
               try {
                 Get.find<ActivitiesController>().logActivity(
-                  title: "مراسلة تاجر: ${product.storeName}",
-                  type: "chat"
+                  title: "زيارة متجر: ${product.storeName}",
+                  type: "visit"
                 );
               } catch (_) {}
               
-              Get.to(() => const ChatDetailView(), arguments: {
-                'storeId': product.storeId,
-                'senderName': product.storeName,
-              });
+              Get.to(() => ProductListView(
+                categoryTitle: product.storeName,
+                apiCategorySlug: 'all', 
+                storeId: product.storeId,
+              ));
             },
             child: _buildServiceChip(
-              icon: Icons.chat_bubble_outline_rounded,
-              label: "مراسلة المتجر",
+              icon: Icons.storefront_outlined,
+              imageUrl: product.storeLogo,
+              label: "زيارة المتجر",
               color: kSecondaryColor,
             ),
           ),
@@ -342,18 +355,28 @@ class ProductDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildServiceChip({required IconData icon, required String label, required Color color}) {
+  Widget _buildServiceChip({required IconData icon, String? imageUrl, required String label, required Color color}) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.grey.shade100, width: 1),
       ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(height: 6),
+          if (imageUrl != null && imageUrl.isNotEmpty)
+            ClipOval(
+              child: CustomImage(
+                imageUrl: imageUrl,
+                width: 22,
+                height: 22,
+                fit: BoxFit.contain,
+              ),
+            )
+          else
+            Icon(icon, color: color, size: 18),
+          const SizedBox(height: 4),
           Text(
             label,
             textAlign: TextAlign.center,
@@ -367,6 +390,7 @@ class ProductDetailView extends StatelessWidget {
   }
 
   Widget _buildVariantSection(ProductController controller) {
+    final p = controller.product.value;
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
@@ -376,13 +400,13 @@ class ProductDetailView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (product.colors.isNotEmpty) ...[
+          if (p.colors.isNotEmpty) ...[
             const Text("الألوان المتاحة", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kTextColor)),
             const SizedBox(height: 12),
             _buildColorSelector(controller),
             const SizedBox(height: 20),
           ],
-          if (product.sizes.isNotEmpty) ...[
+          if (p.sizes.isNotEmpty) ...[
             const Text("المواصفات المختارة", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kTextColor)),
             const SizedBox(height: 12),
             _buildSizeSelector(controller),
@@ -717,8 +741,9 @@ class ProductDetailView extends StatelessWidget {
   }
 
   Widget _buildColorSelector(ProductController controller) {
+    final p = controller.product.value;
     return Row(
-      children: (product.colors).map((c) {
+      children: (p.colors).map((c) {
         return Obx(() {
           bool isSelected = controller.selectedColor.value == c;
           return GestureDetector(
@@ -736,7 +761,7 @@ class ProductDetailView extends StatelessWidget {
                   imageUrl: c['image'],
                   width: 30,
                   height: 30,
-                  fit: BoxFit.cover,
+                  fit: BoxFit.contain,
                 ),
               ),
             ),
@@ -747,8 +772,9 @@ class ProductDetailView extends StatelessWidget {
   }
 
   Widget _buildSizeSelector(ProductController controller) {
+    final p = controller.product.value;
     return Row(
-      children: (product.sizes).map((s) {
+      children: (p.sizes).map((s) {
         return Obx(() {
           bool isSelected = controller.selectedSize.value == s;
           return GestureDetector(
@@ -784,11 +810,23 @@ class ProductDetailView extends StatelessWidget {
     bool isOnShipment = product.status == 'On Shipment';
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 30),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(offset: const Offset(0, -10), blurRadius: 20, color: Colors.black.withOpacity(0.04))],
-        borderRadius: const BorderRadius.only(topLeft: Radius.circular(35), topRight: Radius.circular(35)),
+        boxShadow: [
+          BoxShadow(
+            offset: const Offset(0, 15),
+            blurRadius: 35,
+            color: kPrimaryColor.withOpacity(0.15),
+          ),
+          BoxShadow(
+            offset: const Offset(0, -2),
+            blurRadius: 10,
+            color: Colors.black.withOpacity(0.02),
+          ),
+        ],
+        borderRadius: BorderRadius.circular(30),
       ),
       child: SafeArea(
         child: Row(
@@ -825,26 +863,34 @@ class ProductDetailView extends StatelessWidget {
                     NotificationHelper.showCustomSnackBar(context, "هذا المنتج قيد الشحن حالياً.", isError: false);
                     return;
                   }
+                  
+                  // Add to cart and proceed to checkout
                   cartController.addItem(product);
-                  appController.addNotification(title: "تمت الإضافة للسلة", body: "تم إضافة المنتج بنجاح", color: kPrimaryColor);
-                  NotificationHelper.showCustomSnackBar(context, "تمت الإضافة للسلة بنجاح", isError: false);
+                  
+                  if (appController.isLoggedIn.value) {
+                    Get.toNamed(AppRoutes.CHECKOUT_ADDRESS);
+                  } else {
+                    Get.toNamed(AppRoutes.LOGIN, arguments: {'redirectToAddress': true});
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: (isUnavailable || isOnShipment) ? Colors.grey : kPrimaryColor,
                   padding: const EdgeInsets.symmetric(vertical: 18),
+                  elevation: 8,
+                  shadowColor: kPrimaryColor.withOpacity(0.4),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                      Icon(
-                      isUnavailable ? Icons.block_flipped : (isOnShipment ? Icons.local_shipping_rounded : Icons.shopping_bag_outlined),
+                      isUnavailable ? Icons.block_flipped : (isOnShipment ? Icons.local_shipping_rounded : Icons.payments_outlined),
                       size: 20,
                       color: Colors.white,
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      isUnavailable ? "غير متوفر" : (isOnShipment ? "قيد الشحن" : "إضافة للسلة"),
+                      isUnavailable ? "غير متوفر" : (isOnShipment ? "قيد الشحن" : "استمرار للدفع"),
                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white),
                     ),
                   ],

@@ -5,6 +5,7 @@ class UserModel {
   final String? email;
   final String phone;
   final String? profilePhotoUrl;
+  final bool hasBiometric;
 
   UserModel({
     required this.id,
@@ -13,16 +14,27 @@ class UserModel {
     this.email,
     required this.phone,
     this.profilePhotoUrl,
+    this.hasBiometric = false,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    int parsedId = 0;
+    if (json['id'] != null) {
+      if (json['id'] is int) {
+        parsedId = json['id'];
+      } else if (json['id'] is String) {
+        parsedId = int.tryParse(json['id']) ?? 0;
+      }
+    }
+
     return UserModel(
-      id: json['id'] ?? 0,
+      id: parsedId,
       firstName: json['first_name'] ?? json['name'] ?? '',
       lastName: json['last_name'] ?? '',
       email: json['email'],
       phone: json['phone'] ?? json['phone_number'] ?? '',
       profilePhotoUrl: json['profile_photo_url'] ?? json['profile_picture_url'],
+      hasBiometric: json['has_biometric'] == true,
     );
   }
 
@@ -34,6 +46,7 @@ class UserModel {
       'email': email,
       'phone': phone,
       'profile_photo_url': profilePhotoUrl,
+      'has_biometric': hasBiometric,
     };
   }
 

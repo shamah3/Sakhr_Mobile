@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:bytore/core/constants/constants.dart';
 import 'package:get/get.dart';
 import 'dart:ui';
+
+import 'package:bytore/core/services/api_service.dart';
+import 'package:bytore/core/controllers/app_controller.dart';
 
 class AiChatView extends StatefulWidget {
   const AiChatView({super.key});
@@ -18,87 +20,106 @@ class _AiChatViewState extends State<AiChatView> {
   final FocusNode _focusNode = FocusNode();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  // API Key - In production this should be in an environment variable or secure storage
-  static const apiKey = "AIzaSyAS_tVOD5wOeiG5tOd4qvD5LcIWuGgeQnE";
+  // --- حالة الذاكرة المحلية للشات بوت ---
+  String? _detectedSpecialty;
 
-  final model = GenerativeModel(model: 'gemini-1.5-flash', apiKey: apiKey);
+  final ApiService _apiService = ApiService();
 
-  final List<Message> _messages = [
-    Message(
-      isUser: false, 
-      message: "مرحباً بك! أنا مساعدك الذكي في متجر صخر. كيف يمكنني مساعدتك اليوم؟", 
-      date: DateTime.now()
-    ),
-  ];
+  final List<Message> _messages = [];
   bool isLoading = false;
+  bool isInitializing = true;
 
   static const assistantInstruction =
-      "أنت مساعد ذكي يدعى 'صخر AI' داخل تطبيق متجر 'صخر' الإلكتروني. "
-      "مهمتك هي مساعدة المستخدمين في الاستفسار عن المنتجات الإلكترونية والتقنية، الأسعار، العروض، وطرق الشحن والدفع. "
-      "أسلوبك يجب أن يكون مهنياً، ودوداً، ومختصراً. "
-      "أجب باللغة العربية حصراً. لا تذكر أي معلومات خارج نطاق المتجر.";
+      "أنت 'صخر AI'، مستشار تقني خبير ومتخصص في عتاد الحاسوب لمتجر 'صخر'.\n"
+      "يجب أن تلتزم بالقواعد التالية بدقة فائقة:\n"
+      "1. العقلانية والخبرة: عند السؤال عن تخصص معين (مثل الجرافيكس)، قدم مواصفات حقيقية ومحتلرفة (مثلاً: RAM لا تقل عن 16GB، معالج i7 أو Ryzen 7 فما فوق، كرت شاشة RTX بذاكرة VRAM كافية).\n"
+      "2. السياق والذاكرة: يجب أن تربط إجاباتك ببعضها. إذا سألك المستخدم عن كرت شاشة بعد أن ذكر تخصص الجرافيكس، أجب بناءً على متطلبات الجرافيكس. إذا سألك عن السعر، أعطِ تقديراً يتناسب مع المواصفات التي اقترحتها في الرسائل السابقة.\n"
+      "3. التفاعل التدريجي: اطلب تخصص المستخدم أولاً إذا لم يكن معروفاً، ثم قدم النصيحة.\n"
+      "4. القيود: أجب بالعربية فقط، كن ودوداً وعملياً، لا تخرج عن نطاق التقنية، ولا تقدم معلومات وهمية.\n"
+      "5. الأسعار: قدم نطاقات سعرية واقعية (مثلاً بالدولار أو ما يعادلها) للمواصفات المقترحة.";
+
+  @override
+  void initState() {
+    super.initState();
+    _setupChat();
+  }
+
+  Future<void> _setupChat() async {
+    // جلب السجل من السيرفر لضمان الاستمرارية العرضية فقط
+    try {
+      final token = Get.find<AppController>().token.value;
+      if (token.isNotEmpty) {
+        final rawHistory = await _apiService.fetchChatHistory(token);
+        for (var item in rawHistory) {
+          final userMsg = item['message'] ?? "";
+          final botMsg = item['response'] ?? "";
+          final dateStr = item['created_at'] ?? DateTime.now().toIso8601String();
+          
+          _messages.add(Message(isUser: true, message: userMsg, date: DateTime.parse(dateStr)));
+          _messages.add(Message(isUser: false, message: botMsg, date: DateTime.parse(dateStr)));
+          
+          // محاولة استنتاج التخصص من التاريخ القديم
+          if (userMsg.toLowerCase().contains('جرافكس') || userMsg.toLowerCase().contains('graphics')) {
+            _detectedSpecialty = "graphics";
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("Error loading chat history: $e");
+    }
+
+    if (_messages.isEmpty) {
+      _messages.add(Message(
+          isUser: false,
+          message: "مرحباً بك مجدداً في صخر AI! أنا مساعدك التقني المحلي. كيف يمكنني مساعدتك في اختيار عتادك التقني اليوم؟",
+          date: DateTime.now()));
+    }
+
+    if (mounted) {
+      setState(() => isInitializing = false);
+      _scrollToBottom();
+    }
+  }
 
   Future<void> sendMessage() async {
     if (_userMessage.text.trim().isEmpty) return;
 
     final userMessageText = _userMessage.text.trim();
     _userMessage.clear();
-    
+
     setState(() {
-      _messages.add(Message(
-          isUser: true, message: userMessageText, date: DateTime.now()));
+      _messages.add(Message(isUser: true, message: userMessageText, date: DateTime.now()));
       isLoading = true;
     });
 
     _scrollToBottom();
 
-    try {
-      final chatMessages = _messages.map((m) {
-        return m.isUser ? Content.text(m.message) : Content.model([TextPart(m.message)]);
-      }).toList();
+    // جلب الرد من السيرفر (البحث الذكي)
+    final token = Get.find<AppController>().token.value;
+    String? botResponse = await _apiService.smartSearch(
+      userMessageText,
+      token: token.isNotEmpty ? token : null,
+    );
 
-      // Add instruction as system prompt if needed, but for now append to last message or use session
-      final content = [Content.text("$assistantInstruction\n\nالمستخدم: $userMessageText")];
-      
-      final response = await model.generateContent(content).timeout(const Duration(seconds: 15));
+    // Fallback if API fails
+    botResponse ??= "عذراً، لم أتمكن من الحصول على إجابة حالياً. يرجى المحاولة مرة أخرى.";
 
-      if (mounted) {
-        setState(() {
-          _messages.add(Message(
-              isUser: false, 
-              message: response.text ?? "عذراً، لم أستطع معالجة الطلب حالياً.", 
-              date: DateTime.now()));
-          isLoading = false;
-        });
-        _scrollToBottom();
-      }
-    } catch (e) {
-      if (mounted) {
-        String fallbackResponse = _getFallbackResponse(userMessageText);
-        setState(() {
-          _messages.add(Message(
-              isUser: false, 
-              message: fallbackResponse, 
-              date: DateTime.now()));
-          isLoading = false;
-        });
-        _scrollToBottom();
-      }
+    if (mounted) {
+      setState(() {
+        _messages.add(Message(isUser: false, message: botResponse!, date: DateTime.now()));
+        isLoading = false;
+      });
+      _scrollToBottom();
     }
-  }
 
-  String _getFallbackResponse(String input) {
-    final lowerInput = input.toLowerCase();
-    if (lowerInput.contains('لابتوب') || lowerInput.contains('كمبيوتر') || lowerInput.contains('mac')) {
-      return 'لدينا مجموعة رائعة من اللابتوبات الحديثة، أبرزها لابتوبات Apple وأجهزة المحترفين. يمكنك تفقد قسم التخفيضات!';
-    } else if (lowerInput.contains('سعر') || lowerInput.contains('رخيص') || lowerInput.contains('تخفيض') || lowerInput.contains('خصم')) {
-      return 'نطمح دائماً لتقديم أفضل الأسعار مع خصومات دورية. تفضل بزيارة قسم "الخصومات" عبر الصفحة الرئيسية للإطلاع على عروضنا.';
-    } else if (lowerInput.contains('توصيل') || lowerInput.contains('شحن')) {
-      return 'نوفر خدمة توصيل سريعة لكافة المناطق. سيتم عرض تفاصيل التوصيل أثناء إتمام عملية الشراء.';
-    } else if (lowerInput.contains('مرحبا') || lowerInput.contains('هلا') || lowerInput.contains('السلام')) {
-      return 'أهلاً بك في متجر صخر! كيف يمكنني مساعدتك للوصول لمنتجك التقني المفضل؟';
-    } else {
-      return 'عذراً لا أملك إجابة دقيقة على ذلك. هل تبحث عن "$input"؟ يمكنك استخدام أيقونة البحث أعلى الصفحة للوصول السريع، أو إعطائي تفاصيل أكثر.';
+    // حفظ الرد في السيرفر للسجل (اختياري، لأن المحرك قد يقوم بذلك تلقائياً، لكننا نحافظ عليه للتوافق)
+    if (token.isNotEmpty) {
+      _apiService.sendChatbotResponse({
+        if (Get.find<AppController>().user.value?.id != null)
+          'user_id': Get.find<AppController>().user.value?.id,
+        'message': userMessageText,
+        'response': botResponse,
+      }, token: token);
     }
   }
 
@@ -169,16 +190,27 @@ class _AiChatViewState extends State<AiChatView> {
           Column(
             children: [
               Expanded(
-                child: ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.fromLTRB(20, 120, 20, 20),
-                  itemCount: _messages.length,
-                  itemBuilder: (context, index) {
-                    return ChatBubble(message: _messages[index]);
-                  },
-                ),
+                child: isInitializing
+                    ? const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(color: kPrimaryColor),
+                            SizedBox(height: 15),
+                            Text("جاري تحميل المحادثات السابقة...",
+                                style: TextStyle(color: kTextLightColor, fontSize: 13)),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.fromLTRB(20, 120, 20, 20),
+                        itemCount: _messages.length,
+                        itemBuilder: (context, index) {
+                          return ChatBubble(message: _messages[index]);
+                        },
+                      ),
               ),
-              
               if (isLoading)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),

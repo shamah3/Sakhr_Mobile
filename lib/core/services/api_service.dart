@@ -6,11 +6,13 @@ import 'package:bytore/features/stores/models/store_model.dart';
 import 'package:bytore/features/stores/models/advertisement_model.dart';
 import 'package:bytore/features/notifications/models/notification_model.dart';
 import 'package:bytore/features/checkout/models/payment_method_model.dart';
+import 'package:bytore/features/checkout/models/floosak_payment_attempt_model.dart';
 import 'package:bytore/features/orders/models/order_model.dart';
 import 'package:bytore/features/profile/models/wallet_model.dart';
 import 'package:bytore/features/profile/models/complaint_model.dart';
 import 'package:bytore/features/profile/models/review_model.dart';
 import 'package:bytore/features/profile/models/activity_model.dart';
+import 'package:bytore/core/models/user_model.dart';
 import 'package:bytore/core/controllers/app_controller.dart';
 import 'package:bytore/features/home/models/coupon_model.dart';
 import 'package:get/get.dart';
@@ -21,6 +23,41 @@ class ApiService {
   static String get storageUrl => "http://$baseIp/storage";
   static String get serverUrl => "http://$baseIp";
 
+  static String fixImageUrl(String? url) {
+    if (url == null || url.isEmpty) return "";
+    String rawUrl = url.trim();
+
+    // 1. Handle Absolute URLs
+    if (rawUrl.startsWith("http")) {
+      return rawUrl
+          .replaceAll("localhost:8000", baseIp)
+          .replaceAll("127.0.0.1:8000", baseIp)
+          .replaceAll("localhost", baseIp.split(':')[0])
+          .replaceAll("127.0.0.1", baseIp.split(':')[0]);
+    }
+
+    // 2. Handle Asset Paths
+    if (rawUrl.startsWith("assets/")) return rawUrl;
+
+    // 3. Handle Relative Paths
+    String path = rawUrl.startsWith('/') ? rawUrl.substring(1) : rawUrl;
+
+    // Check if path already contains storage/ or uploads/
+    if (path.contains("storage/")) {
+      // Extract portion from storage onwards to avoid doubling
+      path = path.substring(path.indexOf("storage/"));
+      return "$serverUrl/$path";
+    }
+
+    if (path.startsWith("public/")) path = path.replaceFirst("public/", "");
+    if (path.startsWith("upload/") || path.startsWith("uploads/")) {
+      return "$serverUrl/$path";
+    }
+
+    // Default fallback to storageUrl
+    return "$storageUrl/$path";
+  }
+
   // ==================================================
   // 🔥 جلب المنتجات (قائمة)
   // ==================================================
@@ -28,6 +65,7 @@ class ApiService {
     String? categorySlug,
     int? categoryId,
     int? storeId,
+    int? brandId,
     String? search,
     String? token,
   }) async {
@@ -44,6 +82,9 @@ class ApiService {
       if (storeId != null) {
         params.add("store_id=$storeId");
       }
+      if (brandId != null) {
+        params.add("brand_id=$brandId");
+      }
       if (search != null && search.isNotEmpty) {
         params.add("search=$search");
       }
@@ -54,13 +95,16 @@ class ApiService {
 
       debugPrint("📡 PRODUCTS REQUEST: $url");
 
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          "Accept": "application/json",
-          if (token != null && token.isNotEmpty) "Authorization": "Bearer $token",
-        },
-      ).timeout(const Duration(seconds: 30));
+      final response = await http
+          .get(
+            Uri.parse(url),
+            headers: {
+              "Accept": "application/json",
+              if (token != null && token.isNotEmpty)
+                "Authorization": "Bearer $token",
+            },
+          )
+          .timeout(const Duration(seconds: 30));
 
       debugPrint("📡 [DEBUG] PRODUCTS RESPONSE STATUS: ${response.statusCode}");
       debugPrint("📡 [DEBUG] PRODUCTS RESPONSE BODY: ${response.body}");
@@ -89,23 +133,27 @@ class ApiService {
 
       List<Product> parsedProducts = [];
       debugPrint("📡 [DEBUG] FOUND ${productsList.length} PRODUCTS IN JSON");
-      
+
       for (var e in productsList) {
         if (e is Map) {
           try {
             var product = Product.fromJson(Map<String, dynamic>.from(e));
             parsedProducts.add(product);
           } catch (err) {
-            debugPrint("⚠️ ERROR PARSING INDIVIDUAL PRODUCT (ID: ${e['id']}): $err");
+            debugPrint(
+              "⚠️ ERROR PARSING INDIVIDUAL PRODUCT (ID: ${e['id']}): $err",
+            );
           }
         }
       }
 
-      debugPrint("✅ SUCCESSFULLY PARSED ${parsedProducts.length} OUT OF ${productsList.length} PRODUCTS");
+      debugPrint(
+        "✅ SUCCESSFULLY PARSED ${parsedProducts.length} OUT OF ${productsList.length} PRODUCTS",
+      );
       return parsedProducts;
     } catch (e) {
       debugPrint("🔥 Fetch Products Error: $e");
-      rethrow; 
+      rethrow;
     }
   }
 
@@ -144,14 +192,19 @@ class ApiService {
       );
       if (response.statusCode != 200) return null;
       final decoded = jsonDecode(response.body);
-      Map<String, dynamic>? data = decoded is Map ? (decoded['data'] is Map ? decoded['data'] : decoded) : null;
+      Map<String, dynamic>? data = decoded is Map
+          ? (decoded['data'] is Map ? decoded['data'] : decoded)
+          : null;
       return data != null ? OrderModel.fromJson(data) : null;
     } catch (e) {
       return null;
     }
   }
-  
-  Future<OrderModel?> createOrder(Map<String, dynamic> data, String token) async {
+
+  Future<OrderModel?> createOrder(
+    Map<String, dynamic> data,
+    String token,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse("$baseUrl/orders"),
@@ -167,7 +220,9 @@ class ApiService {
         final decoded = jsonDecode(response.body);
         Map<String, dynamic>? orderData;
         if (decoded is Map) {
-          orderData = decoded.containsKey('data') ? (decoded['data'] is Map ? decoded['data'] : null) : decoded;
+          orderData = decoded.containsKey('data')
+              ? (decoded['data'] is Map ? decoded['data'] : null)
+              : decoded;
         }
         if (orderData != null) {
           return OrderModel.fromJson(orderData);
@@ -194,12 +249,13 @@ class ApiService {
     try {
       final String url = "$baseUrl/products/$id";
       debugPrint("📡 PRODUCT DETAIL REQUEST: $url");
-      
+
       final response = await http.get(
         Uri.parse(url),
         headers: {
           "Accept": "application/json",
-          if (token != null && token.isNotEmpty) "Authorization": "Bearer $token",
+          if (token != null && token.isNotEmpty)
+            "Authorization": "Bearer $token",
         },
       );
 
@@ -237,9 +293,7 @@ class ApiService {
 
       final response = await http.get(
         Uri.parse(url),
-        headers: {
-          "Accept": "application/json",
-        },
+        headers: {"Accept": "application/json"},
       );
 
       if (response.statusCode != 200) return [];
@@ -252,7 +306,9 @@ class ApiService {
       } else if (decoded is List) {
         list = decoded;
       } else if (decoded is Map && decoded.containsKey('advertisements')) {
-        list = decoded['advertisements'] is List ? decoded['advertisements'] : [];
+        list = decoded['advertisements'] is List
+            ? decoded['advertisements']
+            : [];
       }
 
       return list
@@ -274,7 +330,9 @@ class ApiService {
       debugPrint("📡 COUPONS REQUEST: $url");
 
       final appController = Get.find<AppController>();
-      final String? token = appController.token.value.isNotEmpty ? appController.token.value : null;
+      final String? token = appController.token.value.isNotEmpty
+          ? appController.token.value
+          : null;
 
       final response = await http.get(
         Uri.parse(url),
@@ -301,11 +359,14 @@ class ApiService {
         // 1. Check common wrap keys
         if (decoded.containsKey('data')) {
           final dynamic d = decoded['data'];
-          if (d is List) list = d;
-          else if (d is Map && d.containsKey('data')) list = d['data'] is List ? d['data'] : [];
-          else if (d is Map && d.containsKey('coupons')) list = d['coupons'] is List ? d['coupons'] : [];
+          if (d is List)
+            list = d;
+          else if (d is Map && d.containsKey('data'))
+            list = d['data'] is List ? d['data'] : [];
+          else if (d is Map && d.containsKey('coupons'))
+            list = d['coupons'] is List ? d['coupons'] : [];
         }
-        
+
         // 2. If still empty, search for ANY list in the top level (Smart Scan)
         if (list.isEmpty) {
           decoded.forEach((key, value) {
@@ -335,8 +396,14 @@ class ApiService {
   // ==================================================
   Future<List<NotificationModel>> fetchNotifications(String token) async {
     try {
+      final appController = Get.find<AppController>();
+      final userId = appController.user.value?.id ?? 0;
+      if (userId <= 0) {
+        return [];
+      }
+
       final response = await http.get(
-        Uri.parse("$baseUrl/notifications"),
+        Uri.parse("$baseUrl/notifications/$userId"),
         headers: {
           "Accept": "application/json",
           "Authorization": "Bearer $token",
@@ -354,7 +421,10 @@ class ApiService {
     }
   }
 
-  Future<bool> createNotification(Map<String, dynamic> data, String token) async {
+  Future<bool> createNotification(
+    Map<String, dynamic> data,
+    String token,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse("$baseUrl/notifications"),
@@ -383,7 +453,11 @@ class ApiService {
     return fetchProductDetail(id, token: token); // Use the management endpoint
   }
 
-  Future<bool> updateProductStatus(int id, String status, {String? token}) async {
+  Future<bool> updateProductStatus(
+    int id,
+    String status, {
+    String? token,
+  }) async {
     try {
       final String url = "$baseUrl/admin/management/products/$id/status";
       final response = await http.post(
@@ -391,7 +465,8 @@ class ApiService {
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json",
-          if (token != null && token.isNotEmpty) "Authorization": "Bearer $token",
+          if (token != null && token.isNotEmpty)
+            "Authorization": "Bearer $token",
         },
         body: jsonEncode({"status": status}),
       );
@@ -408,12 +483,16 @@ class ApiService {
   // ==================================================
   Future<List<dynamic>> getCategories() async {
     try {
-      final response = await http.get(
-        Uri.parse("$baseUrl/categories"),
-        headers: {"Accept": "application/json"},
-      ).timeout(const Duration(seconds: 30));
+      final response = await http
+          .get(
+            Uri.parse("$baseUrl/categories"),
+            headers: {"Accept": "application/json"},
+          )
+          .timeout(const Duration(seconds: 30));
 
-      debugPrint("📡 [DEBUG] CATEGORIES RESPONSE STATUS: ${response.statusCode}");
+      debugPrint(
+        "📡 [DEBUG] CATEGORIES RESPONSE STATUS: ${response.statusCode}",
+      );
       debugPrint("📡 [DEBUG] CATEGORIES RESPONSE BODY: ${response.body}");
 
       if (response.statusCode != 200) return [];
@@ -449,7 +528,9 @@ class ApiService {
       );
       if (response.statusCode != 200) return null;
       final decoded = jsonDecode(response.body);
-      Map<String, dynamic>? data = decoded is Map ? (decoded['data'] is Map ? decoded['data'] : decoded) : null;
+      Map<String, dynamic>? data = decoded is Map
+          ? (decoded['data'] is Map ? decoded['data'] : decoded)
+          : null;
       return data != null ? WalletModel.fromJson(data) : null;
     } catch (e) {
       debugPrint("Fetch Wallet Error: $e");
@@ -470,11 +551,18 @@ class ApiService {
       if (response.statusCode != 200) return [];
       final decoded = jsonDecode(response.body);
       List<dynamic> list = (decoded is Map ? decoded['data'] : decoded) ?? [];
-      return list.map((e) {
-        if (e is int) return e;
-        if (e is Map) return int.tryParse(e['product_id']?.toString() ?? e['id']?.toString() ?? "0") ?? 0;
-        return 0;
-      }).where((id) => id != 0).toList();
+      return list
+          .map((e) {
+            if (e is int) return e;
+            if (e is Map)
+              return int.tryParse(
+                    e['product_id']?.toString() ?? e['id']?.toString() ?? "0",
+                  ) ??
+                  0;
+            return 0;
+          })
+          .where((id) => id != 0)
+          .toList();
     } catch (e) {
       return [];
     }
@@ -510,7 +598,7 @@ class ApiService {
       if (response.statusCode != 200) return [];
       final decoded = jsonDecode(response.body);
       List<dynamic> list = (decoded is Map ? decoded['data'] : decoded) ?? [];
-      
+
       List<StoreModel> parsedStores = list
           .where((e) => e is Map)
           .map((e) => StoreModel.fromJson(Map<String, dynamic>.from(e)))
@@ -520,7 +608,7 @@ class ApiService {
       return parsedStores;
     } catch (e) {
       debugPrint("🔥 Fetch Stores Error: $e");
-      rethrow; 
+      rethrow;
     }
   }
 
@@ -541,7 +629,11 @@ class ApiService {
     }
   }
 
-  Future<bool> updateStore(int id, Map<String, dynamic> data, String token) async {
+  Future<bool> updateStore(
+    int id,
+    Map<String, dynamic> data,
+    String token,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse("$baseUrl/stores/$id?_method=PUT"),
@@ -644,7 +736,7 @@ class ApiService {
         },
         body: jsonEncode(data),
       );
-      
+
       if (response.statusCode != 200 && response.statusCode != 201) {
         debugPrint("❌ REVIEW API FAILED: ${response.statusCode}");
         debugPrint("❌ BODY: ${response.body}");
@@ -697,23 +789,22 @@ class ApiService {
     }
   }
 
-
   // ==================================================
   // 🔐 المصادقة والـ OTP (Mock/Remote)
   // ==================================================
-  Future<Map<String, dynamic>?> login(String email, String password) async {
+  Future<Map<String, dynamic>?> login(
+    String identifier,
+    String password,
+  ) async {
     try {
-      debugPrint("📡 Login Request: email=$email");
+      debugPrint("📡 Login Request: identifier=$identifier");
       final response = await http.post(
         Uri.parse("$baseUrl/login"),
         headers: {
           "Accept": "application/json",
           "Content-Type": "application/json",
         },
-        body: jsonEncode({
-          "email": email,
-          "password": password,
-        }),
+        body: jsonEncode({"identifier": identifier, "password": password}),
       );
 
       debugPrint("📡 Login Response Code: ${response.statusCode}");
@@ -725,10 +816,15 @@ class ApiService {
           return decoded['data'] is Map ? decoded['data'] : null;
         }
       }
-      return null;
+      throw Exception(
+        _responseMessage(
+          _decodedResponseMap(response),
+          "فشل تسجيل الدخول، تأكد من صحة البيانات",
+        ),
+      );
     } catch (e) {
       debugPrint("🔥 Login Error: $e");
-      return null;
+      rethrow;
     }
   }
 
@@ -750,21 +846,122 @@ class ApiService {
   }
 
   // ==================================================
-  // 🔐 المصادقة والـ OTP
+  // 🔐 المصادقة والـ OTP والـ Biometric
   // ==================================================
+
+  /// نظام تسجيل الدخول الموحد (إنشاء حساب أو دخول تلقائي بالبصمة)
+  Future<Map<String, dynamic>?> customerBioAuthOrRegister({
+    required String phone,
+    required String biometricToken,
+    String? name,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/customers"),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          "phone": phone,
+          "biometric_token": biometricToken,
+          "name": name,
+        }),
+      );
+
+      debugPrint("📡 Bio Auth Status: ${response.statusCode}");
+      debugPrint("📡 Bio Auth Response: ${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map && decoded.containsKey('data')) {
+          return Map<String, dynamic>.from(decoded['data']);
+        }
+      }
+      return null;
+    } catch (e) {
+      debugPrint("🔥 Bio Auth Error: $e");
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> biometricLogin(String biometricToken) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/auth/biometric-login"),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({"biometric_token": biometricToken}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map && decoded.containsKey('data')) {
+          return Map<String, dynamic>.from(decoded['data']);
+        }
+      }
+
+      throw Exception(
+        _responseMessage(
+          _decodedResponseMap(response),
+          "فشل تسجيل الدخول بالبصمة",
+        ),
+      );
+    } catch (e) {
+      debugPrint("🔥 Biometric Login Error: $e");
+      rethrow;
+    }
+  }
+
+  Future<bool> enableBiometric({
+    required String biometricToken,
+    required String token,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/auth/enable-biometric"),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({"biometric_token": biometricToken}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return true;
+      }
+
+      throw Exception(
+        _responseMessage(
+          _decodedResponseMap(response),
+          "فشل تفعيل الدخول بالبصمة",
+        ),
+      );
+    } catch (e) {
+      debugPrint("🔥 Enable Biometric Error: $e");
+      rethrow;
+    }
+  }
+
   Future<String?> sendOtp(String phone) async {
     try {
       final response = await http.post(
         Uri.parse("$baseUrl/auth/send-code"),
-        headers: {"Accept": "application/json", "Content-Type": "application/json"},
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+        },
         body: jsonEncode({"phone": phone}),
       );
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final decoded = jsonDecode(response.body);
         // Extracts the code from Laravel's sendResponse(['code' => $code])
         if (decoded is Map && decoded.containsKey('data')) {
-           return decoded['data']['code']?.toString();
+          return decoded['data']['code']?.toString();
         }
       }
       return null;
@@ -778,18 +975,67 @@ class ApiService {
     try {
       final response = await http.post(
         Uri.parse("$baseUrl/auth/verify-code"),
-        headers: {"Accept": "application/json", "Content-Type": "application/json"},
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+        },
         body: jsonEncode({"phone": phone, "code": code}),
       );
       if (response.statusCode == 200 || response.statusCode == 201) {
         final decoded = jsonDecode(response.body);
         if (decoded is Map && decoded.containsKey('data')) {
-           return Map<String, dynamic>.from(decoded['data']);
+          return Map<String, dynamic>.from(decoded['data']);
         }
+      } else {
+        debugPrint("❌ Verify OTP Failed: ${response.body}");
       }
       return null;
     } catch (e) {
       debugPrint("🔥 Verify OTP Error: $e");
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> fetchUserProfile(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/auth/me"),
+        headers: {
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      debugPrint("📡 Fetch Profile Status: ${response.statusCode}");
+      final decoded = _decodedResponseMap(response);
+
+      if (response.statusCode == 401) {
+        debugPrint("❌ Fetch Profile Failed: ${response.body}");
+        throw Exception("Unauthenticated.");
+      }
+
+      if (response.statusCode == 200 &&
+          decoded['status'] != false &&
+          decoded['data'] is Map) {
+        return Map<String, dynamic>.from(decoded['data']);
+      }
+
+      debugPrint("❌ Fetch Profile Failed: ${response.body}");
+      return null;
+    } catch (e) {
+      debugPrint("🔥 Fetch Profile Error: $e");
+      rethrow;
+    }
+  }
+
+  Future<UserModel?> fetchCurrentUser(String token) async {
+    try {
+      final userData = await fetchUserProfile(token);
+      if (userData == null) return null;
+
+      return UserModel.fromJson(userData);
+    } catch (e) {
+      debugPrint("🔥 Fetch Current User Error: $e");
       return null;
     }
   }
@@ -817,8 +1063,10 @@ class ApiService {
           "new_password": newPassword,
         }),
       );
-      
-      debugPrint("📡 Change Password Response: ${response.statusCode} - ${response.body}");
+
+      debugPrint(
+        "📡 Change Password Response: ${response.statusCode} - ${response.body}",
+      );
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
       debugPrint("🔥 Change Password Error: $e");
@@ -844,6 +1092,10 @@ class ApiService {
           "Content-Type": "application/json",
         },
         body: jsonEncode({
+          "name": [
+            firstName,
+            lastName,
+          ].where((part) => part.trim().isNotEmpty).join(' '),
           "first_name": firstName,
           "last_name": lastName,
           "phone": phone,
@@ -858,24 +1110,29 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final decoded = jsonDecode(response.body);
         if (decoded is Map && decoded.containsKey('data')) {
-           return Map<String, dynamic>.from(decoded['data']);
+          return Map<String, dynamic>.from(decoded['data']);
         }
         return decoded is Map ? Map<String, dynamic>.from(decoded) : {};
       }
-      return null;
+      throw Exception(
+        _responseMessage(_decodedResponseMap(response), "فشل إنشاء الحساب"),
+      );
     } catch (e) {
       debugPrint("🔥 Register Error: $e");
-      return null;
+      rethrow;
     }
   }
 
   // ==================================================
   // 👤 الملف الشخصي (Profile)
   // ==================================================
-  Future<bool> updateUserProfile(Map<String, dynamic> data, String token) async {
+  Future<bool> updateUserProfile(
+    Map<String, dynamic> data,
+    String token,
+  ) async {
     try {
       final response = await http.put(
-        Uri.parse("$baseUrl/user/profile"),
+        Uri.parse("$baseUrl/auth/profile"),
         headers: {
           "Accept": "application/json",
           "Content-Type": "application/json",
@@ -913,7 +1170,7 @@ class ApiService {
     try {
       final request = http.MultipartRequest(
         'POST',
-        Uri.parse("$baseUrl/user/profile/image"),
+        Uri.parse("$baseUrl/auth/profile/image"),
       );
       request.headers.addAll({
         "Authorization": "Bearer $token",
@@ -925,10 +1182,10 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final decoded = jsonDecode(response.body);
         if (decoded is Map && decoded.containsKey('data')) {
-           final data = decoded['data'];
-           if (data is Map && data.containsKey('profile_photo_url')) {
-             return data['profile_photo_url'];
-           }
+          final data = decoded['data'];
+          if (data is Map && data.containsKey('profile_photo_url')) {
+            return data['profile_photo_url'];
+          }
         }
         return "SUCCESS";
       }
@@ -945,7 +1202,10 @@ class ApiService {
   Future<List<Product>> fetchTopSellingProducts() async {
     try {
       final String url = "$baseUrl/products/top-selling";
-      final response = await http.get(Uri.parse(url), headers: {"Accept": "application/json"});
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {"Accept": "application/json"},
+      );
       if (response.statusCode != 200) return [];
       final decoded = jsonDecode(response.body);
       List<dynamic> list = [];
@@ -956,7 +1216,10 @@ class ApiService {
       } else if (decoded is Map && decoded.containsKey('products')) {
         list = decoded['products'] is List ? decoded['products'] : [];
       }
-      return list.where((e) => e is Map).map((e) => Product.fromJson(Map<String, dynamic>.from(e))).toList();
+      return list
+          .where((e) => e is Map)
+          .map((e) => Product.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
     } catch (e) {
       debugPrint("🔥 Fetch Top Selling Error: $e");
       return [];
@@ -1016,7 +1279,10 @@ class ApiService {
     }
   }
 
-  Future<bool> sendChatbotResponse(Map<String, dynamic> data, {String? token}) async {
+  Future<bool> sendChatbotResponse(
+    Map<String, dynamic> data, {
+    String? token,
+  }) async {
     try {
       final String url = "$baseUrl/chatbot/responses";
       final response = await http.post(
@@ -1024,7 +1290,8 @@ class ApiService {
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json",
-          if (token != null && token.isNotEmpty) "Authorization": "Bearer $token",
+          if (token != null && token.isNotEmpty)
+            "Authorization": "Bearer $token",
         },
         body: jsonEncode(data),
       );
@@ -1035,10 +1302,74 @@ class ApiService {
     }
   }
 
-  // 💬 الدردشة مع المتاجر
-  Future<bool> sendChatMessage(int storeId, String message, String token) async {
+  Future<List<dynamic>> fetchChatHistory(String token) async {
     try {
-      final String url = "$baseUrl/messages"; // تم التعديل ليطابق المسار الفعلي في Laravel
+      final String url = "$baseUrl/chatbot/history";
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      if (response.statusCode != 200) return [];
+      final dynamic decoded = jsonDecode(response.body);
+
+      if (decoded is Map && decoded.containsKey('data')) {
+        return decoded['data'] is List ? decoded['data'] : [];
+      }
+      return [];
+    } catch (e) {
+      debugPrint("🔥 Fetch Chat History Error: $e");
+      return [];
+    }
+  }
+
+  // ==================================================
+  // 🔍 البحث الذكي (AI Agent)
+  // ==================================================
+  Future<String?> smartSearch(String query, {String? token}) async {
+    try {
+      final String url = "$baseUrl/search/smart";
+      debugPrint("📡 SMART SEARCH REQUEST: $url | query: $query");
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          if (token != null && token.isNotEmpty)
+            "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({"query": query}),
+      );
+
+      debugPrint("📡 SMART SEARCH RESPONSE STATUS: ${response.statusCode}");
+      debugPrint("📡 SMART SEARCH RESPONSE BODY: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded['success'] == true && decoded['data'] != null) {
+          return decoded['data']['answer'];
+        }
+      }
+      return null;
+    } catch (e) {
+      debugPrint("🔥 Smart Search Error: $e");
+      return null;
+    }
+  }
+
+  // 💬 الدردشة مع المتاجر
+  Future<bool> sendChatMessage(
+    int storeId,
+    String message,
+    String token,
+  ) async {
+    try {
+      final String url =
+          "$baseUrl/messages"; // تم التعديل ليطابق المسار الفعلي في Laravel
       final response = await http.post(
         Uri.parse(url),
         headers: {
@@ -1046,10 +1377,7 @@ class ApiService {
           "Accept": "application/json",
           "Authorization": "Bearer $token",
         },
-        body: jsonEncode({
-          "store_id": storeId,
-          "message": message,
-        }),
+        body: jsonEncode({"store_id": storeId, "message": message}),
       );
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
@@ -1103,9 +1431,12 @@ class ApiService {
   }
 
   // 🛡️ جسور البيانات الجديدة (Data Bridges)
-  
+
   // ⚡ سجل أنشطة العملاء
-  Future<bool> postCustomerActivity(Map<String, dynamic> data, String token) async {
+  Future<bool> postCustomerActivity(
+    Map<String, dynamic> data,
+    String token,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse("$baseUrl/customer-activities"),
@@ -1145,7 +1476,10 @@ class ApiService {
   }
 
   // 📦 المرتجعات
-  Future<bool> postReturnRequest(Map<String, dynamic> data, String token) async {
+  Future<void> postReturnRequest(
+    Map<String, dynamic> data,
+    String token,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse("$baseUrl/returns"),
@@ -1160,17 +1494,24 @@ class ApiService {
       if (response.statusCode != 200 && response.statusCode != 201) {
         debugPrint("❌ RETURN API FAILED: ${response.statusCode}");
         debugPrint("❌ BODY: ${response.body}");
-        return false;
+        throw Exception(
+          _responseMessage(
+            _decodedResponseMap(response),
+            "فشل إرسال طلب الإرجاع",
+          ),
+        );
       }
-      return true;
     } catch (e) {
       debugPrint("🔥 Post Return Error: $e");
-      return false;
+      rethrow;
     }
   }
 
   // 🎧 الدعم الفني
-  Future<bool> postSupportTicket(Map<String, dynamic> data, String token) async {
+  Future<bool> postSupportTicket(
+    Map<String, dynamic> data,
+    String token,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse("$baseUrl/support"),
@@ -1206,5 +1547,127 @@ class ApiService {
       debugPrint("Fetch Payment Methods Error: $e");
       return [];
     }
+  }
+
+  Future<FloosakPaymentAttemptModel> initiateFloosakPayment(
+    int orderId,
+    String token,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/orders/$orderId/payments/floosak/initiate"),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      return FloosakPaymentAttemptModel.fromJson(
+        _dataMapFromEnvelope(response, "فشل بدء عملية الدفع عبر فلوسك"),
+      );
+    } catch (e) {
+      debugPrint("Floosak Initiate Error: $e");
+      rethrow;
+    }
+  }
+
+  Future<FloosakPaymentAttemptModel> confirmFloosakPayment(
+    int paymentAttemptId,
+    String otp,
+    String token,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/payments/floosak/$paymentAttemptId/confirm"),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({"otp": otp}),
+      );
+
+      return FloosakPaymentAttemptModel.fromJson(
+        _dataMapFromEnvelope(response, "فشل تأكيد رمز الدفع عبر فلوسك"),
+      );
+    } catch (e) {
+      debugPrint("Floosak Confirm Error: $e");
+      rethrow;
+    }
+  }
+
+  Future<FloosakPaymentAttemptModel> fetchFloosakPaymentStatus(
+    int paymentAttemptId,
+    String token,
+  ) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/payments/floosak/$paymentAttemptId"),
+        headers: {
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      return FloosakPaymentAttemptModel.fromJson(
+        _dataMapFromEnvelope(response, "فشل جلب حالة الدفع عبر فلوسك"),
+      );
+    } catch (e) {
+      debugPrint("Floosak Status Error: $e");
+      rethrow;
+    }
+  }
+
+  Map<String, dynamic> _dataMapFromEnvelope(
+    http.Response response,
+    String fallbackMessage,
+  ) {
+    final decoded = _decodedResponseMap(response);
+    final isSuccessEnvelope = decoded['status'] != false;
+    final isHttpSuccess =
+        response.statusCode >= 200 && response.statusCode < 300;
+
+    if (!isHttpSuccess || !isSuccessEnvelope) {
+      throw Exception(_responseMessage(decoded, fallbackMessage));
+    }
+
+    final data = decoded['data'];
+    if (data is Map) {
+      return Map<String, dynamic>.from(data);
+    }
+
+    throw Exception(fallbackMessage);
+  }
+
+  Map<String, dynamic> _decodedResponseMap(http.Response response) {
+    try {
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map) {
+        return Map<String, dynamic>.from(decoded);
+      }
+    } catch (_) {}
+
+    return <String, dynamic>{};
+  }
+
+  String _responseMessage(
+    Map<String, dynamic> decoded,
+    String fallbackMessage,
+  ) {
+    final message = decoded['message'];
+    if (message is String && message.trim().isNotEmpty) {
+      return message;
+    }
+    if (message is Map || message is List) {
+      return jsonEncode(message);
+    }
+
+    final errors = decoded['errors'];
+    if (errors != null) {
+      return errors.toString();
+    }
+
+    return fallbackMessage;
   }
 }

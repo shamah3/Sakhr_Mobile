@@ -15,6 +15,7 @@ class Product {
   final String deliveryTime;
   final String storeName;
   final int storeId;
+  final String? storeLogo;
   final String category;
   final String shortDescription;
   final String region;
@@ -42,6 +43,7 @@ class Product {
     required this.deliveryTime,
     this.storeName = "Bytore Official",
     this.storeId = 1,
+    this.storeLogo,
     this.category = "General",
     this.shortDescription = "",
     this.region = "اليمن",
@@ -79,12 +81,17 @@ class Product {
       }
       
       // ✅ Handle JSON array strings like ["image.jpg"]
+      // DEPRECATED: We now prefer handling lists properly in fromJson
       if (rawUrl.startsWith('[') && rawUrl.endsWith(']')) {
         try {
-          rawUrl = rawUrl.substring(1, rawUrl.length - 1)
+          String clean = rawUrl.substring(1, rawUrl.length - 1)
                          .replaceAll('"', '')
-                         .replaceAll("'", "")
-                         .split(',')[0].trim();
+                         .replaceAll("'", "");
+          if (clean.contains(',')) {
+             rawUrl = clean.split(',')[0].trim();
+          } else {
+             rawUrl = clean.trim();
+          }
         } catch (e) {
           debugPrint("❌ Error parsing image JSON: $e");
         }
@@ -128,16 +135,31 @@ class Product {
 
     /// ==========================================================
     /// ✅ معالجة قائمة الصور القادمة من API
-    /// (images_url)
+    /// (images_url OR images relationship)
     /// ==========================================================
     List<String> galleryImages = [];
 
-    if (json['images_url'] != null) {
+    if (json['images_urls'] != null && json['images_urls'] is List) {
+       galleryImages = (json['images_urls'] as List)
+          .map((e) => fixImageUrl(e?.toString()))
+          .toList();
+    } else if (json['images'] != null && json['images'] is List) {
+      galleryImages = (json['images'] as List)
+          .map((e) => fixImageUrl(e['image_path'] ?? e['image_url'] ?? e['image']?.toString()))
+          .where((url) => url.isNotEmpty)
+          .toList();
+    } else if (json['images_url'] != null) {
       try {
         if (json['images_url'] is List) {
           galleryImages = (json['images_url'] as List)
               .map((e) => fixImageUrl(e?.toString()))
               .toList();
+        } else if (json['images_url'] is String && json['images_url'].startsWith('[')) {
+           // Handle stringified JSON array
+           String clean = json['images_url'].substring(1, json['images_url'].length - 1)
+                         .replaceAll('"', '')
+                         .replaceAll("'", "");
+           galleryImages = clean.split(',').map((e) => fixImageUrl(e.trim())).toList();
         }
       } catch (_) {
         galleryImages = [];
@@ -145,7 +167,7 @@ class Product {
     }
 
     /// إذا ما فيه صور إضافية → نضيف الصورة الأساسية
-    if (galleryImages.isEmpty) {
+    if (galleryImages.isEmpty && image.isNotEmpty) {
       galleryImages = [image];
     }
 
@@ -177,6 +199,30 @@ class Product {
       regionValue = cities[parsedId % cities.length];
     }
 
+    // Parse Warranty
+    String parsedWarranty = json['warranty']?.toString() ?? "";
+    if (parsedWarranty.isEmpty || parsedWarranty == "null" || parsedWarranty == "بدون ضمان") {
+      if (json['warranty_duration'] != null && json['warranty_duration'].toString().isNotEmpty && json['warranty_duration'].toString() != "null") {
+        String wUnit = json['warranty_unit']?.toString() ?? "";
+        if (wUnit == "months" || wUnit == "month") wUnit = "أشهر";
+        else if (wUnit == "years" || wUnit == "year") wUnit = "سنوات";
+        else if (wUnit == "days" || wUnit == "day") wUnit = "أيام";
+        parsedWarranty = "${json['warranty_duration']} $wUnit".trim();
+      } else {
+        parsedWarranty = "بدون ضمان";
+      }
+    }
+
+    // Parse Brand
+    String parsedBrand = "بدون ماركة";
+    if (json['brand'] is Map && json['brand']['name'] != null) {
+      parsedBrand = json['brand']['name'].toString();
+    } else if (json['manual_brand'] != null && json['manual_brand'].toString().isNotEmpty && json['manual_brand'].toString() != "null") {
+      parsedBrand = json['manual_brand'].toString();
+    } else if (json['brand'] != null && json['brand'].toString().isNotEmpty && json['brand'].toString() != "null" && json['brand'] is! Map) {
+      parsedBrand = json['brand'].toString();
+    }
+
     return Product(
       id: parsedId,
       name: json['name']?.toString() ?? "بدون اسم",
@@ -185,13 +231,19 @@ class Product {
       price: currentPrice,
       oldPrice: currentPrice * 1.2,
       imageUrl: image,
-      brandName: json['brand']?.toString() ?? "General",
-      storeName: json['store_name'] ?? json['vendor'] ?? (json['user'] is Map ? json['user']['name'] : null) ?? "سيليكون",
-      storeId: int.tryParse(json['store_id']?.toString() ?? json['vendor_id']?.toString() ?? (json['user'] is Map ? json['user']['id']?.toString() : "1") ?? "1") ?? 1,
+      brandName: parsedBrand,
+      storeName: json['store']?['name']?.toString() ?? json['store_name'] ?? json['vendor'] ?? (json['user'] is Map ? json['user']['name'] : null) ?? "سيليكون",
+      storeId: int.tryParse(json['store']?['id']?.toString() ?? json['store_id']?.toString() ?? json['vendor_id']?.toString() ?? (json['user'] is Map ? json['user']['id']?.toString() : "1") ?? "1") ?? 1,
+      storeLogo: fixImageUrl(
+          json['store']?['logo_url'] ?? 
+          json['store']?['logo_path'] ?? 
+          json['store_logo'] ?? 
+          json['vendor_logo']
+      ),
       region: regionValue,
       stock: stockValue,
       status: json['status']?.toString() ?? (stockValue > 0 ? "In Stock" : "Out of Stock"),
-      warranty: json['warranty']?.toString() ?? "سنة واحدة",
+      warranty: parsedWarranty,
       deliveryTime: "3 أيام",
       category: json['category']?['name'] ?? "General",
       images: galleryImages,
@@ -202,7 +254,12 @@ class Product {
       )
           : [],
       colors: json['colors'] != null
-          ? List<Map<String, dynamic>>.from(json['colors'])
+          ? List<Map<String, dynamic>>.from(json['colors']).map((c) {
+              return {
+                ...c,
+                'image': fixImageUrl(c['image_url'] ?? c['image_path'] ?? c['image']?.toString()),
+              };
+            }).toList()
           : [],
       sizes: json['sizes'] != null
           ? List<Map<String, dynamic>>.from(json['sizes'])

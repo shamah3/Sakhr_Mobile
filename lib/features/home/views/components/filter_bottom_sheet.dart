@@ -49,7 +49,35 @@ class FilterBottomSheet extends StatelessWidget {
 
     final TextEditingController minPriceCtrl = TextEditingController(text: tempRange.start.round().toString());
     final TextEditingController maxPriceCtrl = TextEditingController(text: tempRange.end.round().toString());
-    final TextEditingController warrantyCtrl = TextEditingController(text: tempWarranty);
+    
+    // استخراج الماركات والضمانات من المنتجات الفعلية ليكون الفلتر "مضبوط بالضبط"
+    final List<String> availableBrands = ["الكل", ...homeController.allProducts.map((p) => p.brandName).where((b) => b.isNotEmpty).toSet().toList()..sort()];
+    final List<String> availableWarranties = ["الكل", ...homeController.allProducts.map((p) => p.warranty).where((w) => w.isNotEmpty).toSet().toList()..sort()];
+    final List<String> yemenGovernorates = [
+      "الكل",
+      "أمانة العاصمة",
+      "صنعاء",
+      "عدن",
+      "تعز",
+      "الحديدة",
+      "إب",
+      "أبين",
+      "لحج",
+      "الضالع",
+      "شبوة",
+      "حضرموت",
+      "المهرة",
+      "سقطرى",
+      "مأرب",
+      "الجوف",
+      "صعدة",
+      "حجة",
+      "عمران",
+      "ذمار",
+      "البيضاء",
+      "المحويت",
+      "ريمة"
+    ];
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
@@ -145,7 +173,7 @@ class FilterBottomSheet extends StatelessWidget {
                       tempBrand,
                       null,
                       label: "الماركة",
-                      items: ["الكل", "Apple", "HP", "Dell", "Samsung", "Sony", "Canon", "Asus", "Lenovo"],
+                      items: availableBrands,
                       onChanged: (v) {
                         setModalState(() => tempBrand = v ?? tempBrand);
                       },
@@ -157,7 +185,7 @@ class FilterBottomSheet extends StatelessWidget {
                       null,
                       label: "التوفر والحالة",
                       hint: "اختيار الحالة",
-                      items: ["الكل", "متوفر", "غير متوفر"],
+                      items: ["الكل", "متوفر"],
                       onChanged: (v) {
                         setModalState(() => tempAvailability = v ?? tempAvailability);
                       },
@@ -168,19 +196,23 @@ class FilterBottomSheet extends StatelessWidget {
                       tempRegion,
                       null,
                       label: "المنطقة",
-                      hint: "اختيار المنطقة",
-                      items: ["الكل", "صنعاء", "عدن", "تعز", "إب", "الحديدة", "المكلا", "أخرى"],
+                      hint: "اختيار المدينة/المحافظة",
+                      items: yemenGovernorates,
                       onChanged: (v) {
                         setModalState(() => tempRegion = v ?? tempRegion);
                       },
                     ),
 
-                    const SizedBox(height: 20),
-                    const Text("الضمان", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                    const SizedBox(height: 10),
-                    FilterWidgets.buildTextField("أدخل مدة الضمان (مثال: سنة)", "", controller: warrantyCtrl, onChanged: (val) {
-                        tempWarranty = val;
-                    }),
+                    FilterWidgets.buildDropdownField(
+                      tempWarranty,
+                      null,
+                      label: "الضمان",
+                      hint: "اختيار مدة الضمان",
+                      items: availableWarranties,
+                      onChanged: (v) {
+                        setModalState(() => tempWarranty = v ?? tempWarranty);
+                      },
+                    ),
 
                     const SizedBox(height: 40),
                     ElevatedButton(

@@ -44,65 +44,56 @@ class CouponCard extends StatelessWidget {
                     children: [
                       // Verified Icon - Top Corner (Left side in RTL)
                       const Positioned(
-                        top: 0, left: 0,
+                        top: 0, 
+                        left: 0,
                         child: Icon(Icons.verified_rounded, size: 16, color: kPrimaryColor),
                       ),
                       
                       Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          const SizedBox(height: 5),
-                          Text(
-                            coupon.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.cairo(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 14,
-                              color: kTextColor,
+                          Flexible(
+                            child: Text(
+                              coupon.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.cairo(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 13,
+                                color: kTextColor,
+                                height: 1.1,
+                              ),
                             ),
                           ),
-                          Text(
-                            coupon.details,
-                            style: GoogleFonts.cairo(fontSize: 10, color: Colors.grey, height: 1.2),
+                          Flexible(
+                            child: Text(
+                              coupon.details,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.cairo(
+                                fontSize: 10,
+                                color: Colors.grey,
+                                height: 1.1,
+                              ),
+                            ),
                           ),
-                          const Spacer(),
                           
-                          // Code & Copy Row
+                          // Code & Copy Label
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              // Copy Button - Bottom Corner (Left side in RTL)
-                              GestureDetector(
-                                onTap: () => _copyCode(context),
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: kPrimaryColor,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: const Icon(Icons.copy_rounded, color: Colors.white, size: 16),
+                              const Icon(Icons.copy_rounded, size: 10, color: kSecondaryColor),
+                              const SizedBox(width: 4),
+                              Text(
+                                "انسخ الكود: ${coupon.code}",
+                                style: GoogleFonts.cairo(
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                  color: kSecondaryColor,
                                 ),
                               ),
-                              
-                              // Code Display
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF9FAFB),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  coupon.code,
-                                  style: GoogleFonts.cairo(
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 12,
-                                    color: kPrimaryColor,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 5),
                             ],
                           ),
                         ],

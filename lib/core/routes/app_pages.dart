@@ -13,6 +13,7 @@ import 'package:bytore/features/authentication/views/otp_verification_view.dart'
 // import 'package:bytore/features/home/controllers/home_controller.dart';
 import 'package:bytore/features/checkout/views/address_page.dart';
 import 'package:bytore/features/checkout/views/payment_page.dart';
+import 'package:bytore/features/checkout/views/floosak_payment_page.dart';
 import 'package:bytore/features/checkout/views/success_page.dart';
 import 'package:bytore/features/wishlist/views/wishlist_view.dart';
 import 'package:bytore/features/orders/views/tracking_view.dart';
@@ -57,14 +58,8 @@ class AppPages {
   static const INITIAL = AppRoutes.SPLASH;
 
   static final routes = [
-    GetPage(
-      name: AppRoutes.SPLASH,
-      page: () => const SplashView(),
-    ),
-    GetPage(
-      name: AppRoutes.MAIN,
-      page: () => const MainView(),
-    ),
+    GetPage(name: AppRoutes.SPLASH, page: () => const SplashView()),
+    GetPage(name: AppRoutes.MAIN, page: () => const MainView()),
     GetPage(
       name: AppRoutes.HOME,
       page: () => const HomeView(),
@@ -87,7 +82,9 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.LOGIN,
-      page: () => LoginView(redirectToAddress: Get.arguments?['redirectToAddress'] ?? false),
+      page: () => LoginView(
+        redirectToAddress: Get.arguments?['redirectToAddress'] ?? false,
+      ),
       binding: AuthBinding(),
     ),
     GetPage(
@@ -96,7 +93,7 @@ class AppPages {
         phoneNumber: Get.arguments?['phoneNumber'] ?? '',
         redirectToAddress: Get.arguments?['redirectToAddress'] ?? false,
       ),
-      binding: AuthBinding(), 
+      binding: AuthBinding(),
     ),
     GetPage(
       name: AppRoutes.CHECKOUT_ADDRESS,
@@ -109,14 +106,16 @@ class AppPages {
       binding: CheckoutBinding(),
     ),
     GetPage(
+      name: AppRoutes.CHECKOUT_FLOOSAK_PAYMENT,
+      page: () => const FloosakPaymentPage(),
+      binding: CheckoutBinding(),
+    ),
+    GetPage(
       name: AppRoutes.CHECKOUT_SUCCESS,
       page: () => const SuccessPage(),
       binding: CheckoutBinding(),
     ),
-    GetPage(
-      name: AppRoutes.CART,
-      page: () => const CartView(),
-    ),
+    GetPage(name: AppRoutes.CART, page: () => const CartView()),
     GetPage(
       name: AppRoutes.PRODUCT_DETAIL,
       page: () => ProductDetailView(product: Get.arguments),
@@ -125,94 +124,28 @@ class AppPages {
       name: AppRoutes.NOTIFICATIONS,
       page: () => const NotificationView(),
     ),
-    GetPage(
-      name: AppRoutes.WISHLIST,
-      page: () => const WishlistView(),
-    ),
-    GetPage(
-      name: AppRoutes.TRACKING,
-      page: () => const TrackingView(),
-    ),
-    GetPage(
-      name: AppRoutes.ADS,
-      page: () => const AdsView(),
-    ),
-    GetPage(
-      name: AppRoutes.PROFILE,
-      page: () => ProfilePage(),
-    ),
-    GetPage(
-      name: AppRoutes.WALLET,
-      page: () => WalletPage(),
-    ),
-    GetPage(
-      name: AppRoutes.SETTINGS,
-      page: () => SettingsPage(),
-    ),
-    GetPage(
-      name: AppRoutes.EDIT_PROFILE,
-      page: () => const EditProfilePage(),
-    ),
-    GetPage(
-      name: AppRoutes.REPORTS,
-      page: () => PurchaseReportsPage(),
-    ),
-    GetPage(
-      name: AppRoutes.RETURNS,
-      page: () => ReturnedProductsPage(),
-    ),
-    GetPage(
-      name: AppRoutes.ACTIVITY,
-      page: () => ActivitiesPage(),
-    ),
-    GetPage(
-      name: AppRoutes.REVIEWS,
-      page: () => ReviewsPage(),
-    ),
-    GetPage(
-      name: AppRoutes.CONTACT,
-      page: () => ContactUsPage(),
-    ),
-    GetPage(
-      name: AppRoutes.FAQ,
-      page: () => FaqPage(),
-    ),
-    GetPage(
-      name: AppRoutes.COMPLAINTS,
-      page: () => ComplaintsPage(),
-    ),
-    GetPage(
-      name: AppRoutes.RETURN_POLICY,
-      page: () => PolicyPage(),
-    ),
-    GetPage(
-      name: AppRoutes.PRIVACY,
-      page: () => const PrivacyPolicyScreen(),
-    ),
-    GetPage(
-      name: AppRoutes.TERMS,
-      page: () => TermsAndConditionsPage(),
-    ),
-    GetPage(
-      name: AppRoutes.ABOUT,
-      page: () => const AboutUsPage(),
-    ),
-    GetPage(
-      name: AppRoutes.MESSAGES,
-      page: () => const MessagesPage(),
-    ),
-    GetPage(
-      name: AppRoutes.ORDERS,
-      page: () => const MyOrdersPage(),
-    ),
-    GetPage(
-      name: AppRoutes.AI_CHAT,
-      page: () => const AiChatView(),
-    ),
-    GetPage(
-      name: AppRoutes.CHAT_DETAIL,
-      page: () => const ChatDetailView(),
-    ),
+    GetPage(name: AppRoutes.WISHLIST, page: () => const WishlistView()),
+    GetPage(name: AppRoutes.TRACKING, page: () => const TrackingView()),
+    GetPage(name: AppRoutes.ADS, page: () => const AdsView()),
+    GetPage(name: AppRoutes.PROFILE, page: () => ProfilePage()),
+    GetPage(name: AppRoutes.WALLET, page: () => WalletPage()),
+    GetPage(name: AppRoutes.SETTINGS, page: () => SettingsPage()),
+    GetPage(name: AppRoutes.EDIT_PROFILE, page: () => const EditProfilePage()),
+    GetPage(name: AppRoutes.REPORTS, page: () => PurchaseReportsPage()),
+    GetPage(name: AppRoutes.RETURNS, page: () => ReturnedProductsPage()),
+    GetPage(name: AppRoutes.ACTIVITY, page: () => ActivitiesPage()),
+    GetPage(name: AppRoutes.REVIEWS, page: () => ReviewsPage()),
+    GetPage(name: AppRoutes.CONTACT, page: () => ContactUsPage()),
+    GetPage(name: AppRoutes.FAQ, page: () => FaqPage()),
+    GetPage(name: AppRoutes.COMPLAINTS, page: () => ComplaintsPage()),
+    GetPage(name: AppRoutes.RETURN_POLICY, page: () => PolicyPage()),
+    GetPage(name: AppRoutes.PRIVACY, page: () => const PrivacyPolicyScreen()),
+    GetPage(name: AppRoutes.TERMS, page: () => TermsAndConditionsPage()),
+    GetPage(name: AppRoutes.ABOUT, page: () => const AboutUsPage()),
+    GetPage(name: AppRoutes.MESSAGES, page: () => const MessagesPage()),
+    GetPage(name: AppRoutes.ORDERS, page: () => const MyOrdersPage()),
+    GetPage(name: AppRoutes.AI_CHAT, page: () => const AiChatView()),
+    GetPage(name: AppRoutes.CHAT_DETAIL, page: () => const ChatDetailView()),
     GetPage(
       name: AppRoutes.PRODUCT_MANAGEMENT,
       page: () => const ProductManagementView(),

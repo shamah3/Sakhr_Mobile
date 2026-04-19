@@ -27,8 +27,14 @@ class MainView extends GetView<MainController> {
         key: controller.categoriesNavigatorKey,
         onGenerateRoute: (settings) => _onGenerateRoute(settings, initialRoute: AppRoutes.CATEGORIES),
       ),
-      StoresView(onReturnHome: () => controller.onTabTapped(0)),
-      CartView(onReturnHome: () => controller.onTabTapped(0)),
+      Navigator(
+        key: controller.storesNavigatorKey,
+        onGenerateRoute: (settings) => _onGenerateRoute(settings, initialRoute: AppRoutes.STORES),
+      ),
+      Navigator(
+        key: controller.cartNavigatorKey,
+        onGenerateRoute: (settings) => _onGenerateRoute(settings, initialRoute: AppRoutes.CART),
+      ),
       Navigator(
         key: controller.profileNavigatorKey,
         onGenerateRoute: (settings) => _onGenerateRoute(settings, initialRoute: AppRoutes.PROFILE),

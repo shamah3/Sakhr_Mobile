@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'dart:async';
-import 'dart:math';
 import 'package:bytore/core/constants/constants.dart';
 import 'package:bytore/core/services/notification_service.dart';
-import 'package:bytore/core/services/whatsapp_service.dart';
 import 'package:bytore/core/services/api_service.dart';
 import 'package:bytore/core/models/user_model.dart';
 import 'package:bytore/features/profile/controllers/activities_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'package:bytore/features/notifications/models/notification_model.dart';
 import 'package:bytore/features/notifications/controllers/notification_controller.dart';
 
 class AppController extends GetxController {
@@ -27,9 +24,9 @@ class AppController extends GetxController {
   var phoneNumber = "777777777".obs;
   var isBiometricEnabled = false.obs;
   var profilePicturePath = "".obs; // Local file path
-  var profilePictureUrl = "".obs;  // Remote URL from platform
-  var user = Rxn<UserModel>();      // Consolidated User object
-  
+  var profilePictureUrl = "".obs; // Remote URL from platform
+  var user = Rxn<UserModel>(); // Consolidated User object
+
   @override
   void onInit() {
     super.onInit();
@@ -62,10 +59,24 @@ class AppController extends GetxController {
       phoneNumber.value = prefs.getString('phone_number') ?? "777777777";
       profilePicturePath.value = prefs.getString('profile_picture_path') ?? "";
       isBiometricEnabled.value = prefs.getBool('is_biometric_enabled') ?? false;
-      
+
       final String? userJson = prefs.getString('user_data');
       if (userJson != null) {
         user.value = UserModel.fromJson(jsonDecode(userJson));
+      }
+
+      final hasStoredToken = token.value.isNotEmpty;
+      if (isLoggedIn.value != hasStoredToken) {
+        await clearSession();
+        return;
+      }
+
+      if (isLoggedIn.value && token.value.isNotEmpty) {
+        if (user.value == null || user.value!.id <= 0) {
+          await loadUserProfile();
+        } else {
+          isBiometricEnabled.value = user.value!.hasBiometric;
+        }
       }
     } catch (e) {
       debugPrint("Error loading session: $e");
@@ -83,13 +94,19 @@ class AppController extends GetxController {
       await prefs.setString('profile_picture_path', profilePicturePath.value);
       await prefs.setString('profile_picture_url', profilePictureUrl.value);
       await prefs.setBool('is_biometric_enabled', isBiometricEnabled.value);
-      
+
       if (user.value != null) {
         await prefs.setString('user_data', jsonEncode(user.value!.toJson()));
+      } else {
+        await prefs.remove('user_data');
       }
     } catch (e) {
       debugPrint("Error saving session: $e");
     }
+  }
+
+  Future<void> persistSessionNow() async {
+    await _saveSession();
   }
 
   Future<void> clearSession() async {
@@ -102,8 +119,9 @@ class AppController extends GetxController {
       await prefs.remove('phone_number');
       await prefs.remove('profile_picture_path');
       await prefs.remove('profile_picture_url');
+      await prefs.remove('is_biometric_enabled');
       await prefs.remove('user_data');
-      
+
       isLoggedIn.value = false;
       token.value = "";
       firstName.value = "";
@@ -111,6 +129,7 @@ class AppController extends GetxController {
       phoneNumber.value = "777777777";
       profilePicturePath.value = "";
       profilePictureUrl.value = "";
+      isBiometricEnabled.value = false;
       user.value = null;
     } catch (e) {
       debugPrint("Error clearing session: $e");
@@ -131,7 +150,12 @@ class AppController extends GetxController {
         _fetchRemoteNotifications();
       } else if (notifications.isEmpty) {
         // Sample data if completely empty
-        addNotification(title: "مرحباً بك!", body: "شكراً لاستخدامك تطبيق صخر، تصفح أحدث المنتجات الآن.", category: "الكل", color: Colors.blue);
+        addNotification(
+          title: "مرحباً بك!",
+          body: "شكراً لاستخدامك تطبيق صخر، تصفح أحدث المنتجات الآن.",
+          category: "الكل",
+          color: Colors.blue,
+        );
       }
     } catch (e) {
       debugPrint("Error loading notifications: $e");
@@ -140,13 +164,17 @@ class AppController extends GetxController {
 
   Future<void> _fetchRemoteNotifications() async {
     if (token.value.isEmpty) return;
-    
+
     try {
-      final remoteNotifications = await _apiService.fetchNotifications(token.value);
+      final remoteNotifications = await _apiService.fetchNotifications(
+        token.value,
+      );
       for (var remote in remoteNotifications) {
         // Check if already exists
-        bool exists = notifications.any((n) => n['title'] == remote.title && n['body'] == remote.body);
-        
+        bool exists = notifications.any(
+          (n) => n['title'] == remote.title && n['body'] == remote.body,
+        );
+
         if (!exists) {
           notifications.insert(0, {
             'title': remote.title,
@@ -173,17 +201,22 @@ class AppController extends GetxController {
       debugPrint("Error saving notifications: $e");
     }
   }
-  
+
   // Currency State
   var currency = "YER_OLD".obs;
-  
+
   String get currencyName {
     switch (currency.value) {
-      case 'YER_OLD': return '(ر.ي.ق)';
-      case 'YER_NEW': return '(ر.ي.ج)';
-      case 'SAR': return '(ر.س)';
-      case 'USD': return r'$';
-      default: return '(ر.ي.ق)';
+      case 'YER_OLD':
+        return '(ر.ي.ق)';
+      case 'YER_NEW':
+        return '(ر.ي.ج)';
+      case 'SAR':
+        return '(ر.س)';
+      case 'USD':
+        return r'$';
+      default:
+        return '(ر.ي.ق)';
     }
   }
 
@@ -198,21 +231,30 @@ class AppController extends GetxController {
   String getFormattedPrice(double basePriceInUsd) {
     double rate = _exchangeRates[currency.value] ?? 1.0;
     double convertedPrice = basePriceInUsd * rate;
-    
+
     String priceSymbol = "";
     switch (currency.value) {
-      case 'YER_OLD': priceSymbol = "ر.ي.ق"; break;
-      case 'YER_NEW': priceSymbol = "ر.ي.ج"; break;
-      case 'SAR': priceSymbol = "ر.س"; break;
-      case 'USD': priceSymbol = r"$"; break;
-      default: priceSymbol = "";
+      case 'YER_OLD':
+        priceSymbol = "ر.ي.ق";
+        break;
+      case 'YER_NEW':
+        priceSymbol = "ر.ي.ج";
+        break;
+      case 'SAR':
+        priceSymbol = "ر.س";
+        break;
+      case 'USD':
+        priceSymbol = r"$";
+        break;
+      default:
+        priceSymbol = "";
     }
 
     if (currency.value == 'USD') {
       return r"$" + convertedPrice.toStringAsFixed(2);
     } else {
       if (currency.value.startsWith('YER')) {
-         return "${convertedPrice.round()} $priceSymbol";
+        return "${convertedPrice.round()} $priceSymbol";
       }
       return "${convertedPrice.toStringAsFixed(2)} $priceSymbol";
     }
@@ -222,7 +264,9 @@ class AppController extends GetxController {
     currency.value = newCurrency;
   }
 
-  String get selectedAddress => "${selectedCity.value}، ${streetName.value}" + (landmark.value.isNotEmpty ? " (${landmark.value})" : "");
+  String get selectedAddress =>
+      "${selectedCity.value}، ${streetName.value}" +
+      (landmark.value.isNotEmpty ? " (${landmark.value})" : "");
 
   void updateAddress({
     String? city,
@@ -237,7 +281,7 @@ class AppController extends GetxController {
     if (street != null) streetName.value = street;
     if (landmark != null) this.landmark.value = landmark;
   }
-  
+
   // Wishlist State
   var wishlistIds = <int>{}.obs;
 
@@ -250,27 +294,29 @@ class AppController extends GetxController {
       wishlistIds.remove(productId);
     } else {
       wishlistIds.add(productId);
-      
+
       // ✅ سجل النشاط: إضافة للمفضلة
       try {
         Get.find<ActivitiesController>().logActivity(
-          title: productName != null ? "إضافة المنتج '$productName' للمفضلة" : "إضافة منتج للمفضلة",
-          type: "favorite"
+          title: productName != null
+              ? "إضافة المنتج '$productName' للمفضلة"
+              : "إضافة منتج للمفضلة",
+          type: "favorite",
         );
       } catch (_) {}
-      
+
       NotificationService().showNotification(
         id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
         title: 'المفضلة',
         body: 'تم إضافة المنتج للمفضلة',
       );
-      
+
       // Update Notification Center
       try {
         Get.find<NotificationController>().addNotification(
           "المفضلة",
           'تم إضافة المنتج للمفضلة',
-          category: "الكل"
+          category: "الكل",
         );
       } catch (_) {}
     }
@@ -279,9 +325,15 @@ class AppController extends GetxController {
   // Notifications State
   var notifications = <Map<String, dynamic>>[].obs;
 
-  int get notificationCount => notifications.where((n) => n['read'] == false).length;
+  int get notificationCount =>
+      notifications.where((n) => n['read'] == false).length;
 
-  void addNotification({required String title, required String body, Color? color, String category = 'الكل'}) {
+  void addNotification({
+    required String title,
+    required String body,
+    Color? color,
+    String category = 'الكل',
+  }) {
     notifications.insert(0, {
       'title': title,
       'body': body,
@@ -290,9 +342,9 @@ class AppController extends GetxController {
       'read': false,
       'category': category,
     });
-    
+
     _saveNotifications();
-    
+
     // Trigger system notification
     NotificationService().showNotification(
       id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
@@ -330,7 +382,14 @@ class AppController extends GetxController {
 
   var warrantyText = "".obs;
 
-  void updateFilters({RangeValues? range, String? category, String? brand, String? availability, String? warranty, String? region}) {
+  void updateFilters({
+    RangeValues? range,
+    String? category,
+    String? brand,
+    String? availability,
+    String? warranty,
+    String? region,
+  }) {
     if (range != null) priceRange.value = range;
     if (category != null) activeCategory.value = category;
     if (brand != null) selectedBrand.value = brand;
@@ -343,7 +402,7 @@ class AppController extends GetxController {
     firstName.value = first;
     lastName.value = last;
     if (phone != null) phoneNumber.value = phone;
-    
+
     // 🔥 تحديث كائن المستخدم الأساسي لضمان المزامنة والوراثة
     if (user.value != null) {
       user.value = UserModel(
@@ -353,13 +412,53 @@ class AppController extends GetxController {
         phone: phone ?? user.value!.phone,
         email: user.value!.email,
         profilePhotoUrl: user.value!.profilePhotoUrl,
+        hasBiometric: user.value!.hasBiometric,
       );
     }
-    
+
     _saveSession(); // حفظ فوري في الذاكرة
   }
 
   void updateLoginStatus(bool status) {
     isLoggedIn.value = status;
+    if (status && token.value.isNotEmpty && user.value == null) {
+      loadUserProfile();
+    }
+  }
+
+  Future<void> loadUserProfile() async {
+    if (token.value.isEmpty) {
+      debugPrint("⚠️ Cannot load profile: Token is empty");
+      return;
+    }
+
+    try {
+      final userData = await _apiService.fetchUserProfile(token.value);
+      if (userData != null) {
+        debugPrint("✅ User data received successfully from backend");
+        user.value = UserModel.fromJson(userData);
+        isBiometricEnabled.value = user.value!.hasBiometric;
+        updateUserName(
+          user.value!.firstName,
+          user.value!.lastName,
+          phone: user.value!.phone,
+        );
+      } else {
+        debugPrint("❌ User profile data is null after fetchUserProfile");
+      }
+    } catch (e) {
+      debugPrint("🔥 Fatal error in loadUserProfile: $e");
+      if (e.toString().contains("Unauthenticated")) {
+        await clearSession();
+      }
+    }
+  }
+
+  Future<UserModel?> ensureUserLoaded() async {
+    if (user.value != null && user.value!.id > 0) {
+      return user.value;
+    }
+    await loadUserProfile();
+    return user.value;
   }
 }

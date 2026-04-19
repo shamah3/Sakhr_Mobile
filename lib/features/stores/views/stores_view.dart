@@ -7,6 +7,7 @@ import 'package:bytore/core/components/custom_image.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:bytore/features/stores/models/store_model.dart';
 import '../controllers/stores_controller.dart';
+import 'package:bytore/core/routes/app_routes.dart';
 
 class StoresView extends GetView<StoresController> {
   final VoidCallback? onReturnHome;
@@ -111,7 +112,7 @@ class StoresView extends GetView<StoresController> {
         children: [
           if (onReturnHome != null)
             IconButton(
-              icon: const Icon(Icons.arrow_forward_ios_rounded, color: kTextColor, size: 20),
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: kTextColor, size: 20),
               onPressed: onReturnHome,
             )
           else
@@ -171,11 +172,15 @@ class StoresView extends GetView<StoresController> {
   Widget _buildStoreCard(StoreModel store) {
     return GestureDetector(
       onTap: () {
-        Get.to(() => ProductListView(
-          categoryTitle: store.name,
-          apiCategorySlug: 'all', 
-          storeId: store.id,
-        ));
+        Get.toNamed(
+          AppRoutes.PRODUCT_LIST,
+          arguments: {
+            'categoryTitle': store.name,
+            'apiCategorySlug': 'all',
+            'storeId': store.id,
+          },
+          id: 4, // Stores Navigator ID
+        );
       },
       child: Container(
         decoration: BoxDecoration(
@@ -212,7 +217,7 @@ class StoresView extends GetView<StoresController> {
                     child: ClipOval(
                       child: CustomImage(
                         imageUrl: store.logo ?? "",
-                        fit: BoxFit.cover,
+                        fit: BoxFit.contain, // Show full logo without cropping
                         width: 85,
                         height: 85,
                       ),
