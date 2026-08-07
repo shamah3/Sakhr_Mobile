@@ -37,13 +37,19 @@ class AdvertisementModel {
       
       String rawUrl = url.trim();
       
-      // Replace legacy localhost/127.0.0.1 with correct URL
+      // Replace legacy localhost/127.0.0.1/local IPs with correct server URL
       String fixedUrl = rawUrl.replaceAll("http://localhost:8000", ApiService.serverUrl)
                               .replaceAll("http://127.0.0.1:8000", ApiService.serverUrl)
+                              .replaceAll("http://192.168.8.196:8000", ApiService.serverUrl)
+                              .replaceAll("http://10.0.2.2:8000", ApiService.serverUrl)
                               .replaceAll("localhost:8000", ApiService.serverUrl)
                               .replaceAll("127.0.0.1:8000", ApiService.serverUrl)
+                              .replaceAll("192.168.8.196:8000", ApiService.serverUrl)
+                              .replaceAll("10.0.2.2:8000", ApiService.serverUrl)
                               .replaceAll("localhost", ApiService.baseIp)
-                              .replaceAll("127.0.0.1", ApiService.baseIp);
+                              .replaceAll("127.0.0.1", ApiService.baseIp)
+                              .replaceAll("http://sakhr.etezaz.com", ApiService.serverUrl)
+                              .replaceAll("https://sakhr.etezaz.com", ApiService.serverUrl);
       
       // If it's still not absolute, prepend server path
       if (!fixedUrl.startsWith("http")) {

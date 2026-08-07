@@ -28,7 +28,7 @@ class ProfilePage extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, color: kTextColor, size: 24),
-            onPressed: () => Get.toNamed(AppRoutes.SETTINGS),
+            onPressed: () => Get.toNamed(AppRoutes.SETTINGS, id: 3),
           ),
         ],
       ),
@@ -66,27 +66,27 @@ class ProfilePage extends StatelessWidget {
                         _buildMenuItem(
                           'تقارير المشتريات',
                           Icons.bar_chart_rounded,
-                          () => Get.toNamed(AppRoutes.REPORTS),
+                          () => Get.toNamed(AppRoutes.REPORTS, id: 3),
                         ),
                         _buildMenuItem(
                           'المنتجات المسترجعة',
                           Icons.assignment_return_outlined,
-                          () => Get.toNamed(AppRoutes.RETURNS),
+                          () => Get.toNamed(AppRoutes.RETURNS, id: 3),
                         ),
                         _buildMenuItem(
                           'سجل الأنشطة',
                           Icons.access_time_rounded,
-                          () => Get.toNamed(AppRoutes.ACTIVITY),
+                          () => Get.toNamed(AppRoutes.ACTIVITY, id: 3),
                         ),
                         _buildMenuItem(
                           'الرسائل',
                           Icons.mail_outline_rounded,
-                          () => Get.toNamed(AppRoutes.MESSAGES),
+                          () => Get.toNamed(AppRoutes.MESSAGES, id: 3),
                         ),
                         _buildMenuItem(
                           'تقييماتي',
                           Icons.star_border_rounded,
-                          () => Get.toNamed(AppRoutes.REVIEWS),
+                          () => Get.toNamed(AppRoutes.REVIEWS, id: 3),
                           isLast: true,
                         ),
                       ]),
@@ -103,37 +103,37 @@ class ProfilePage extends StatelessWidget {
             _buildMenuItem(
               'تواصل معنا',
               Icons.headset_mic_outlined,
-              () => Get.toNamed(AppRoutes.CONTACT),
+              () => Get.toNamed(AppRoutes.CONTACT, id: 3),
             ),
             _buildMenuItem(
               'الأسئلة الشائعة',
               Icons.help_outline_rounded,
-              () => Get.toNamed(AppRoutes.FAQ),
+              () => Get.toNamed(AppRoutes.FAQ, id: 3),
             ),
             _buildMenuItem(
               'الشكاوى',
               Icons.warning_amber_rounded,
-              () => Get.toNamed(AppRoutes.COMPLAINTS),
+              () => Get.toNamed(AppRoutes.COMPLAINTS, id: 3),
             ),
             _buildMenuItem(
               'سياسة الاستبدال والاسترجاع',
               Icons.cached_rounded,
-              () => Get.toNamed(AppRoutes.RETURN_POLICY),
+              () => Get.toNamed(AppRoutes.RETURN_POLICY, id: 3),
             ),
             _buildMenuItem(
               'سياسة الخصوصية',
               Icons.verified_user_outlined,
-              () => Get.toNamed(AppRoutes.PRIVACY),
+              () => Get.toNamed(AppRoutes.PRIVACY, id: 3),
             ),
             _buildMenuItem(
               'الشروط والأحكام',
               Icons.gavel_rounded,
-              () => Get.toNamed(AppRoutes.TERMS),
+              () => Get.toNamed(AppRoutes.TERMS, id: 3),
             ),
             _buildMenuItem(
               'من نحن',
               Icons.info_outline_rounded,
-              () => Get.toNamed(AppRoutes.ABOUT),
+              () => Get.toNamed(AppRoutes.ABOUT, id: 3),
               isLast: true,
             ),
           ]),
@@ -219,7 +219,7 @@ class ProfilePage extends StatelessWidget {
           Align(
             alignment: Alignment.topLeft,
             child: IconButton(
-              onPressed: () => Get.toNamed(AppRoutes.EDIT_PROFILE),
+              onPressed: () => Get.toNamed(AppRoutes.EDIT_PROFILE, id: 3),
               icon: const Icon(
                 Icons.edit_outlined,
                 color: primaryBlue,
@@ -318,19 +318,19 @@ class ProfilePage extends StatelessWidget {
           _buildActionBtn(
             'المفضلة',
             Icons.favorite_border_rounded,
-            () => Get.toNamed(AppRoutes.WISHLIST),
+            () => Get.toNamed(AppRoutes.WISHLIST, id: 3),
           ),
           _buildVerticalDivider(), // الفاصل الأزرق
           _buildActionBtn(
             'المحفظة',
             Icons.account_balance_wallet_outlined,
-            () => Get.toNamed(AppRoutes.WALLET),
+            () => Get.toNamed(AppRoutes.WALLET, id: 3),
           ),
           _buildVerticalDivider(), // الفاصل الأزرق
           _buildActionBtn(
             'طلباتي',
             Icons.shopping_bag_outlined,
-            () => Get.toNamed(AppRoutes.ORDERS),
+            () => Get.toNamed(AppRoutes.ORDERS, id: 3),
           ),
         ],
       ),

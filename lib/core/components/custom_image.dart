@@ -19,6 +19,17 @@ class CustomImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (imageUrl.trim().isEmpty) {
+      return SizedBox(
+        width: width,
+        height: height,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(borderRadius),
+          child: _buildErrorWidget(),
+        ),
+      );
+    }
+
     bool isAsset = imageUrl.startsWith('assets/');
 
     return SizedBox(

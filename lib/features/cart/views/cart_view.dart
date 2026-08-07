@@ -7,6 +7,7 @@ import 'package:bytore/features/checkout/views/address_page.dart';
 import 'package:bytore/features/authentication/views/login_view.dart';
 import 'package:bytore/core/controllers/app_controller.dart';
 import 'package:bytore/core/routes/app_routes.dart';
+import 'package:bytore/features/home/controllers/main_controller.dart';
 
 class CartView extends StatefulWidget {
   final VoidCallback? onReturnHome;
@@ -85,7 +86,15 @@ class _CartViewState extends State<CartView> {
           const Text("ابدأ باستكشاف أفضل العروض المتاحة الآن!", textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.grey)),
           const SizedBox(height: 30),
           ElevatedButton(
-            onPressed: () => widget.onReturnHome != null ? widget.onReturnHome!() : Navigator.pop(context),
+            onPressed: () {
+              if (widget.onReturnHome != null) {
+                widget.onReturnHome!();
+              } else if (Get.isRegistered<MainController>()) {
+                Get.find<MainController>().onTabTapped(0);
+              } else {
+                Get.offAllNamed(AppRoutes.MAIN);
+              }
+            },
             style: ElevatedButton.styleFrom(backgroundColor: kPrimaryColor, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15), elevation: 0),
             child: const Text("ابدأ التسوق", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
@@ -230,11 +239,8 @@ class _CartViewState extends State<CartView> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  if (appController.isLoggedIn.value) {
-                    Get.toNamed(AppRoutes.CHECKOUT_ADDRESS, id: 5);
-                  } else {
-                    Get.toNamed(AppRoutes.LOGIN, arguments: {'redirectToAddress': true}, id: 5);
-                  }
+                  // Require login for every purchase operation
+                  Get.toNamed(AppRoutes.LOGIN, arguments: {'redirectToAddress': true});
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimaryColor,

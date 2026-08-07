@@ -26,18 +26,18 @@ class SettingsPage extends StatelessWidget {
             Expanded(
               child: ListView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
                 children: [
                   _buildSectionHeader('الحساب والأمان'),
                   _buildInteractiveItem(
                     icon: Icons.person_outline_rounded,
                     title: 'تعديل الملف الشخصي',
-                    onTap: () => Get.toNamed(AppRoutes.EDIT_PROFILE),
+                    onTap: () => Get.toNamed(AppRoutes.EDIT_PROFILE, id: 3),
                   ),
                   _buildInteractiveItem(
                     icon: Icons.lock_reset_rounded,
                     title: 'تغيير كلمة المرور',
-                    onTap: () => Get.to(() => ChangePasswordPage()), 
+                    onTap: () => Get.to(() => ChangePasswordPage(), id: 3), 
                   ),
   
                   const SizedBox(height: 25),

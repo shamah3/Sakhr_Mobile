@@ -99,13 +99,19 @@ class Product {
 
       if (rawUrl.isEmpty) return "";
       
-      // Replace legacy localhost/127.0.0.1 with correct URL
+      // Replace legacy localhost/127.0.0.1/local IPs with correct server URL
       String fixedUrl = rawUrl.replaceAll("http://localhost:8000", ApiService.serverUrl)
                               .replaceAll("http://127.0.0.1:8000", ApiService.serverUrl)
+                              .replaceAll("http://192.168.8.196:8000", ApiService.serverUrl)
+                              .replaceAll("http://10.0.2.2:8000", ApiService.serverUrl)
                               .replaceAll("localhost:8000", ApiService.serverUrl)
                               .replaceAll("127.0.0.1:8000", ApiService.serverUrl)
+                              .replaceAll("192.168.8.196:8000", ApiService.serverUrl)
+                              .replaceAll("10.0.2.2:8000", ApiService.serverUrl)
                               .replaceAll("localhost", ApiService.baseIp)
-                              .replaceAll("127.0.0.1", ApiService.baseIp);
+                              .replaceAll("127.0.0.1", ApiService.baseIp)
+                              .replaceAll("http://sakhr.etezaz.com", ApiService.serverUrl)
+                              .replaceAll("https://sakhr.etezaz.com", ApiService.serverUrl);
       
       // If it's still not absolute, prepend server path
       if (!fixedUrl.startsWith("http")) {
@@ -131,7 +137,16 @@ class Product {
       return fixedUrl;
     }
 
-    String image = fixImageUrl(json['image_url']?.toString() ?? json['image']?.toString());
+    String image = fixImageUrl(
+      json['image_url']?.toString() ??
+      json['image']?.toString() ??
+      json['image_path']?.toString() ??
+      json['path']?.toString() ??
+      json['photo']?.toString() ??
+      json['thumbnail']?.toString() ??
+      json['cover_image']?.toString() ??
+      json['primary_image']?.toString()
+    );
 
     /// ==========================================================
     /// ✅ معالجة قائمة الصور القادمة من API
@@ -142,6 +157,7 @@ class Product {
     if (json['images_urls'] != null && json['images_urls'] is List) {
        galleryImages = (json['images_urls'] as List)
           .map((e) => fixImageUrl(e?.toString()))
+          .where((url) => url.isNotEmpty)
           .toList();
     } else if (json['images'] != null && json['images'] is List) {
       galleryImages = (json['images'] as List)
@@ -153,21 +169,24 @@ class Product {
         if (json['images_url'] is List) {
           galleryImages = (json['images_url'] as List)
               .map((e) => fixImageUrl(e?.toString()))
+              .where((url) => url.isNotEmpty)
               .toList();
         } else if (json['images_url'] is String && json['images_url'].startsWith('[')) {
            // Handle stringified JSON array
            String clean = json['images_url'].substring(1, json['images_url'].length - 1)
                          .replaceAll('"', '')
                          .replaceAll("'", "");
-           galleryImages = clean.split(',').map((e) => fixImageUrl(e.trim())).toList();
+           galleryImages = clean.split(',').map((e) => fixImageUrl(e.trim())).where((url) => url.isNotEmpty).toList();
         }
       } catch (_) {
         galleryImages = [];
       }
     }
 
-    /// إذا ما فيه صور إضافية → نضيف الصورة الأساسية
-    if (galleryImages.isEmpty && image.isNotEmpty) {
+    /// التزامن بين الصورة الرئيسية ومعرض الصور
+    if (image.isEmpty && galleryImages.isNotEmpty) {
+      image = galleryImages.first;
+    } else if (galleryImages.isEmpty && image.isNotEmpty) {
       galleryImages = [image];
     }
 

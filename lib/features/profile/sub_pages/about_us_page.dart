@@ -216,7 +216,7 @@ class AboutUsPage extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               // هنا يمكنك التوجه لصفحة تواصل معنا
-              Get.toNamed(AppRoutes.CONTACT);
+              Get.toNamed(AppRoutes.CONTACT, id: 3);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,

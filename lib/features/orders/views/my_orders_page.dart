@@ -32,7 +32,7 @@ class MyOrdersPage extends StatelessWidget {
           centerTitle: true,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: kTextColor, size: 24),
-            onPressed: () => Get.back(),
+            onPressed: () => Navigator.of(context).canPop() ? Navigator.of(context).pop() : Get.back(),
           ),
           bottom: TabBar(
             isScrollable: true,
@@ -106,7 +106,7 @@ class MyOrdersPage extends StatelessWidget {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
       physics: const BouncingScrollPhysics(),
       itemCount: orders.length,
       itemBuilder: (context, index) {
@@ -197,7 +197,7 @@ class MyOrdersPage extends StatelessWidget {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => Get.toNamed(AppRoutes.TRACKING, arguments: order),
+                          onPressed: () => Get.toNamed(AppRoutes.TRACKING, arguments: order, id: 3),
                           style: OutlinedButton.styleFrom(
                             side: BorderSide(color: Colors.grey.shade200),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -212,7 +212,7 @@ class MyOrdersPage extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () => Get.toNamed(AppRoutes.TRACKING, arguments: order),
+                          onPressed: () => Get.toNamed(AppRoutes.TRACKING, arguments: order, id: 3),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: kPrimaryColor,
                             foregroundColor: Colors.white,

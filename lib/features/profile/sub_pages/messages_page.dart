@@ -100,7 +100,7 @@ class MessagesPage extends GetView<MessagesController> {
   Widget _buildStoreCard(StoreModel store) {
     return GestureDetector(
       onTap: () {
-        Get.to(() => const ChatDetailView(), arguments: {
+        Get.to(() => const ChatDetailView(), id: 3, arguments: {
           'storeId': store.id,
           'senderName': store.name,
         });

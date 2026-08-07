@@ -61,10 +61,9 @@ class SuccessPage extends StatelessWidget {
 
               const Spacer(flex: 3),
 
-              // زر تتبع الطلب
               _buildActionButton(
                 label: 'تتبع حالة الطلب',
-                onPressed: () => Get.to(() => const TrackingView(), arguments: order?.id),
+                onPressed: () => Get.to(() => const TrackingView(), arguments: order),
                 isPrimary: true,
               ),
 

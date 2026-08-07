@@ -38,7 +38,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 color: kTextColor,
                 size: 24,
               ),
-              onPressed: onBackPressed ?? () => Get.back(),
+              onPressed: onBackPressed ?? () {
+                if (Navigator.of(context).canPop()) {
+                  Navigator.of(context).pop();
+                } else {
+                  Get.back();
+                }
+              },
             )
           : null,
       actions: actions,

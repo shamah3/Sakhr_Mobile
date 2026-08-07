@@ -11,6 +11,7 @@ import 'package:bytore/core/utils/notification_helper.dart';
 import 'package:bytore/features/product/views/product_list_view.dart';
 import 'package:bytore/features/product/controllers/product_controller.dart';
 import '../../home/controllers/home_controller.dart';
+import 'package:bytore/features/home/controllers/main_controller.dart';
 import 'package:bytore/features/product/views/components/three_d_viewer.dart';
 import 'package:bytore/core/components/custom_app_bar.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
@@ -864,13 +865,14 @@ class ProductDetailView extends StatelessWidget {
                     return;
                   }
                   
-                  // Add to cart and proceed to checkout
+                  // Add to cart and navigate to Cart screen
                   cartController.addItem(product);
+                  NotificationHelper.showCustomSnackBar(context, "تمت إضافة المنتج إلى السلة بنجاح", isError: false);
                   
-                  if (appController.isLoggedIn.value) {
-                    Get.toNamed(AppRoutes.CHECKOUT_ADDRESS);
+                  if (Get.isRegistered<MainController>()) {
+                    Get.find<MainController>().onTabTapped(3);
                   } else {
-                    Get.toNamed(AppRoutes.LOGIN, arguments: {'redirectToAddress': true});
+                    Get.toNamed(AppRoutes.CART);
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -884,13 +886,13 @@ class ProductDetailView extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                      Icon(
-                      isUnavailable ? Icons.block_flipped : (isOnShipment ? Icons.local_shipping_rounded : Icons.payments_outlined),
+                      isUnavailable ? Icons.block_flipped : (isOnShipment ? Icons.local_shipping_rounded : Icons.add_shopping_cart_rounded),
                       size: 20,
                       color: Colors.white,
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      isUnavailable ? "غير متوفر" : (isOnShipment ? "قيد الشحن" : "استمرار للدفع"),
+                      isUnavailable ? "غير متوفر" : (isOnShipment ? "قيد الشحن" : "الإضافة إلى السلة"),
                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white),
                     ),
                   ],

@@ -28,7 +28,7 @@ class TrackingView extends GetView<TrackingController> {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_forward_rounded, color: kTextColor, size: 24),
-          onPressed: () => Get.back(),
+          onPressed: () => Navigator.of(context).canPop() ? Navigator.of(context).pop() : Get.back(),
         ),
         actions: [
           IconButton(
@@ -373,7 +373,7 @@ class TrackingView extends GetView<TrackingController> {
 
   Widget _buildBottomAction(BuildContext context, OrderModel order) {
     return Container(
-      padding: const EdgeInsets.all(25),
+      padding: const EdgeInsets.fromLTRB(25, 20, 25, 100),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),

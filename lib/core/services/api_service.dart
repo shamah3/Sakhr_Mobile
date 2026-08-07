@@ -18,10 +18,15 @@ import 'package:bytore/features/home/models/coupon_model.dart';
 import 'package:get/get.dart';
 
 class ApiService {
-  static const String baseIp = "192.168.8.196:8000";
-  static String get baseUrl => "http://$baseIp/api/v1";
-  static String get storageUrl => "http://$baseIp/storage";
-  static String get serverUrl => "http://$baseIp";
+  // 🔥 IP الجهاز المحلي على الشبكة المحتسب
+  static const String localIp = "192.168.8.196:8000";
+
+  static String get localHost => localIp;
+  static String get baseDomain => localHost;
+  static String get baseIp => localIp;
+  static String get serverUrl => "http://$baseDomain";
+  static String get baseUrl => "$serverUrl/api/v1";
+  static String get storageUrl => "$serverUrl/storage";
 
   static String fixImageUrl(String? url) {
     if (url == null || url.isEmpty) return "";
@@ -30,10 +35,16 @@ class ApiService {
     // 1. Handle Absolute URLs
     if (rawUrl.startsWith("http")) {
       return rawUrl
-          .replaceAll("localhost:8000", baseIp)
-          .replaceAll("127.0.0.1:8000", baseIp)
-          .replaceAll("localhost", baseIp.split(':')[0])
-          .replaceAll("127.0.0.1", baseIp.split(':')[0]);
+          .replaceAll("http://sakhr.etezaz.com", serverUrl)
+          .replaceAll("https://sakhr.etezaz.com", serverUrl)
+          .replaceAll("http://localhost:8000", serverUrl)
+          .replaceAll("http://127.0.0.1:8000", serverUrl)
+          .replaceAll("http://192.168.8.196:8000", serverUrl)
+          .replaceAll("http://10.0.2.2:8000", serverUrl)
+          .replaceAll("localhost:8000", baseDomain)
+          .replaceAll("127.0.0.1:8000", baseDomain)
+          .replaceAll("192.168.8.196:8000", baseDomain)
+          .replaceAll("10.0.2.2:8000", baseDomain);
     }
 
     // 2. Handle Asset Paths

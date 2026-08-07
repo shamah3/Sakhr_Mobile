@@ -110,29 +110,7 @@ class HomeController extends GetxController {
       final appController = Get.find<AppController>();
       final token = appController.token.value;
       
-      List<Product> products;
-      try {
-        products = await _apiService.fetchProducts(token: token.isEmpty ? null : token);
-      } catch (e) {
-        // Fallback for Emulator if first IP fails
-        if (e.toString().contains("SocketException") || e.toString().contains("timeout")) {
-           statusMessage.value = "فشل 192.. جاري تجربة عنوان المحاكي 10.0.2.2...";
-           // Manual override for this request
-           const emulatorIp = "10.0.2.2:8000";
-           final emulatorUrl = "http://$emulatorIp/api/v1/products";
-           final response = await http.get(Uri.parse(emulatorUrl)).timeout(const Duration(seconds: 10));
-           if (response.statusCode == 200) {
-              final decoded = jsonDecode(response.body);
-              final rawList = decoded is Map ? (decoded['data'] ?? []) : [];
-              products = (rawList as List).map((p) => Product.fromJson(p)).toList();
-              statusMessage.value = "تم الاتصال بنجاح عبر عنوان المحاكي!";
-           } else {
-             throw "خطأ في كلا العنوانين. 192 (فشل) و 10.0 (كود ${response.statusCode})";
-           }
-        } else {
-          rethrow;
-        }
-      }
+      List<Product> products = await _apiService.fetchProducts(token: token.isEmpty ? null : token);
       
       if (products.isNotEmpty) {
         allProducts.assignAll(products);
@@ -159,6 +137,12 @@ class HomeController extends GetxController {
       connectionStatus.value = 2; // Offline
       statusMessage.value = "⚠️ فشل فني: $e";
       debugPrint("🏠 HOME ERROR: $e");
+      
+      // 🔥 في حالة الخطأ، أظهر المنتجات المحلية على الأقل
+      allProducts.assignAll(local3DProducts);
+      local3DProductsList.assignAll(local3DProducts);
+      _updateDiscountedProducts();
+      applyFilters();
     } finally {
       isLoading.value = false;
     }
